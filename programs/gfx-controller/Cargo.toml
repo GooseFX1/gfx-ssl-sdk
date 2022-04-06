@@ -1,0 +1,20 @@
+[package]
+description = "Created with Anchor"
+edition = "2021"
+name = "gfx-controller-sdk"
+version = "0.1.0"
+
+[lib]
+crate-type = ["lib"]
+name = "gfx_controller_sdk"
+
+[features]
+cpi = ["no-entrypoint"]
+default = []
+dev = []
+no-entrypoint = []
+no-idl = []
+
+[dependencies]
+anchor-lang = "0.23"
+anchor-spl = "0.23"

@@ -1,0 +1,9 @@
+[programs.devnet]
+gfx_ssl = "7WduLbRfYhTJktjLw5FDEyrqoEv61aTTCuGAetgLjzN5"
+
+[provider]
+cluster = "devnet"
+wallet = "~/.config/solana/id.json"
+
+[registry]
+url = "https://anchor.projectserum.com"

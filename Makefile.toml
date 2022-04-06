@@ -1,0 +1,19 @@
+[config]
+default_to_workspace = false
+skip_core_tasks = true
+
+[tasks.build]
+args = ["build-bpf", "--", "${@}"]
+command = "cargo"
+
+[tasks.idl]
+args = ["${@}"]
+script = """
+mkdir -p target/deploy
+output = exec anchor idl parse --file programs/gfx-ssl/src/lib.rs
+writefile target/deploy/gfx-ssl.json ${output.stdout}
+
+output = exec anchor idl parse --file programs/gfx-controller/src/lib.rs
+writefile target/deploy/gfx-controller.json ${output.stdout}
+"""
+script_runner = "@duckscript"

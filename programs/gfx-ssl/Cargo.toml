@@ -1,0 +1,22 @@
+[package]
+description = "GFX SSl SDK"
+edition = "2021"
+name = "gfx-ssl-sdk"
+version = "0.1.0"
+
+[lib]
+crate-type = ["lib"]
+name = "gfx_ssl_sdk"
+
+[features]
+cli = []
+cpi = ["no-entrypoint"]
+default = []
+no-entrypoint = []
+no-idl = []
+
+[dependencies]
+anchor-lang = "0.23"
+anchor-spl = "0.23"
+gfx_controller = {path = "../gfx-controller", package = "gfx-controller-sdk"}
+solana-program = "1.8.10"
