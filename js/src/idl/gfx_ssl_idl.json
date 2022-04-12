@@ -3,6 +3,226 @@
   "name": "contract",
   "instructions": [
     {
+      "name": "createLiquidityAccount",
+      "accounts": [
+        {
+          "name": "controller",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "ssl",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "liquidityAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "userWallet",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "deposit",
+      "accounts": [
+        {
+          "name": "controller",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "ssl",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "liquidityAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "rtVault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "userRtAta",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "userWallet",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "withdraw",
+      "accounts": [
+        {
+          "name": "controller",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "ssl",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "liquidityAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "rtVault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "userRtAta",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "userWallet",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "withdrawPercent",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "mintPt",
+      "accounts": [
+        {
+          "name": "controller",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "ssl",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "liquidityAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "ptMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "userPtAta",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "userWallet",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "amountToMint",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "burnPt",
+      "accounts": [
+        {
+          "name": "controller",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "ssl",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "liquidityAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "ptMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "userPtAta",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "userWallet",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "amountToBurn",
+          "type": "u64"
+        }
+      ]
+    },
+    {
       "name": "rebalanceSwap",
       "accounts": [
         {

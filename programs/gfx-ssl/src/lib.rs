@@ -14,6 +14,31 @@ pub mod contract {
     use super::*;
 
     #[allow(unused_variables)]
+    pub fn create_liquidity_account(ctx: Context<CreateLiquidityAccount>) -> Result<()> {
+        Ok(())
+    }
+
+    #[allow(unused_variables)]
+    pub fn deposit(ctx: Context<Deposit>, amount: u64) -> Result<()> {
+        Ok(())
+    }
+
+    #[allow(unused_variables)]
+    pub fn withdraw(ctx: Context<Withdraw>, withdraw_percent: u64) -> Result<()> {
+        Ok(())
+    }
+
+    #[allow(unused_variables)]
+    pub fn mint_pt(ctx: Context<MintPT>, amount_to_mint: u64) -> Result<()> {
+        Ok(())
+    }
+
+    #[allow(unused_variables)]
+    pub fn burn_pt(ctx: Context<BurnPT>, amount_to_burn: u64) -> Result<()> {
+        Ok(())
+    }
+
+    #[allow(unused_variables)]
     pub fn rebalance_swap(ctx: Context<RebalanceSwap>, amount_in: u64, min_out: u64) -> Result<()> {
         Ok(())
     }
@@ -27,57 +52,4 @@ pub mod contract {
     pub fn swap(ctx: Context<Swap>) -> Result<()> {
         Ok(())
     }
-}
-
-// preswap
-#[derive(Accounts)]
-pub struct PreSwap<'info> {
-    pub controller: AccountInfo<'info>,
-
-    #[account(mut)]
-    pub pair: AccountInfo<'info>,
-
-    pub ssl_in: AccountInfo<'info>,
-
-    pub ssl_out: AccountInfo<'info>,
-
-    pub user_wallet: Signer<'info>,
-
-    pub instructions: AccountInfo<'info>, // solana_program::sysvar::instructions::ID
-}
-
-#[derive(Accounts)]
-pub struct Swap<'info> {
-    pub controller: AccountInfo<'info>,
-
-    #[account(mut)]
-    pub pair: AccountInfo<'info>,
-
-    #[account(mut)]
-    pub ssl_in: AccountInfo<'info>,
-
-    #[account(mut)]
-    pub ssl_out: AccountInfo<'info>,
-
-    #[account(mut)]
-    pub vault_in: AccountInfo<'info>,
-
-    #[account(mut)]
-    pub vault_out: AccountInfo<'info>,
-
-    #[account(mut)]
-    pub user_in_ata: AccountInfo<'info>,
-
-    #[account(mut)]
-    pub user_out_ata: AccountInfo<'info>,
-
-    #[account(mut)]
-    pub fee_collector_ata: AccountInfo<'info>,
-
-    #[account(mut)]
-    pub user_wallet: Signer<'info>,
-    pub fee_collector: SystemAccount<'info>,
-
-    pub instructions: AccountInfo<'info>, // solana_program::sysvar::instructions::ID
-    pub token_program: AccountInfo<'info>,
 }
