@@ -1,8 +1,8 @@
 
 import BN from 'bn.js';
-import * as lo from 'buffer-layout';
+import * as lo from '@solana/buffer-layout';
 import { PublicKey } from "@solana/web3.js";
-import { publicKeyLayout, u64 } from "../layout";
+import { publicKey, u64 } from "@solana/buffer-layout-utils";
 
 export interface StakingAccount {
     controller: PublicKey,
@@ -13,7 +13,7 @@ export interface StakingAccount {
 
 export const STAKING_ACCOUNT_LAYOUT = lo.struct<StakingAccount>([
     lo.blob(8, 'sighash'),
-    publicKeyLayout("controller"),
+    publicKey("controller"),
     lo.u8("bump"),
     lo.blob(7),
     u64("share"),

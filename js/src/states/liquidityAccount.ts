@@ -1,9 +1,8 @@
 
 import BN from 'bn.js';
-import * as lo from 'buffer-layout';
+import * as lo from '@solana/buffer-layout';
 import { PublicKey } from "@solana/web3.js";
-import { publicKeyLayout, u64 } from "../layout";
-
+import { publicKey, u64 } from "@solana/buffer-layout-utils";
 
 export interface LiquidityAccount {
     mint: PublicKey,
@@ -14,7 +13,7 @@ export interface LiquidityAccount {
 
 export const Liquidity_ACCOUNT_LAYOUT = lo.struct<LiquidityAccount>([
     lo.blob(8, 'sighash'),
-    publicKeyLayout("mint"),
+    publicKey("mint"),
     lo.u8("bump"),
     lo.blob(7),
     u64("share"),

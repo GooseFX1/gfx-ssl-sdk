@@ -1,18 +1,28 @@
-import { publicKeyLayout, u64, u128 } from "../layout";
-import * as lo from "buffer-layout";
+import * as lo from '@solana/buffer-layout';
 import { PublicKey } from "@solana/web3.js";
 import { BN } from "bn.js";
+import { publicKey, u64, u128, bool } from "@solana/buffer-layout-utils";
 
-export const Oracle = lo.struct([
-    lo.seq(
-        lo.struct([
-            publicKeyLayout("address"),
-            lo.u8("inverse"),
-            lo.u8(), // padding
-        ]),
-        4,
-        "elements"
-    ),
+interface Oracle {
+    elements: Array<{ address: PublicKey, inverse: boolean; }>,
+    n: bigint,
+    padding: Uint8Array;
+}
+
+interface OracleComponent {
+    address: PublicKey,
+    inverse: boolean,
+    padding: Uint8Array;
+}
+
+export const ORACLE_ELEMENT_LAYOUT = lo.struct<OracleComponent>([
+    publicKey("address"),
+    bool("inverse"),
+    lo.blob(1, "padding"), // padding
+]);
+
+export const ORACLE_LAYOUT = lo.struct<Oracle>([
+    lo.seq(ORACLE_ELEMENT_LAYOUT, 4, "elements"),
     u64("n"),
     lo.blob(8 * 8), // padding
 ]);
@@ -27,19 +37,19 @@ export interface Pair {
 
 export const PAIR_LAYOUT = lo.struct<Pair>([
     lo.blob(8, "sighash"),
-    publicKeyLayout('controller'),
-    lo.seq(publicKeyLayout("mint"), 2, 'mints'),
+    publicKey('controller'),
+    lo.seq(publicKey("mint"), 2, 'mints'),
     lo.blob(8),// padding for alignment
-    lo.seq(Oracle, 5, "oracles"),
+    lo.seq(ORACLE_LAYOUT, 5, "oracles"),
     u64("nOracle"),
     lo.u8("A"),
     lo.seq(lo.u8(), 2, 'feeRates'),
     lo.blob(5), // padding
     u64("maxDelay"),
     u64("confidence"),
-    publicKeyLayout('balancer'),
+    publicKey('balancer'),
     lo.u16("excessiveConfiscateRate"),
-    publicKeyLayout('feeCollector'),
+    publicKey('feeCollector'),
     lo.seq(lo.u16(), 2, 'platformFeeRate'),
     lo.seq(lo.u8(), 2, 'rebalanceRebates'),
     lo.seq(u64("surplus"), 2, 'surpluses'),

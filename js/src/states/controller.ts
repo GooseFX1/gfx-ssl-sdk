@@ -1,9 +1,9 @@
 
 
 import BN from 'bn.js';
-import * as lo from 'buffer-layout';
+import * as lo from '@solana/buffer-layout';
 import { PublicKey } from "@solana/web3.js";
-import { publicKeyLayout, u64 } from "../layout";
+import { publicKey, u64 } from "@solana/buffer-layout-utils";
 
 export interface Controller {
     seed: Buffer,
@@ -22,10 +22,10 @@ export const CONTROLLER_LAYOUT = lo.struct<Controller>([
     lo.blob(8, 'sighash'),
     lo.blob(32, "seed"),
     lo.u8("bump"),
-    publicKeyLayout("admin"),
+    publicKey("admin"),
     lo.u8("suspended"),
     lo.u8("decimals"),
-    publicKeyLayout("mint"),
+    publicKey("mint"),
     lo.blob(5, "padding"),
     u64("dailyReward"),
     u64('totalStakingShare'),

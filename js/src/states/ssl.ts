@@ -1,7 +1,8 @@
-import { publicKeyLayout, u64 } from "../layout";
-import * as lo from "buffer-layout";
+import * as lo from '@solana/buffer-layout';
 import { PublicKey } from "@solana/web3.js";
 import { BN } from "bn.js";
+import { publicKey, u64 } from "@solana/buffer-layout-utils";
+
 export interface SSL {
     controller: PublicKey,
     mint: PublicKey,
@@ -18,13 +19,13 @@ export interface SSL {
 
 export const SSL_LAYOUT = lo.struct<SSL>([
     lo.blob(8, "sighash"),
-    publicKeyLayout('controller'),
-    publicKeyLayout('mint'),
+    publicKey('controller'),
+    publicKey('mint'),
     lo.u8("decimals"),
     lo.u8("bump"),
     lo.u8("pt_bump"),
     lo.u8("suspended"),
-    publicKeyLayout('cranker'),
+    publicKey('cranker'),
     lo.blob(4), // padding
     u64("weight"),
     u64("liability"),
