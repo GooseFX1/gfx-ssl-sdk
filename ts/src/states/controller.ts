@@ -1,25 +1,23 @@
-
-
-import BN from 'bn.js';
 import * as lo from '@solana/buffer-layout';
 import { PublicKey } from "@solana/web3.js";
 import { publicKey, u64 } from "@solana/buffer-layout-utils";
 
 export interface Controller {
+    sighash: Uint8Array,
     seed: Buffer,
     bump: number,
     admin: PublicKey,
     suspended: number,
     decimals: number,
     mint: PublicKey,
-    dailyReward: BN,
-    totalStakingShare: BN,
-    stakingBalance: BN,
-    lastDistributionTime: BN,
+    dailyReward: BigInt,
+    totalStakingShare: BigInt,
+    stakingBalance: BigInt,
+    lastDistributionTime: BigInt,
 }
 
 export const CONTROLLER_LAYOUT = lo.struct<Controller>([
-    lo.blob(8, 'sighash'),
+    lo.blob(8, "sighash"),
     lo.blob(32, "seed"),
     lo.u8("bump"),
     publicKey("admin"),
@@ -28,9 +26,9 @@ export const CONTROLLER_LAYOUT = lo.struct<Controller>([
     publicKey("mint"),
     lo.blob(5, "padding"),
     u64("dailyReward"),
-    u64('totalStakingShare'),
-    u64('stakingBalance'),
-    u64('lastDistributionTime'),
+    u64("totalStakingShare"),
+    u64("stakingBalance"),
+    u64("lastDistributionTime"),
     lo.blob(256, "padding")
 ]);
 

@@ -1,6 +1,5 @@
 import * as lo from '@solana/buffer-layout';
 import { PublicKey } from "@solana/web3.js";
-import { BN } from "bn.js";
 import { publicKey, u64, u128, bool } from "@solana/buffer-layout-utils";
 
 interface Oracle {
@@ -28,33 +27,46 @@ export const ORACLE_LAYOUT = lo.struct<Oracle>([
 ]);
 
 export interface Pair {
+    sighash: Uint8Array,
     controller: PublicKey,
     mints: Array<PublicKey>,
-    oracles: Array<{ elements: Array<{ address: PublicKey, inverse: number; }>, n: BN; }>,
-    nOracle: BN,
+    oracles: Array<Oracle>,
+    nOracle: BigInt,
     fee_collector: PublicKey;
+    A: number,
+    feeRates: Array<number>,
+    maxDelay: BigInt,
+    confidence: BigInt,
+    balancer: PublicKey,
+    excessiveConfiscateRate: number,
+    feeCollector: PublicKey,
+    platformFeeRate: Array<number>,
+    rebalanceRebates: Array<number>,
+    surpluses: Array<BigInt>,
+    volumes: Array<BigInt>,
+    enableRebalanceSwap: boolean;
 }
 
 export const PAIR_LAYOUT = lo.struct<Pair>([
     lo.blob(8, "sighash"),
-    publicKey('controller'),
-    lo.seq(publicKey("mint"), 2, 'mints'),
+    publicKey("controller"),
+    lo.seq(publicKey("mint"), 2, "mints"),
     lo.blob(8),// padding for alignment
     lo.seq(ORACLE_LAYOUT, 5, "oracles"),
     u64("nOracle"),
     lo.u8("A"),
-    lo.seq(lo.u8(), 2, 'feeRates'),
+    lo.seq(lo.u8(), 2, "feeRates"),
     lo.blob(5), // padding
     u64("maxDelay"),
     u64("confidence"),
-    publicKey('balancer'),
+    publicKey("balancer"),
     lo.u16("excessiveConfiscateRate"),
-    publicKey('feeCollector'),
-    lo.seq(lo.u16(), 2, 'platformFeeRate'),
-    lo.seq(lo.u8(), 2, 'rebalanceRebates'),
-    lo.seq(u64("surplus"), 2, 'surpluses'),
-    lo.seq(u128("volumes"), 2, 'volumes'),
-    lo.u8("enableRebalanceSwap"),
+    publicKey("feeCollector"),
+    lo.seq(lo.u16(), 2, "platformFeeRate"),
+    lo.seq(lo.u8(), 2, "rebalanceRebates"),
+    lo.seq(u64("surplus"), 2, "surpluses"),
+    lo.seq(u128("volumes"), 2, "volumes"),
+    bool("enableRebalanceSwap"),
     lo.blob(80, "swapCache"),
     lo.blob(151, "padding")
 ]);
