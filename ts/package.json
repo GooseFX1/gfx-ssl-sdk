@@ -1,4 +1,25 @@
 {
+  "name": "goosefx-ssl-sdk",
+  "version": "1.0.0",
+  "description": "SDK for interacting with GooseFX Single-sided Liquidity pools",
+  "main": "index.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GooseFX1/gfx-ssl-sdk.git"
+  },
+  "keywords": [
+    "ssl",
+    "solana",
+    "pool",
+    "sdk",
+    "goosefx"
+  ],
+  "author": "GooseFX",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/GooseFX1/gfx-ssl-sdk/issues"
+  },
+  "homepage": "https://github.com/GooseFX1/gfx-ssl-sdk/ts#readme",
   "dependencies": {
     "@solana/buffer-layout": "^4.0.0",
     "@solana/spl-token": "^0.2.0",
