@@ -11,7 +11,7 @@ export interface LiquidityAccount {
     ptMinted: BigInt,
 }
 
-export const Liquidity_ACCOUNT_LAYOUT = lo.struct<LiquidityAccount>([
+export const LIQUIDITY_ACCOUNT_LAYOUT = lo.struct<LiquidityAccount>([
     lo.blob(8, "sighash"),
     publicKey("mint"),
     lo.u8("bump"),
@@ -22,6 +22,6 @@ export const Liquidity_ACCOUNT_LAYOUT = lo.struct<LiquidityAccount>([
 ]);
 
 
-if (Liquidity_ACCOUNT_LAYOUT.span != 312 + 8) {
+if (LIQUIDITY_ACCOUNT_LAYOUT.span != 312 + 8) {
     throw new Error("LIQUIDITY_ACCOUNT LAYOUT SIZE MISMATCH");
 }
