@@ -1003,11 +1003,6 @@ node-releases@^2.0.3:
   resolved "https://registry.yarnpkg.com/node-releases/-/node-releases-2.0.3.tgz#225ee7488e4a5e636da8da52854844f9d716ca96"
   integrity sha512-maHFz6OLqYxz+VQyCAtA3PTX4UP/53pa05fyDNc9CwjvJ0yEh6+xBwKsgCxMNhS8taUKBFYxfuiaD9U/55iFaw==
 
-node-wasm@^0.1.4:
-  version "0.1.4"
-  resolved "https://registry.yarnpkg.com/node-wasm/-/node-wasm-0.1.4.tgz#ed906aa52403902e8e91722d53a3413c2ca37d48"
-  integrity sha512-tdcJkL/EF56E8IilbNjuwjIQVUzMpmT2qB6eZ8SJwCuFXKBjA1d/gzXi+U3INqNYgBjIS93wlfh66waWrfEwoQ==
-
 npm-run-path@^4.0.1:
   version "4.0.1"
   resolved "https://registry.yarnpkg.com/npm-run-path/-/npm-run-path-4.0.1.tgz#b7ecd1e5ed53da8e37a55e1c2269e0b97ed748ea"
