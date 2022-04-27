@@ -18,7 +18,8 @@ export const LIQUIDITY_ACCOUNT_LAYOUT = lo.struct<LiquidityAccount>([
     lo.blob(7),
     u64("share"),
     u64("ptMinted"),
-    lo.blob(256, "padding")
+    u64("amountDeposited"),
+    lo.blob(248, "padding")
 ]);
 
 
