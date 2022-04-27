@@ -9,7 +9,7 @@ import {
   getAssociatedTokenAddress,
   createCloseAccountInstruction,
   createSyncNativeInstruction,
-} from "@solana/spl-token";
+} from "@solana/spl-token-sdk";
 import {
   Connection,
   PublicKey,
@@ -20,7 +20,6 @@ import {
   Signer,
   LAMPORTS_PER_SOL,
 } from "@solana/web3.js";
-import { swap, OracleRegistry } from "../wasm/gfx_ssl_wasm";
 import { Buffer } from "buffer";
 import {
   poolAddress,
@@ -29,6 +28,7 @@ import {
   SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID,
   SYSTEM,
 } from "../constants";
+
 const SwapIDL = require("../idl/gfx_ssl_idl.json");
 
 const getPairDetails = async (tokenA: ISwapToken, tokenB: ISwapToken) => {
@@ -40,7 +40,7 @@ const getPairDetails = async (tokenA: ISwapToken, tokenB: ISwapToken) => {
   const pairArr = await PublicKey.findProgramAddress(
     [
       new Buffer("GFX-SSL-Pair", "utf-8"),
-      new PublicKey(poolController).toBuffer(),
+      poolController.toBuffer(),
       addresses[0],
       addresses[1],
     ],
@@ -56,7 +56,7 @@ const genSSL = async (address: string) => {
   return await PublicKey.findProgramAddress(
     [
       new Buffer("GFX-SSL", "utf-8"),
-      new PublicKey(poolController).toBuffer(),
+      poolController.toBuffer(),
       new PublicKey(address).toBuffer(),
     ],
     poolAddress
@@ -85,17 +85,15 @@ const createAssociatedTokenAccountIx = (
   owner: PublicKey
 ) =>
   createAssociatedTokenAccountInstruction(
-    ASSOCIATED_TOKEN_PROGRAM_ID,
-    TOKEN_PROGRAM_ID,
-    mint,
+    owner,
     associatedAccount,
     owner,
-    owner
+    mint
   );
 
 const wrapSolToken = async (wallet: any, amount: number) => {
+  const tx = new Transaction();
   try {
-    const tx = new Transaction();
     const associatedTokenAccount = await getAssociatedTokenAddress(
       NATIVE_MINT,
       wallet.publicKey
@@ -123,7 +121,7 @@ const wrapSolToken = async (wallet: any, amount: number) => {
 
     return tx; //signAndSendRawTransaction(connection, tx, wallet)
   } catch {
-    return null;
+    return tx;
   }
 };
 
@@ -133,10 +131,13 @@ export const getQuote = async (
   inTokenAmount: number,
   connection: Connection
 ) => {
-  const [tokenA, tokenB] = [tokens[firstToken], tokens[secondToken]];
+  const [tokenA, tokenB]: [ISwapToken, ISwapToken] = [
+    tokens[firstToken],
+    tokens[secondToken],
+  ];
   const result = await preSwapAmount(tokenA, tokenB, inTokenAmount, connection);
 
-  return Number(result.preSwapResult) * 10 ** tokenB.decimals;
+  return Number(result.preSwapResult);
 };
 
 export const getMinimumQuote = async (
@@ -173,6 +174,9 @@ export const preSwapAmount = async (
   impact: number;
 }> => {
   try {
+    const wasm = await import("gfx-ssl-wasm"); //
+    const swapWASM = wasm.swap;
+    const OracleRegistry = wasm.OracleRegistry;
     if (!inTokenAmount || inTokenAmount === 0)
       return { impact: 0, preSwapResult: "0" };
 
@@ -187,22 +191,30 @@ export const preSwapAmount = async (
       new PublicKey(sslOut[0])
     );
 
-    const decoded = PAIR_LAYOUT.decode(pairData.data);
+    if (!tokenASSLData || !tokenBSSLData || !pairData?.data) {
+      return {
+        preSwapResult: "0",
+        impact: 0,
+      };
+    }
+
+    const decoded = PAIR_LAYOUT.decode(pairData?.data);
     const { oracles, nOracle } = decoded;
+    const n = Number(nOracle.toString());
     const registry = new OracleRegistry();
-    for (const oracle of oracles.slice(0, nOracle)) {
+    for (const oracle of oracles.slice(0, n)) {
       const n = Number(oracle.n);
 
       for (const elem of oracle.elements.slice(0, n)) {
-        registry.add_oracle(
-          elem.address.toBuffer(),
-          (await connection.getAccountInfo(elem.address)).data
-        );
+        const acctInfo = await connection.getAccountInfo(elem.address);
+        if (acctInfo?.data) {
+          registry.add_oracle(elem.address.toBuffer(), acctInfo.data);
+        }
       }
     }
     const pseudoAmount = 10000000;
     const scale = pseudoAmount / inTokenAmount;
-    const out = swap(
+    const out = swapWASM(
       tokenASSLData.data,
       tokenBSSLData.data,
       pairData.data,
@@ -220,7 +232,10 @@ export const preSwapAmount = async (
     };
   } catch (e) {
     console.log(e);
-    return null;
+    return {
+      preSwapResult: "0",
+      impact: 0,
+    };
   }
 };
 
@@ -231,18 +246,18 @@ export const createSwapInstruction = async (
   outTokenAmount: number,
   slippage: number,
   wallet: any,
-  connection: Connection
+  connection: Connection,
+  txn?: Transaction
 ): Promise<Transaction> => {
-  if (!wallet.publicKey || !wallet.signTransaction) return null;
+  const tx = txn || new Transaction();
+  if (!wallet.publicKey || !wallet.signTransaction) return tx;
 
   const program = new Program(
     SwapIDL,
-    poolAddress,
+    poolAddress.toBase58(),
     new Provider(connection, wallet as any, { commitment: "processed" })
   );
   const inst: any = program.instruction;
-  const tx = new Transaction();
-
   const amountIn = new BN(inTokenAmount * 10 ** tokenA.decimals);
   const minimumAmountOut = new BN(
     outTokenAmount * 10 ** tokenB.decimals * (1 - slippage)
@@ -321,12 +336,22 @@ export const createSwapInstruction = async (
     }
 
     const decoded = PAIR_LAYOUT.decode(pairData.data);
-    const { oracles, nOracle, fee_collector } = decoded;
-    const remainingAccounts = oracles.slice(0, nOracle);
-    const collector = fee_collector;
+    const { oracles, nOracle, feeCollector } = decoded;
+    const n = Number(nOracle.toString());
+    const remainingAccounts = [];
+    for (const oracle of oracles.slice(0, n)) {
+      for (const elem of oracle.elements.slice(0, Number(oracle.n))) {
+        remainingAccounts.push({
+          isSigner: false,
+          isWritable: false,
+          pubkey: elem.address,
+        });
+      }
+    }
+    const collector = feeCollector;
 
     const accounts = {
-      controller: new PublicKey(poolController),
+      controller: poolController,
       pair,
       sslIn: sslIn[0],
       sslOut: sslOut[0],
@@ -344,7 +369,7 @@ export const createSwapInstruction = async (
         new PublicKey(collector),
         new PublicKey(tokenA.address)
       ),
-      feeCollector: new PublicKey(collector),
+      feeCollector: collector,
       tokenProgram: TOKEN_PROGRAM_ID,
       associatedTokenProgram: SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID,
       systemProgram: SYSTEM,
@@ -370,30 +395,37 @@ export const swapToken = async (
   firstToken: string,
   secondToken: string,
   inTokenAmount: number,
-  outTokenAmount: number,
   slippage: number,
   wallet: any,
   connection: Connection
-): Promise<TransactionSignature | undefined> => {
+): Promise<TransactionSignature | null | undefined> => {
   try {
     const [tokenA, tokenB] = [tokens[firstToken], tokens[secondToken]];
-    const tx = new Transaction();
+    const outTokenAmount = await getQuote(
+      firstToken,
+      secondToken,
+      inTokenAmount,
+      connection
+    );
+
+    let preTx = new Transaction();
     if (tokenA.address === NATIVE_MINT.toBase58()) {
       const txn = await wrapSolToken(wallet, inTokenAmount * LAMPORTS_PER_SOL);
-      tx.add(txn);
+      if (txn) {
+        preTx = txn;
+      }
     }
 
-    const txSwap = await createSwapInstruction(
+    const tx = await createSwapInstruction(
       tokenA,
       tokenB,
       inTokenAmount,
       outTokenAmount,
       slippage,
       wallet,
-      connection
+      connection,
+      preTx
     );
-
-    tx.add(txSwap);
 
     // unwrapping sol if tokenB is sol
     if (tokenB.address === NATIVE_MINT.toBase58()) {
@@ -416,12 +448,14 @@ export const swapToken = async (
     }
 
     const finalResult = await signAndSendRawTransaction(connection, tx, wallet);
-    let result = await connection.confirmTransaction(finalResult);
+    if (finalResult) {
+      let result = await connection.confirmTransaction(finalResult);
 
-    if (!result.value.err) {
-      return finalResult;
-    } else {
-      return null;
+      if (!result?.value?.err) {
+        return finalResult;
+      } else {
+        return null;
+      }
     }
   } catch {
     return null;
@@ -444,7 +478,10 @@ export const signAndSendRawTransaction = async (
 
     transaction = await wallet.signTransaction(transaction);
     const tx = await connection.sendRawTransaction(transaction!.serialize());
-    return tx;
+    if (tx) {
+      return tx;
+    }
+    return null;
   } catch (e) {
     console.log(e);
     return null;

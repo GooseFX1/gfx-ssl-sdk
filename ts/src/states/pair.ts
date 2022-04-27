@@ -1,6 +1,7 @@
 import * as lo from "@solana/buffer-layout";
 import { PublicKey } from "@solana/web3.js";
 import { publicKey, u64, u128, bool } from "@solana/buffer-layout-utils";
+import { ISwapToken } from ".";
 
 interface Oracle {
   elements: Array<{ address: PublicKey; inverse: boolean }>;
@@ -26,12 +27,16 @@ export const ORACLE_LAYOUT = lo.struct<Oracle>([
   lo.blob(8 * 8), // padding
 ]);
 
+export interface Tokens {
+  [So11111111111111111111111111111111111111112: string]: ISwapToken;
+  EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v: ISwapToken;
+}
 export interface Pair {
   sighash: Uint8Array;
   controller: PublicKey;
   mints: Array<PublicKey>;
   oracles: Array<Oracle>;
-  nOracle: number;
+  nOracle: BigInt;
   fee_collector: PublicKey;
   A: number;
   feeRates: Array<number>;
