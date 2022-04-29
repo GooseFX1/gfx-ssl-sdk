@@ -1,6 +1,6 @@
 {
   "name": "goosefx-ssl-sdk",
-  "version": "1.0.1",
+  "version": "2.0.5",
   "description": "SDK for interacting with GooseFX Single-sided Liquidity pools",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -34,7 +34,7 @@
     "@solana/buffer-layout": "^4.0.0",
     "@solana/spl-token-sdk": "npm:@solana/spl-token@^0.2.0",
     "@solana/wallet-adapter-react": "^0.15.4",
-    "@solana/web3.js": "^1.35.1",
+    "@solana/web3.js": "^1.41.1",
     "gfx-ssl-wasm": "^0.3.0"
   },
   "devDependencies": {
