@@ -2,9 +2,12 @@
   "compilerOptions": {
     "moduleResolution": "node",
     "esModuleInterop": true,
-    "target": "es5",
+    "target": "es2020",
     "module": "esNext",
-    "lib": ["dom", "es2015"],
+    "lib": [
+      "dom",
+      "es2015"
+    ],
     "downlevelIteration": true,
     "outDir": "../dist",
     "allowJs": true,

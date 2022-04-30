@@ -1,4 +1,4 @@
-import { Connection } from "@solana/web3.js";
+import { Connection, PublicKey } from "@solana/web3.js";
 import { Swap } from "../src";
 
 const connection = new Connection(
@@ -7,20 +7,14 @@ const connection = new Connection(
 );
 
 async function main() {
-  const { getQuote, getPriceImpact } = new Swap(connection);
-  const outAmount = await getQuote(
-    "So11111111111111111111111111111111111111112", //SOL
-    "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", //USD
-    1000000
+  const swap = new Swap(connection);
+  const { out: outAmount, impact } = await swap.getQuote(
+    new PublicKey("So11111111111111111111111111111111111111112"), //SOL
+    new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"), //USD
+    1000000n
   );
 
-  const priceImpact = await getPriceImpact(
-    "So11111111111111111111111111111111111111112",
-    "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-    1000000
-  );
-
-  console.log(`out: ${outAmount} ${priceImpact}`);
+  console.log(`out: ${outAmount} ${impact}`);
 }
 
 main();
