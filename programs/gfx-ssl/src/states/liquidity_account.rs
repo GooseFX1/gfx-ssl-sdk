@@ -19,8 +19,9 @@ pub struct LiquidityAccount {
     pub bump: u8,
     pub share: u64,
     pub pt_minted: u64,
+    pub amount_deposited: u64,
 
-    pub _pad: [u64; 32],
+    pub _pad: [u64; 31],
 }
 
 const _: [u8; 312] = [0; std::mem::size_of::<LiquidityAccount>()];

@@ -1,7 +1,6 @@
 <div align="center">
   <img height="142" src="https://github.com/GooseFX1/gfx-web-app/blob/dev/public/img/assets/gfx_logo_gradient_lite.svg" />
   <h3>GooseFX Typescript SDK</h3>
-  <small>The GooseFX SDK contains a set of simple to use APIs to allow developers to integrate with the GooseFX exchange platform.</small>
   <h4>
     <a href="https://goosefx.io">Website</a>
     <span> | </span>
@@ -16,6 +15,10 @@
   <br />
   <br />
 </div>
+
+## GooseFX Typescript SDK
+
+The GooseFX SDK contains a set of simple to use APIs to allow developers to integrate with the GooseFX exchange platform.
 
 ### Trading GooseFX Liquidity Pools
 
@@ -80,7 +83,7 @@ async function main() {
     new PublicKey("So11111111111111111111111111111111111111112"),
     new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"),
     100000n, // 0.0001 SOL
-    100n, // 0.0001 USDC
+    100n, // 0.0001 USDC 
     wallet.publicKey
   );
 
