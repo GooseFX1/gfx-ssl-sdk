@@ -51,20 +51,13 @@ const connection = new Connection(
 );
 
 async function main() {
-  const { getQuote, getPriceImpact } = new Swap(connection);
-  const outAmount = await getQuote(
-    "So11111111111111111111111111111111111111112", //SOL
-    "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", //USD
-    1000000
+  const { out: outAmount, impact } = await swap.getQuote(
+    new PublicKey("So11111111111111111111111111111111111111112"), //SOL
+    new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"), //USD
+    1000000n
   );
 
-  const priceImpact = await getPriceImpact(
-    "So11111111111111111111111111111111111111112",
-    "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-    1000000
-  );
-
-  console.log(`out: ${outAmount} ${priceImpact}`);
+  console.log(`out: ${outAmount} ${impact}`);
 }
 
 main()
@@ -76,7 +69,6 @@ main()
 ```typescript
 import { Connection } from "@solana/web3.js";
 import { Swap } from "goosefx-ssl-sdk;
-import { useWallet } from "@solana/wallet-adapter-react";
 
 const connection = new Connection(
   "https://api.mainnet-beta.solana.com/",
@@ -84,22 +76,23 @@ const connection = new Connection(
 );
 
 async function main() {
-  const wallet = useWallet();
-  const { swapToken } = new Swap(connection);
+   const wallet = new Keypair();
+  const swap = new Swap(connection);
 
-  const swapResult = await swapToken(
-    "So11111111111111111111111111111111111111112", //SOL
-    "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", //USDC
-    100000, //0.0001 SOL
-    0.001, // 0.1% slippage
-    wallet // wallet Object
+  const ixs = await swap.createSwapIx(
+    new PublicKey("So11111111111111111111111111111111111111112"),
+    new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"),
+    100000n, // 0.0001 SOL
+    100n, // 0.0001 USDC
+    wallet.publicKey
   );
 
-  if (swapResult) {
-    console.log("TRANSACTION AT " + swapResult);
-  } else {
-    console.log("TRANSACTION FAILED");
+  let tx = new Transaction();
+  for (const ix of ixs) {
+    tx.add(ix);
   }
+
+  // Send out the tx use browser wallet or keypair
 }
 
 main()
