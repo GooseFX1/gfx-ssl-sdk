@@ -202,10 +202,7 @@ export class Swap {
     const n = Number(nOracle.toString());
     const remainingAccounts = [];
     for (const oracle of oracles.slice(0, n)) {
-      for (const elem of oracle.elements.slice(
-        0,
-        Number(oracle.n.toString())
-      )) {
+      for (const elem of oracle.elements.slice(0, Number(oracle.n))) {
         remainingAccounts.push({
           isSigner: false,
           isWritable: false,
