@@ -1,4 +1,4 @@
-import { Program, Provider, Idl, } from "@project-serum/anchor";
+import { Program, Provider, Idl, BN } from "@project-serum/anchor";
 import { PAIR_LAYOUT } from "../states";
 import {
   TOKEN_PROGRAM_ID,
@@ -43,7 +43,9 @@ export class Swap {
   }
 
   public getPairAddress = (tokenA: PublicKey, tokenB: PublicKey) => {
-    const addresses = [tokenA.toBuffer(), tokenB.toBuffer()].sort(Buffer.compare);
+    const addresses = [tokenA.toBuffer(), tokenB.toBuffer()].sort(
+      Buffer.compare
+    );
 
     const pairArr = PublicKey.findProgramAddressSync(
       [
@@ -73,12 +75,13 @@ export class Swap {
     mint: PublicKey,
     associatedAccount: PublicKey,
     owner: PublicKey
-  ) => createAssociatedTokenAccountInstruction(
-    owner,
-    associatedAccount,
-    owner,
-    mint
-  );
+  ) =>
+    createAssociatedTokenAccountInstruction(
+      owner,
+      associatedAccount,
+      owner,
+      mint
+    );
 
   public getQuote = async (
     tokenA: PublicKey,
@@ -89,8 +92,7 @@ export class Swap {
 
     const swapWASM = wasm.swap;
     const OracleRegistry = this.wasm.OracleRegistry;
-    if (inTokenAmount === 0n)
-      return { impact: 0, out: 0n };
+    if (inTokenAmount === 0n) return { impact: 0, out: 0n };
 
     const pair = this.getPairAddress(tokenA, tokenB);
     const pairData = await this.connection.getAccountInfo(pair);
@@ -139,10 +141,11 @@ export class Swap {
     tokenA: PublicKey,
     tokenB: PublicKey,
     inTokenAmount: BigInt,
-    slippage: number,
+    slippage: number
   ) => {
     const result = await this.getQuote(tokenA, tokenB, inTokenAmount);
-    const minAmountOut = result.out as bigint * (10000n - BigInt(slippage * 10000)) / 10000n;
+    const minAmountOut =
+      ((result.out as bigint) * (10000n - BigInt(slippage * 10000))) / 10000n;
     return minAmountOut;
   };
 
@@ -151,7 +154,7 @@ export class Swap {
     tokenB: PublicKey,
     inTokenAmount: BigInt,
     minOut: BigInt,
-    wallet: PublicKey,
+    wallet: PublicKey
   ): Promise<Array<TransactionInstruction>> => {
     let ixs = [];
 
@@ -199,7 +202,10 @@ export class Swap {
     const n = Number(nOracle.toString());
     const remainingAccounts = [];
     for (const oracle of oracles.slice(0, n)) {
-      for (const elem of oracle.elements.slice(0, Number(oracle.n))) {
+      for (const elem of oracle.elements.slice(
+        0,
+        Number(oracle.n.toString())
+      )) {
         remainingAccounts.push({
           isSigner: false,
           isWritable: false,
@@ -233,10 +239,14 @@ export class Swap {
     };
 
     ixs.push(
-      await inst.rebalanceSwap(inTokenAmount, minOut, {
-        accounts,
-        remainingAccounts,
-      })
+      await inst.rebalanceSwap(
+        new BN(inTokenAmount.toString()),
+        new BN(minOut.toString()),
+        {
+          accounts,
+          remainingAccounts,
+        }
+      )
     );
     ixs.push(await inst.preSwap({ accounts, remainingAccounts }));
     ixs.push(await inst.swap({ accounts, remainingAccounts }));
