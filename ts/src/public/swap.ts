@@ -18,7 +18,7 @@ import {
   SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID,
   SYSTEM,
 } from "../constants";
-import SwapIDL from "../idl/gfx_ssl_idl.json";
+const SwapIDL = require("../idl/gfx_ssl_idl");
 import { findAssociatedTokenAddress } from "./utils";
 
 export interface Quote {
@@ -145,6 +145,7 @@ export class Swap {
   ) => {
     const result = await this.getQuote(tokenA, tokenB, inTokenAmount);
     const minAmountOut =
+      //@ts-ignore
       ((result.out as bigint) * (10000n - BigInt(slippage * 10000))) / 10000n;
     return minAmountOut;
   };
