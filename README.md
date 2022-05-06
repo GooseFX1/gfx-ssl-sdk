@@ -27,7 +27,7 @@ The GooseFX SDK contains a set of simple to use APIs to allow developers to inte
 
 # Installation
 
-Use your environment's package manager to install @orca-so/sdk and other related packages into your project.
+Use your environment's package manager to install goosefx-ssl-sdk and other related packages into your project.
 
 ```bash
 yarn add goosefx-ssl-sdk
@@ -83,7 +83,7 @@ async function main() {
     new PublicKey("So11111111111111111111111111111111111111112"),
     new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"),
     100000n, // 0.0001 SOL
-    100n, // 0.0001 USDC 
+    100n, // 0.0001 USDC
     wallet.publicKey
   );
 
