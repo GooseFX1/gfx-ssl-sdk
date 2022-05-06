@@ -31,7 +31,10 @@ pub struct Controller {
     pub staking_balance: u64,
     pub last_distribution_time: i64, // When is the last time we distribute reward
 
-    pub _pad: [u64; 32],
+    pub withdraw_fee: u16, // in BP
+
+    pub _pad0: [u8; 6],
+    pub _pad1: [u64; 31],
 }
 
 const _: [u8; 392] = [0; std::mem::size_of::<Controller>()];
