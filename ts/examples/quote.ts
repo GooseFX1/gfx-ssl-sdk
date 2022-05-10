@@ -1,5 +1,5 @@
 const solana = require("@solana/web3.js");
-const gfx = require("../dist/public/swap");
+import { Swap } from "../dist";
 
 const connection = new solana.Connection(
   "https://api.mainnet-beta.solana.com/",
@@ -14,8 +14,8 @@ const quote = async () => {
     //@ts-ignore
     new BigInt(1000000)
   );
-
   console.log(`out: ${outAmount} ${impact}`);
-}
+  return { outAmount, impact };
+};
 
-quote()
+export default quote;
