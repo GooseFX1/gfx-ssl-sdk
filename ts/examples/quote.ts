@@ -1,5 +1,5 @@
 const solana = require("@solana/web3.js");
-import { Swap } from "../dist";
+import { Swap } from "goosefx-ssl-sdk";
 
 const connection = new solana.Connection(
   "https://api.mainnet-beta.solana.com/",
