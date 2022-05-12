@@ -27,8 +27,8 @@ export interface Quote {
 }
 
 export class Swap {
-  private connection: Connection;
-  private wasm: any;
+  public connection: Connection;
+  public wasm: any;
 
   constructor(connection: Connection) {
     this.connection = connection;
