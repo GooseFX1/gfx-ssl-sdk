@@ -1,7 +1,7 @@
 <div align="center">
   <img height="142" src="https://github.com/GooseFX1/gfx-web-app/blob/dev/public/img/assets/gfx_logo_gradient_lite.svg" />
   <h3>GooseFX Typescript SDK</h3>
-  <small>The GooseFX SDK contains a set of simple to use APIs to allow developers to integrate with the GooseFX exchange platform.</small>
+  <p>The GooseFX SDK contains a set of simple to use APIs to allow developers to integrate with the GooseFX platform.</p>
   <h4>
     <a href="https://goosefx.io">Website</a>
     <span> | </span>
@@ -18,13 +18,12 @@
 </div>
 
 ### Trading GooseFX Liquidity Pools
-
-- Get detailed quotes and make swaps between trading pairs in a Goosefx Pool
+- Get detailed quotes and make swaps between trading pairs in a GooseFx Pool
 - Check your GooseFX Pool LP token balance and total supply
 
 # Installation
 
-Use your environment's package manager to install @orca-so/sdk and other related packages into your project.
+Use your environment's package manager to install `goosefx-ssl-sdk` and other related packages into your project.
 
 ```bash
 yarn add goosefx-ssl-sdk
@@ -110,11 +109,11 @@ Have problems integrating with the SDK? Pop by over to our [Discord](https://dis
 
 **Issues / Bugs**
 
-If you found a bug, open up an issue on github with the prefix [ISSUE]. To help us be more effective in resolving the problem, be specific in the steps it took to reproduce the problem (ex. when did the issue occur, code samples, debug logs etc).
+If you found a bug, open up an issue on github with the prefix [ISSUE](https://github.com/GooseFX1/gfx-ssl-sdk/issues). To help us be more effective in resolving the problem, be specific in the steps it took to reproduce the problem (ex. when did the issue occur, code samples, debug logs etc).
 
 **Feedback**
 
-Got ideas on how to improve the system? Open up an issue on github with the prefix [FEEDBACK] and let's brainstorm more about it together!
+Got ideas on how to improve the system? Open up an issue on github with the prefix [FEEDBACK](https://github.com/GooseFX1/gfx-ssl-sdk/issues) and let's brainstorm more about it together!
 
 # License
 

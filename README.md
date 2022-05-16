@@ -1,6 +1,7 @@
 <div align="center">
   <img height="142" src="https://github.com/GooseFX1/gfx-web-app/blob/dev/public/img/assets/gfx_logo_gradient_lite.svg" />
-  <h3>GooseFX Typescript SDK</h3>
+  <h3>GooseFX SDK Mono Repo</h3>
+  <p>The GooseFX SDK contains a set of simple to use APIs to allow developers to integrate with the GooseFX platform.</p>
   <h4>
     <a href="https://goosefx.io">Website</a>
     <span> | </span>
@@ -16,18 +17,17 @@
   <br />
 </div>
 
-## GooseFX Typescript SDK
-
-The GooseFX SDK contains a set of simple to use APIs to allow developers to integrate with the GooseFX exchange platform.
+### Contents
+- `/programs` : contains `gfx_ssl_sdk` lib and `gfx_controller_sdk` lib
+- `/ts` : contains typescript `goosefx-ssl-sdk` which creates npm package - [npmjs.com/package/goosefx-ssl-sdk](https://www.npmjs.com/package/goosefx-ssl-sdk)
 
 ### Trading GooseFX Liquidity Pools
-
-- Get detailed quotes and make swaps between trading pairs in a Goosefx Pool
+- Get detailed quotes and make swaps between trading pairs in a GooseFx Pool
 - Check your GooseFX Pool LP token balance and total supply
 
 # Installation
 
-Use your environment's package manager to install goosefx-ssl-sdk and other related packages into your project.
+Use your environment's package manager to install `goosefx-ssl-sdk` and other related packages into your project.
 
 ```bash
 yarn add goosefx-ssl-sdk
