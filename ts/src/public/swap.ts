@@ -18,8 +18,9 @@ import {
   SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID,
   SYSTEM,
 } from "../constants";
-const SwapIDL = require("../idl/gfx_ssl_idl");
+import * as SwapIDL from "../idl/gfx_ssl_idl.json";
 import { findAssociatedTokenAddress } from "./utils";
+import * as wasm from "../wasm";
 
 export interface Quote {
   out: BigInt;
@@ -37,7 +38,7 @@ export class Swap {
 
   public async getWasm() {
     if (this.wasm === null) {
-      this.wasm = await import("gfx-ssl-wasm");
+      this.wasm = wasm;
     }
     return this.wasm;
   }
