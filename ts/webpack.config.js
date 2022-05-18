@@ -18,18 +18,11 @@ module.exports = {
                 test: /\.ts$/,
                 use: 'ts-loader',
                 exclude: /node_modules/,
-            },
-            {
-                test: /\.wasm$/,
-                type: "asset/inline",
-            },
+            }
         ]
     },
     resolve: {
-        extensions: ['.ts', '.js', "json", "wasm"],
+        extensions: ['.ts', '.js', "json"],
         fallback: { assert: false, process: false, fs: false, util: false, path: false }
-    },
-    optimization: {
-        minimize: false
     }
 };
