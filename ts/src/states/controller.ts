@@ -14,6 +14,7 @@ export interface Controller {
     totalStakingShare: BigInt,
     stakingBalance: BigInt,
     lastDistributionTime: BigInt,
+    withdrawFee: number,
 }
 
 export const CONTROLLER_LAYOUT = lo.struct<Controller>([
@@ -29,7 +30,8 @@ export const CONTROLLER_LAYOUT = lo.struct<Controller>([
     u64("totalStakingShare"),
     u64("stakingBalance"),
     u64("lastDistributionTime"),
-    lo.blob(256, "padding")
+    lo.u16("withdrawFee"),
+    lo.blob(254, "padding")
 ]);
 
 if (CONTROLLER_LAYOUT.span != 392 + 8) {

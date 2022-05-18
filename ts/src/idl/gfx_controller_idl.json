@@ -103,6 +103,11 @@
           "isSigner": false
         },
         {
+          "name": "feeCollectorAta",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
           "name": "userWallet",
           "isMut": false,
           "isSigner": true

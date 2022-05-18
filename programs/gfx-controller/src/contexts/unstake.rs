@@ -32,6 +32,13 @@ pub struct Unstake<'info> {
     )]
     pub user_ata: Account<'info, TokenAccount>,
 
+    #[account(
+        mut,
+        associated_token::mint = controller.load()?.mint,
+        associated_token::authority = controller.load()?.admin,
+    )]
+    pub fee_collector_ata: Account<'info, TokenAccount>,
+
     pub user_wallet: Signer<'info>,
 
     pub token_program: Program<'info, Token>,
