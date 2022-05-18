@@ -20,7 +20,7 @@ import {
 } from "../constants";
 import * as SwapIDL from "../idl/gfx_ssl_idl.json";
 import { findAssociatedTokenAddress } from "./utils";
-import wasmData from "../wasm/gfx_ssl_wasm_bg.wasm";
+import wasmData from "../wasm/gfx_ssl_wasm_data";
 import init, * as wasm from "../wasm/gfx_ssl_wasm";
 
 let wasmInited = false;
@@ -40,10 +40,7 @@ export class Swap {
 
   public async getWasm() {
     if (!wasmInited) {
-      // 29 is the length of "data:application/wasm;base64,"
-      // we pack the wasm as an inline asset using data url
-      let wasm = Buffer.from((wasmData as any as string).slice(29), "base64");
-      await init(wasm);
+      await init(Buffer.from(wasmData, "base64"));
       wasmInited = true;
     }
     return wasm;
