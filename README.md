@@ -42,25 +42,27 @@ npm install goosefx-ssl-sdk
 ## Get Quotes and price Impact
 
 ```typescript
-import { Connection } from "@solana/web3.js";
-import { Swap } from "goosefx-ssl-sdk;
+import { PublicKey, Connection } from "@solana/web3.js";
+import { gfxSSL } from "goosefx-ssl-sdk";
 
 const connection = new Connection(
   "https://api.mainnet-beta.solana.com/",
   "finalized"
 );
 
-async function main() {
+const quote = async () => {
+  const swap = new gfxSSL.Swap(connection);
   const { out: outAmount, impact } = await swap.getQuote(
     new PublicKey("So11111111111111111111111111111111111111112"), //SOL
     new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"), //USD
     1000000n
   );
-
   console.log(`out: ${outAmount} ${impact}`);
-}
+  return { outAmount, impact };
+};
 
-main()
+quote();
+
 
 ```
 
@@ -98,6 +100,10 @@ async function main() {
 main()
 
 ```
+
+# Build
+
+`cd ts && yarn build`: this will output the bundled js in the `dist` folder.
 
 # Technical Notes
 

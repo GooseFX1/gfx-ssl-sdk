@@ -20,7 +20,10 @@ import {
 } from "../constants";
 import * as SwapIDL from "../idl/gfx_ssl_idl.json";
 import { findAssociatedTokenAddress } from "./utils";
-import * as wasm from "../wasm";
+import wasmData from "../wasm/gfx_ssl_wasm_bg.wasm";
+import init, * as wasm from "../wasm/gfx_ssl_wasm";
+
+let wasmInited = false;
 
 export interface Quote {
   out: BigInt;
@@ -29,18 +32,21 @@ export interface Quote {
 
 export class Swap {
   public connection: Connection;
-  public wasm: any;
+
 
   constructor(connection: Connection) {
     this.connection = connection;
-    this.wasm = null;
   }
 
   public async getWasm() {
-    if (this.wasm === null) {
-      this.wasm = wasm;
+    if (!wasmInited) {
+      // 29 is the length of "data:application/wasm;base64,"
+      // we pack the wasm as an inline asset using data url
+      let wasm = Buffer.from((wasmData as any as string).slice(29), "base64");
+      await init(wasm);
+      wasmInited = true;
     }
-    return this.wasm;
+    return wasm;
   }
 
   public getPairAddress = (tokenA: PublicKey, tokenB: PublicKey) => {
@@ -92,7 +98,7 @@ export class Swap {
     let wasm = await this.getWasm();
 
     const swapWASM = wasm.swap;
-    const OracleRegistry = this.wasm.OracleRegistry;
+    const OracleRegistry = wasm.OracleRegistry;
     if (inTokenAmount === 0n) return { impact: 0, out: 0n };
 
     const pair = this.getPairAddress(tokenA, tokenB);
