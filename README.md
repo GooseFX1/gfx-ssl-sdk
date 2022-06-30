@@ -130,7 +130,7 @@ Got ideas on how to improve the system? Open up an issue on github with the pref
 ```
 CONTROLLER_PROGRAM=3Gwyhoudx8XgYry8dzKQ2GGsofkUdm7VZUvddHxchL3x
 SSL_PROGRAM=JYe7AcuQ7CqhkGvchJGvSKF8ei41FuDKb1h47qkbFNf
-CONTROLLER=483AtY5eistVBBcXr9Tq2XH6MTrxCWfFRingputiZC2B
+CONTROLLER=ApkmzBaTPUAeVj3QuqDcz6iLE6xZSLd29nke4McqrKw5
 ```
 
 ## Mainnet
