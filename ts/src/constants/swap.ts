@@ -11,7 +11,7 @@ export const ADDRESSES = {
   DEVNET: {
     CONTROLLER_PROGRAM_ID: new PublicKey("3Gwyhoudx8XgYry8dzKQ2GGsofkUdm7VZUvddHxchL3x"),
     SSL_PROGRAM_ID: new PublicKey("JYe7AcuQ7CqhkGvchJGvSKF8ei41FuDKb1h47qkbFNf"),
-    GFX_CONTROLLER: new PublicKey("483AtY5eistVBBcXr9Tq2XH6MTrxCWfFRingputiZC2B"),
+    GFX_CONTROLLER: new PublicKey("ApkmzBaTPUAeVj3QuqDcz6iLE6xZSLd29nke4McqrKw5"),
   }
 };
 
