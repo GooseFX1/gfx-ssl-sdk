@@ -18,6 +18,7 @@
 </div>
 
 ### Trading GooseFX Liquidity Pools
+
 - Get detailed quotes and make swaps between trading pairs in a GooseFx Pool
 - Check your GooseFX Pool LP token balance and total supply
 
@@ -93,6 +94,35 @@ async function createTx() {
 }
 
 createTx()
+
+```
+
+## Get the status of the SSL Pool
+
+```typescript
+import { Connection } from "@solana/web3.js";
+import { SSL, ADDRESSES } from "goosefx-ssl-sdk;
+import { NATIVE_MINT } from "@solana/spl-token";
+
+
+const connection = new Connection(
+  "https://api.mainnet-beta.solana.com/",
+  "finalized"
+);
+
+//get the pool status for SOl native token
+async function getSolPoolStatus() {
+  const ssl = (await SSL.loadByMint(
+    connection,
+    ADDRESSES["MAINNET"].GFX_CONTROLLER,
+    NATIVE_MINT
+  ))!;
+   const isSuspended = ssl.suspended;
+   return isSuspended
+   // interprete the meaning from this: if true, the pool have been suspended and all txns to it will fail, if false the pool is active
+}
+
+getSolPoolStatus()
 
 ```
 
