@@ -1,6 +1,6 @@
 <div align="center">
   <img height="142" src="https://github.com/GooseFX1/gfx-web-app/blob/dev/public/img/assets/gfx_logo_gradient_lite.svg" />
-  <h3>GooseFX SDK Mono Repo</h3>
+  <h3>GooseFX Typescript SDK</h3>
   <p>The GooseFX SDK contains a set of simple to use APIs to allow developers to integrate with the GooseFX platform.</p>
   <h4>
     <a href="https://goosefx.io">Website</a>
@@ -17,11 +17,8 @@
   <br />
 </div>
 
-### Contents
-- `/programs` : contains `gfx_ssl_sdk` lib and `gfx_controller_sdk` lib
-- `/ts` : contains typescript `goosefx-ssl-sdk` which creates npm package - [npmjs.com/package/goosefx-ssl-sdk](https://www.npmjs.com/package/goosefx-ssl-sdk)
-
 ### Trading GooseFX Liquidity Pools
+
 - Get detailed quotes and make swaps between trading pairs in a GooseFx Pool
 - Check your GooseFX Pool LP token balance and total supply
 
@@ -42,27 +39,26 @@ npm install goosefx-ssl-sdk
 ## Get Quotes and price Impact
 
 ```typescript
-import { PublicKey, Connection } from "@solana/web3.js";
-import { Swap } from "goosefx-ssl-sdk";
+import { Connection } from "@solana/web3.js";
+import { Swap } from "goosefx-ssl-sdk;
 
 const connection = new Connection(
   "https://api.mainnet-beta.solana.com/",
   "finalized"
 );
 
-const quote = async () => {
+async function main() {
   const swap = new Swap(connection);
   const { out: outAmount, impact } = await swap.getQuote(
     new PublicKey("So11111111111111111111111111111111111111112"), //SOL
     new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"), //USD
     1000000n
   );
+
   console.log(`out: ${outAmount} ${impact}`);
-  return { outAmount, impact };
-};
+}
 
-quote();
-
+main()
 
 ```
 
@@ -77,7 +73,7 @@ const connection = new Connection(
   "finalized"
 );
 
-async function main() {
+async function createTx() {
    const wallet = new Keypair();
   const swap = new Swap(connection);
 
@@ -97,13 +93,38 @@ async function main() {
   // Send out the tx use browser wallet or keypair
 }
 
-main()
+createTx()
 
 ```
 
-# Build
+## Get the status of the SSL Pool
 
-`cd ts && yarn build`: this will output the bundled js in the `dist` folder.
+```typescript
+import { Connection } from "@solana/web3.js";
+import { SSL, ADDRESSES } from "goosefx-ssl-sdk;
+import { NATIVE_MINT } from "@solana/spl-token";
+
+
+const connection = new Connection(
+  "https://api.mainnet-beta.solana.com/",
+  "finalized"
+);
+
+//get the pool status for SOl native token
+async function getSolPoolStatus() {
+  const ssl = (await SSL.loadByMint(
+    connection,
+    ADDRESSES["MAINNET"].GFX_CONTROLLER,
+    NATIVE_MINT
+  ))!;
+   const isSuspended = ssl.suspended;
+   return isSuspended
+   // interprete the meaning from this: if true, the pool have been suspended and all txns to it will fail, if false the pool is active
+}
+
+getSolPoolStatus()
+
+```
 
 # Technical Notes
 
@@ -119,26 +140,11 @@ Have problems integrating with the SDK? Pop by over to our [Discord](https://dis
 
 **Issues / Bugs**
 
-If you found a bug, open up an issue on github with the prefix [ISSUE]. To help us be more effective in resolving the problem, be specific in the steps it took to reproduce the problem (ex. when did the issue occur, code samples, debug logs etc).
+If you found a bug, open up an issue on github with the prefix [ISSUE](https://github.com/GooseFX1/gfx-ssl-sdk/issues). To help us be more effective in resolving the problem, be specific in the steps it took to reproduce the problem (ex. when did the issue occur, code samples, debug logs etc).
 
 **Feedback**
 
-Got ideas on how to improve the system? Open up an issue on github with the prefix [FEEDBACK] and let's brainstorm more about it together!
-
-# Addresses
-## Devnet
-```
-CONTROLLER_PROGRAM=3Gwyhoudx8XgYry8dzKQ2GGsofkUdm7VZUvddHxchL3x
-SSL_PROGRAM=JYe7AcuQ7CqhkGvchJGvSKF8ei41FuDKb1h47qkbFNf
-CONTROLLER=ApkmzBaTPUAeVj3QuqDcz6iLE6xZSLd29nke4McqrKw5
-```
-
-## Mainnet
-```
-CONTROLLER_PROGRAM=8KJx48PYGHVC9fxzRRtYp4x4CM2HyYCm2EjVuAP4vvrx
-SSL_PROGRAM=7WduLbRfYhTJktjLw5FDEyrqoEv61aTTCuGAetgLjzN5
-CONTROLLER=8CxKnuJeoeQXFwiG6XiGY2akBjvJA5k3bE52BfnuEmNQ
-```
+Got ideas on how to improve the system? Open up an issue on github with the prefix [FEEDBACK](https://github.com/GooseFX1/gfx-ssl-sdk/issues) and let's brainstorm more about it together!
 
 # License
 
