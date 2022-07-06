@@ -18,92 +18,14 @@
 </div>
 
 ### Contents
+
 - `/programs` : contains `gfx_ssl_sdk` lib and `gfx_controller_sdk` lib
 - `/ts` : contains typescript `goosefx-ssl-sdk` which creates npm package - [npmjs.com/package/goosefx-ssl-sdk](https://www.npmjs.com/package/goosefx-ssl-sdk)
 
 ### Trading GooseFX Liquidity Pools
+
 - Get detailed quotes and make swaps between trading pairs in a GooseFx Pool
 - Check your GooseFX Pool LP token balance and total supply
-
-# Installation
-
-Use your environment's package manager to install `goosefx-ssl-sdk` and other related packages into your project.
-
-```bash
-yarn add goosefx-ssl-sdk
-```
-
-```bash
-npm install goosefx-ssl-sdk
-```
-
-# Usage
-
-## Get Quotes and price Impact
-
-```typescript
-import { PublicKey, Connection } from "@solana/web3.js";
-import { Swap } from "goosefx-ssl-sdk";
-
-const connection = new Connection(
-  "https://api.mainnet-beta.solana.com/",
-  "finalized"
-);
-
-const quote = async () => {
-  const swap = new Swap(connection);
-  const { out: outAmount, impact } = await swap.getQuote(
-    new PublicKey("So11111111111111111111111111111111111111112"), //SOL
-    new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"), //USD
-    1000000n
-  );
-  console.log(`out: ${outAmount} ${impact}`);
-  return { outAmount, impact };
-};
-
-quote();
-
-
-```
-
-## Get minimum Amount Out and swap Tokens
-
-```typescript
-import { Connection } from "@solana/web3.js";
-import { Swap } from "goosefx-ssl-sdk;
-
-const connection = new Connection(
-  "https://api.mainnet-beta.solana.com/",
-  "finalized"
-);
-
-async function main() {
-   const wallet = new Keypair();
-  const swap = new Swap(connection);
-
-  const ixs = await swap.createSwapIx(
-    new PublicKey("So11111111111111111111111111111111111111112"),
-    new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"),
-    100000n, // 0.0001 SOL
-    100n, // 0.0001 USDC
-    wallet.publicKey
-  );
-
-  let tx = new Transaction();
-  for (const ix of ixs) {
-    tx.add(ix);
-  }
-
-  // Send out the tx use browser wallet or keypair
-}
-
-main()
-
-```
-
-# Build
-
-`cd ts && yarn build`: this will output the bundled js in the `dist` folder.
 
 # Technical Notes
 
@@ -119,14 +41,16 @@ Have problems integrating with the SDK? Pop by over to our [Discord](https://dis
 
 **Issues / Bugs**
 
-If you found a bug, open up an issue on github with the prefix [ISSUE]. To help us be more effective in resolving the problem, be specific in the steps it took to reproduce the problem (ex. when did the issue occur, code samples, debug logs etc).
+If you found a bug, open up an issue on github with the prefix [ISSUE](https://github.com/GooseFX1/gfx-ssl-sdk/issues). To help us be more effective in resolving the problem, be specific in the steps it took to reproduce the problem (ex. when did the issue occur, code samples, debug logs etc).
 
 **Feedback**
 
 Got ideas on how to improve the system? Open up an issue on github with the prefix [FEEDBACK] and let's brainstorm more about it together!
 
 # Addresses
+
 ## Devnet
+
 ```
 CONTROLLER_PROGRAM=3Gwyhoudx8XgYry8dzKQ2GGsofkUdm7VZUvddHxchL3x
 SSL_PROGRAM=JYe7AcuQ7CqhkGvchJGvSKF8ei41FuDKb1h47qkbFNf
@@ -134,6 +58,7 @@ CONTROLLER=ApkmzBaTPUAeVj3QuqDcz6iLE6xZSLd29nke4McqrKw5
 ```
 
 ## Mainnet
+
 ```
 CONTROLLER_PROGRAM=8KJx48PYGHVC9fxzRRtYp4x4CM2HyYCm2EjVuAP4vvrx
 SSL_PROGRAM=7WduLbRfYhTJktjLw5FDEyrqoEv61aTTCuGAetgLjzN5
