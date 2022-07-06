@@ -27,22 +27,6 @@
 - Get detailed quotes and make swaps between trading pairs in a GooseFx Pool
 - Check your GooseFX Pool LP token balance and total supply
 
-# Installation
-
-Use your environment's package manager to install `goosefx-ssl-sdk` and other related packages into your project.
-
-```bash
-yarn add goosefx-ssl-sdk
-```
-
-```bash
-npm install goosefx-ssl-sdk
-```
-
-# Build
-
-`cd ts && yarn build`: this will output the bundled js in the `dist` folder.
-
 # Technical Notes
 
 **Stability of the Functions**
