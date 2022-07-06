@@ -1,6 +1,6 @@
 <div align="center">
   <img height="142" src="https://github.com/GooseFX1/gfx-web-app/blob/dev/public/img/assets/gfx_logo_gradient_lite.svg" />
-  <h3>GooseFX Typescript SDK</h3>
+  <h3>GooseFX SDK Mono Repo</h3>
   <p>The GooseFX SDK contains a set of simple to use APIs to allow developers to integrate with the GooseFX platform.</p>
   <h4>
     <a href="https://goosefx.io">Website</a>
@@ -40,7 +40,7 @@ npm install goosefx-ssl-sdk
 
 ```typescript
 import { Connection } from "@solana/web3.js";
-import { Swap } from "goosefx-ssl-sdk;
+import { Swap } from "goosefx-ssl-sdk";
 
 const connection = new Connection(
   "https://api.mainnet-beta.solana.com/",
@@ -58,15 +58,14 @@ async function main() {
   console.log(`out: ${outAmount} ${impact}`);
 }
 
-main()
-
+main();
 ```
 
 ## Get minimum Amount Out and swap Tokens
 
 ```typescript
 import { Connection } from "@solana/web3.js";
-import { Swap } from "goosefx-ssl-sdk;
+import { Swap } from "goosefx-ssl-sdk";
 
 const connection = new Connection(
   "https://api.mainnet-beta.solana.com/",
@@ -74,7 +73,7 @@ const connection = new Connection(
 );
 
 async function createTx() {
-   const wallet = new Keypair();
+  const wallet = new Keypair();
   const swap = new Swap(connection);
 
   const ixs = await swap.createSwapIx(
@@ -93,8 +92,7 @@ async function createTx() {
   // Send out the tx use browser wallet or keypair
 }
 
-createTx()
-
+createTx();
 ```
 
 ## Get the status of the SSL Pool
