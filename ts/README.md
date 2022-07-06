@@ -102,9 +102,8 @@ main();
 
 ```typescript
 import { Connection } from "@solana/web3.js";
-import { SSL, ADDRESSES } from "goosefx-ssl-sdk;
+import { SSL, ADDRESSES } from "goosefx-ssl-sdk";
 import { NATIVE_MINT } from "@solana/spl-token";
-
 
 const connection = new Connection(
   "https://api.mainnet-beta.solana.com/",
@@ -118,13 +117,12 @@ async function getSolPoolStatus() {
     ADDRESSES["MAINNET"].GFX_CONTROLLER,
     NATIVE_MINT
   ))!;
-   const isSuspended = ssl.suspended;
-   return isSuspended
-   // interprete the meaning from this: if true, the pool have been suspended and all txns to it will fail, if false the pool is active
+  const isSuspended = ssl.suspended;
+  return isSuspended;
+  // interprete the meaning from this: if true, the pool have been suspended and all txns to it will fail, if false the pool is active
 }
 
-getSolPoolStatus()
-
+getSolPoolStatus();
 ```
 
 # Build
