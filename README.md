@@ -17,6 +17,11 @@
   <br />
 </div>
 
+### Contents
+
+- `/programs` : contains `gfx_ssl_sdk` lib and `gfx_controller_sdk` lib
+- `/ts` : contains typescript `goosefx-ssl-sdk` which creates npm package - [npmjs.com/package/goosefx-ssl-sdk](https://www.npmjs.com/package/goosefx-ssl-sdk)
+
 ### Trading GooseFX Liquidity Pools
 
 - Get detailed quotes and make swaps between trading pairs in a GooseFx Pool
@@ -47,18 +52,17 @@ const connection = new Connection(
   "finalized"
 );
 
-async function main() {
+const quote = async () => {
   const swap = new Swap(connection);
   const { out: outAmount, impact } = await swap.getQuote(
     new PublicKey("So11111111111111111111111111111111111111112"), //SOL
     new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"), //USD
     1000000n
   );
-
   console.log(`out: ${outAmount} ${impact}`);
-}
-
-main();
+  return { outAmount, impact };
+};
+quote();
 ```
 
 ## Get minimum Amount Out and swap Tokens
@@ -72,7 +76,7 @@ const connection = new Connection(
   "finalized"
 );
 
-async function createTx() {
+async function main() {
   const wallet = new Keypair();
   const swap = new Swap(connection);
 
@@ -92,7 +96,7 @@ async function createTx() {
   // Send out the tx use browser wallet or keypair
 }
 
-createTx();
+main();
 ```
 
 ## Get the status of the SSL Pool
@@ -124,6 +128,10 @@ getSolPoolStatus()
 
 ```
 
+# Build
+
+`cd ts && yarn build`: this will output the bundled js in the `dist` folder.
+
 # Technical Notes
 
 **Stability of the Functions**
@@ -142,7 +150,25 @@ If you found a bug, open up an issue on github with the prefix [ISSUE](https://g
 
 **Feedback**
 
-Got ideas on how to improve the system? Open up an issue on github with the prefix [FEEDBACK](https://github.com/GooseFX1/gfx-ssl-sdk/issues) and let's brainstorm more about it together!
+Got ideas on how to improve the system? Open up an issue on github with the prefix [FEEDBACK] and let's brainstorm more about it together!
+
+# Addresses
+
+## Devnet
+
+```
+CONTROLLER_PROGRAM=3Gwyhoudx8XgYry8dzKQ2GGsofkUdm7VZUvddHxchL3x
+SSL_PROGRAM=JYe7AcuQ7CqhkGvchJGvSKF8ei41FuDKb1h47qkbFNf
+CONTROLLER=ApkmzBaTPUAeVj3QuqDcz6iLE6xZSLd29nke4McqrKw5
+```
+
+## Mainnet
+
+```
+CONTROLLER_PROGRAM=8KJx48PYGHVC9fxzRRtYp4x4CM2HyYCm2EjVuAP4vvrx
+SSL_PROGRAM=7WduLbRfYhTJktjLw5FDEyrqoEv61aTTCuGAetgLjzN5
+CONTROLLER=8CxKnuJeoeQXFwiG6XiGY2akBjvJA5k3bE52BfnuEmNQ
+```
 
 # License
 
