@@ -40,7 +40,7 @@ npm install goosefx-ssl-sdk
 
 # Usage
 
-## Get Quotes and price Impact
+## Get Quotes and Price Impact
 
 ```typescript
 import { Connection } from "@solana/web3.js";
@@ -64,7 +64,7 @@ const quote = async () => {
 quote();
 ```
 
-## Get minimum Amount Out and swap Tokens
+## Get Minimum Amount Out and Swap Tokens
 
 ```typescript
 import { Connection } from "@solana/web3.js";
@@ -98,7 +98,7 @@ async function main() {
 main();
 ```
 
-## Get the status of the SSL Pool
+## Get Status of the SSL Pool
 
 ```typescript
 import { Connection } from "@solana/web3.js";
