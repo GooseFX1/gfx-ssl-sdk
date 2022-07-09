@@ -13,7 +13,7 @@ async function createTx(wallet: any) {
   const swap = new Swap(connection);
 
   // wrap SOL token if Sol is first token pair
-  const ixs = await swap.createSwapIx(
+  const ixs: Array<TransactionInstruction> = await swap.createSwapIx(
     new PublicKey("So11111111111111111111111111111111111111112"),
     new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"),
     100000n, // 0.0001 SOL

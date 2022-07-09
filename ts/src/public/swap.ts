@@ -7,6 +7,7 @@ import {
 } from "@solana/spl-token";
 import {
   Connection,
+  ComputeBudgetProgram,
   PublicKey,
   TransactionInstruction,
 } from "@solana/web3.js";
@@ -27,14 +28,11 @@ export interface Quote {
 }
 
 export class Swap {
-
-
-
   constructor(
     public connection: Connection,
     public controller: PublicKey = ADDRESSES["MAINNET"].GFX_CONTROLLER,
     public programId: PublicKey = ADDRESSES["MAINNET"].SSL_PROGRAM_ID
-  ) { }
+  ) {}
 
   public async getWasm() {
     if (!wasmInited) {
@@ -92,10 +90,22 @@ export class Swap {
     const tokenASSLData = await this.connection.getAccountInfo(sslIn);
     const tokenBSSLData = await this.connection.getAccountInfo(sslOut);
 
-    const liabilityVaultIn = await getAccount(this.connection, findAssociatedTokenAddress(sslIn, tokenIn,));
-    const swappedLiabilityVaultIn = await getAccount(this.connection, findAssociatedTokenAddress(sslIn, tokenOut,));
-    const liabilityVaultOut = await getAccount(this.connection, findAssociatedTokenAddress(sslOut, tokenOut,));
-    const swappedLiabilityVaultOut = await getAccount(this.connection, findAssociatedTokenAddress(sslOut, tokenIn,));
+    const liabilityVaultIn = await getAccount(
+      this.connection,
+      findAssociatedTokenAddress(sslIn, tokenIn)
+    );
+    const swappedLiabilityVaultIn = await getAccount(
+      this.connection,
+      findAssociatedTokenAddress(sslIn, tokenOut)
+    );
+    const liabilityVaultOut = await getAccount(
+      this.connection,
+      findAssociatedTokenAddress(sslOut, tokenOut)
+    );
+    const swappedLiabilityVaultOut = await getAccount(
+      this.connection,
+      findAssociatedTokenAddress(sslOut, tokenIn)
+    );
 
     if (!tokenASSLData) throw "Cannot get SSL for tokenA";
     if (!tokenBSSLData) throw "Cannot get SSL for tokenB";
@@ -125,7 +135,7 @@ export class Swap {
       swappedLiabilityVaultIn.amount,
       swappedLiabilityVaultOut.amount,
       registry,
-      inTokenAmount,
+      inTokenAmount
     );
 
     const finalResult: Quote = {
@@ -157,6 +167,14 @@ export class Swap {
     wallet: PublicKey
   ): Promise<Array<TransactionInstruction>> => {
     let ixs = [];
+
+    const addedComputeBudgetIX: TransactionInstruction =
+      ComputeBudgetProgram.requestUnits({
+        units: 600000,
+        additionalFee: 0,
+      });
+      
+    ixs.push(addedComputeBudgetIX);
 
     const program = new Program(
       SwapIDL as Idl,
@@ -210,7 +228,6 @@ export class Swap {
       }
     }
 
-
     const accounts = {
       controller: this.controller,
       pair,
@@ -234,10 +251,12 @@ export class Swap {
       tokenProgram: TOKEN_PROGRAM_ID,
     };
 
-    ixs.push(await inst.swap(
-      new BN(inTokenAmount.toString()),
-      new BN(minOut.toString()),
-      { accounts, remainingAccounts })
+    ixs.push(
+      await inst.swap(
+        new BN(inTokenAmount.toString()),
+        new BN(minOut.toString()),
+        { accounts, remainingAccounts }
+      )
     );
 
     return ixs;
