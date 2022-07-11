@@ -32,7 +32,7 @@ export class Swap {
     public connection: Connection,
     public controller: PublicKey = ADDRESSES["MAINNET"].GFX_CONTROLLER,
     public programId: PublicKey = ADDRESSES["MAINNET"].SSL_PROGRAM_ID
-  ) {}
+  ) { }
 
   public async getWasm() {
     if (!wasmInited) {
@@ -170,10 +170,10 @@ export class Swap {
 
     const addedComputeBudgetIX: TransactionInstruction =
       ComputeBudgetProgram.requestUnits({
-        units: 600000,
+        units: 1000000,
         additionalFee: 0,
       });
-      
+
     ixs.push(addedComputeBudgetIX);
 
     const program = new Program(
