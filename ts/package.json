@@ -1,6 +1,6 @@
 {
   "name": "goosefx-ssl-sdk",
-  "version": "1.2.3", 
+  "version": "1.2.4", 
   "description": "SDK for interacting with GooseFX Single-sided Liquidity pools",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
