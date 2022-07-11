@@ -1,7 +1,7 @@
 import {
   Keypair,
   Connection,
-	PublicKey,
+  PublicKey,
   LAMPORTS_PER_SOL,
   sendAndConfirmTransaction,
   ComputeBudgetProgram,
@@ -28,7 +28,7 @@ test("should swap", async () => {
 
 });
 
-test("is adding 600000 additional ComputeBudget Instruction", async () => {
+test("is adding 1000000 additional ComputeBudget Instruction", async () => {
   const swap = new Swap(connection);
   const wallet = new Keypair();
 
@@ -40,11 +40,11 @@ test("is adding 600000 additional ComputeBudget Instruction", async () => {
     wallet.publicKey
   );
 
-	const result = JSON.parse(JSON.stringify(ixs));
-	
-	expect(result[0].programId).toBe("ComputeBudget111111111111111111111111111111");
-	expect(result[0].data[0]).toBe(0);
-	expect(JSON.stringify(result[0].data.slice(1, 5))).toBe("[192,39,9,0]");
-	expect(JSON.stringify(result[0].data.slice(5))).toBe("[0,0,0,0]");
+  const result = JSON.parse(JSON.stringify(ixs));
+
+  expect(result[0].programId).toBe("ComputeBudget111111111111111111111111111111");
+  expect(result[0].data[0]).toBe(0);
+  expect(JSON.stringify(result[0].data.slice(1, 5))).toBe("[64,66,15,0]");
+  expect(JSON.stringify(result[0].data.slice(5))).toBe("[0,0,0,0]");
 
 });
