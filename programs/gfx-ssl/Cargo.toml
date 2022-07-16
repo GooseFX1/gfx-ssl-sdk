@@ -16,7 +16,7 @@ no-entrypoint = []
 no-idl = []
 
 [dependencies]
-anchor-lang = "0.23"
-anchor-spl = "0.23"
+anchor-lang = "0.25"
+anchor-spl = "0.25"
 gfx_controller = {path = "../gfx-controller", package = "gfx-controller-sdk"}
-solana-program = "1.8.10"
+solana-program = "1.10.25"
