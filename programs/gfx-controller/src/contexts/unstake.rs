@@ -1,7 +1,7 @@
 use crate::states::{Controller, StakingAccount};
 use crate::utils::PDAIdentifier;
 use anchor_lang::prelude::*;
-use anchor_spl::token::{Mint, Token, TokenAccount};
+use anchor_spl::token::{Token, TokenAccount};
 
 // Unstake
 #[derive(Accounts)]
@@ -15,8 +15,6 @@ pub struct Unstake<'info> {
         bump = staking_account.load()?.bump,
     )]
     pub staking_account: AccountLoader<'info, StakingAccount>,
-
-    pub mint: Account<'info, Mint>, // check is done on ssl
 
     #[account(
         mut,
