@@ -35,7 +35,7 @@ pub struct Pair {
     _pad1: [u8; 5],
     pub max_delay: u64,
     pub confidence: u64,
-    pub balancer: Pubkey,               // the pubkey of the balancer
+    pub _unused4: [u8; 32],
     pub excessive_confiscate_rate: u16, // the percentage to confiscate if a trade gets better price than the oracle price
 
     pub fee_collector: Pubkey, // the pubkey for the platform fee collector
