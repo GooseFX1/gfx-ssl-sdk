@@ -21,8 +21,7 @@ pub struct Oracle {
 
 #[allow(non_snake_case)]
 #[account(zero_copy)]
-#[derive(Default)]
-#[cfg_attr(feature = "no-entrypoint", derive(Debug))]
+#[derive(Default, Debug)]
 pub struct Pair {
     pub controller: Pubkey, // for indexing purpose
     pub mints: (Pubkey, Pubkey),
