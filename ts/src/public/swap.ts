@@ -164,7 +164,8 @@ export class Swap {
     tokenB: PublicKey,
     inTokenAmount: BigInt,
     minOut: BigInt,
-    wallet: PublicKey
+    wallet: PublicKey,
+    referrerTokenAccount?: PublicKey, // referrerTokenAccount in TokenA
   ): Promise<Array<TransactionInstruction>> => {
     let ixs = [];
 
@@ -218,6 +219,9 @@ export class Swap {
 
     const n = Number(nOracle.toString());
     const remainingAccounts = [];
+    if (referrerTokenAccount !== null) {
+      remainingAccounts.push({ isSigner: false, isWritable: true, pubkey: referrerTokenAccount });
+    }
     for (const oracle of oracles.slice(0, n)) {
       for (const elem of oracle.elements.slice(0, Number(oracle.n))) {
         remainingAccounts.push({

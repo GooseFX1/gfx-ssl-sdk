@@ -1,5 +1,8 @@
-use std::mem::{forget, zeroed};
 use std::ops::{Deref, Index, IndexMut};
+use std::{
+    fmt::{self, Debug},
+    mem::{forget, zeroed},
+};
 
 #[derive(Copy, Clone)]
 #[cfg_attr(feature = "no-entrypoint", derive(Debug))]
@@ -7,6 +10,23 @@ use std::ops::{Deref, Index, IndexMut};
 pub struct StackVec<T, const N: usize> {
     val: [T; N],
     n: u64,
+}
+
+impl<T, const N: usize> Debug for StackVec<T, N>
+where
+    T: Debug,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "[")?;
+        for i in 0..self.n as usize {
+            if i + 1 != self.n as usize {
+                write!(f, "{:?}, ", self.val[i])?;
+            } else {
+                write!(f, "{:?}", self.val[i])?;
+            }
+        }
+        write!(f, "]")
+    }
 }
 
 impl<T, const N: usize> Default for StackVec<T, N>

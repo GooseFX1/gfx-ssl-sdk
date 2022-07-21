@@ -11,8 +11,7 @@ impl PDAIdentifier for Pair {
     }
 }
 
-#[derive(Copy, Clone, Default)]
-#[cfg_attr(feature = "no-entrypoint", derive(Debug))]
+#[derive(Copy, Clone, Default, Debug)]
 #[repr(C, align(8))]
 pub struct Oracle {
     pub path: StackVec<(Pubkey, bool), 4>,
