@@ -165,7 +165,7 @@ export class Swap {
     inTokenAmount: BigInt,
     minOut: BigInt,
     wallet: PublicKey,
-    referrerTokenAccount: PublicKey | undefined, // referrerTokenAccount in TokenA
+    referrerTokenAccount?: PublicKey, // referrerTokenAccount in TokenA
   ): Promise<Array<TransactionInstruction>> => {
     let ixs = [];
 
