@@ -72,78 +72,22 @@ export class Swap {
       mint
     );
 
+  public getQuoter = async (
+    tokenIn: PublicKey,
+    tokenOut: PublicKey,
+  ): Promise<Quoter> => {
+    let wasm = await this.getWasm();
+    return new Quoter(this.connection, this.programId, this.controller, tokenIn, tokenOut, wasm);
+  };
+
   public getQuote = async (
     tokenIn: PublicKey,
     tokenOut: PublicKey,
     inTokenAmount: BigInt
   ): Promise<Quote> => {
-    let wasm = await this.getWasm();
-
-    const swapWASM = wasm.swap;
-    const OracleRegistry = wasm.OracleRegistry;
-    if (inTokenAmount === 0n) return { impact: 0, out: 0n };
-
-    const pair = this.getPairAddress(tokenIn, tokenOut);
-    const pairData = await this.connection.getAccountInfo(pair);
-    const sslIn = SSL.findAddress(this.controller, tokenIn, this.programId);
-    const sslOut = SSL.findAddress(this.controller, tokenOut, this.programId);
-    const tokenASSLData = await this.connection.getAccountInfo(sslIn);
-    const tokenBSSLData = await this.connection.getAccountInfo(sslOut);
-
-    const liabilityVaultIn = await getAccount(
-      this.connection,
-      findAssociatedTokenAddress(sslIn, tokenIn)
-    );
-    const swappedLiabilityVaultIn = await getAccount(
-      this.connection,
-      findAssociatedTokenAddress(sslIn, tokenOut)
-    );
-    const liabilityVaultOut = await getAccount(
-      this.connection,
-      findAssociatedTokenAddress(sslOut, tokenOut)
-    );
-    const swappedLiabilityVaultOut = await getAccount(
-      this.connection,
-      findAssociatedTokenAddress(sslOut, tokenIn)
-    );
-
-    if (!tokenASSLData) throw "Cannot get SSL for tokenA";
-    if (!tokenBSSLData) throw "Cannot get SSL for tokenB";
-    if (!pairData) throw "Cannot get Pair";
-
-    const decoded = PAIR_LAYOUT.decode(pairData.data);
-    const { oracles, nOracle } = decoded;
-    const n = Number(nOracle.toString());
-    const registry = new OracleRegistry();
-    for (const oracle of oracles.slice(0, n)) {
-      const n = Number(oracle.n);
-
-      for (const elem of oracle.elements.slice(0, n)) {
-        const acctInfo = await this.connection.getAccountInfo(elem.address);
-        if (acctInfo?.data) {
-          registry.add_oracle(elem.address.toBuffer(), acctInfo.data);
-        }
-      }
-    }
-
-    const out = swapWASM(
-      tokenASSLData.data,
-      tokenBSSLData.data,
-      pairData.data,
-      liabilityVaultIn.amount,
-      liabilityVaultOut.amount,
-      swappedLiabilityVaultIn.amount,
-      swappedLiabilityVaultOut.amount,
-      registry,
-      inTokenAmount
-    );
-
-    const finalResult: Quote = {
-      out: out.out,
-      impact: out.price_impact,
-    };
-
-    return finalResult;
+    const quoter = await this.getQuoter(tokenIn, tokenOut);
+    await quoter.prepare();
+    return quoter.quote(inTokenAmount);
   };
 
   public getMinimumQuote = async (
@@ -264,5 +208,137 @@ export class Swap {
     );
 
     return ixs;
+  };
+}
+
+
+class Quoter {
+  prepared?: {
+    pairData: Buffer;
+    sslInData: Buffer;
+    sslOutData: Buffer;
+    liabilityIn: BigInt;
+    swappedLiabilityIn: BigInt;
+    liabilityOut: BigInt;
+    swappedLiabilityOut: BigInt;
+    registry: wasm.OracleRegistry;
+  };
+
+
+  constructor(
+    public connection: Connection,
+    public programId: PublicKey,
+    public controller: PublicKey,
+    public tokenIn: PublicKey,
+    public tokenOut: PublicKey,
+    public wasm: any
+  ) { };
+
+  async prepare() {
+    const pair = this.getPairAddress(this.tokenIn, this.tokenOut);
+    const pairData = await this.connection.getAccountInfo(pair);
+    if (!pairData) throw "Cannot get Pair";
+
+    const sslIn = SSL.findAddress(this.controller, this.tokenIn, this.programId);
+    const sslInData = await this.connection.getAccountInfo(sslIn);
+    if (!sslInData) throw "Cannot get SSL for tokenIn";
+
+    const sslOut = SSL.findAddress(this.controller, this.tokenOut, this.programId);
+    const sslOutData = await this.connection.getAccountInfo(sslOut);
+    if (!sslOutData) throw "Cannot get SSL for tokenOut";
+
+    const liabilityVaultIn = await getAccount(
+      this.connection,
+      findAssociatedTokenAddress(sslIn, this.tokenIn)
+    );
+
+    const swappedLiabilityVaultIn = await getAccount(
+      this.connection,
+      findAssociatedTokenAddress(sslIn, this.tokenOut)
+    );
+
+    const liabilityVaultOut = await getAccount(
+      this.connection,
+      findAssociatedTokenAddress(sslOut, this.tokenOut)
+    );
+
+    const swappedLiabilityVaultOut = await getAccount(
+      this.connection,
+      findAssociatedTokenAddress(sslOut, this.tokenIn)
+    );
+
+    const OracleRegistry = wasm.OracleRegistry;
+    const decoded = PAIR_LAYOUT.decode(pairData.data);
+    const { oracles, nOracle } = decoded;
+    const n = Number(nOracle.toString());
+    const registry = new OracleRegistry();
+    for (const oracle of oracles.slice(0, n)) {
+      const n = Number(oracle.n);
+
+      for (const elem of oracle.elements.slice(0, n)) {
+        const acctInfo = await this.connection.getAccountInfo(elem.address);
+        if (acctInfo?.data) {
+          registry.add_oracle(elem.address.toBuffer(), acctInfo.data);
+        }
+      }
+    }
+
+    this.prepared = {
+      pairData: pairData.data,
+      sslInData: sslInData.data,
+      sslOutData: sslOutData.data,
+      liabilityIn: liabilityVaultIn.amount,
+      swappedLiabilityIn: swappedLiabilityVaultIn.amount,
+      liabilityOut: liabilityVaultOut.amount,
+      swappedLiabilityOut: swappedLiabilityVaultOut.amount,
+      registry: registry,
+    };
+
+  }
+
+  quote(inTokenAmount: BigInt) {
+    const swapWASM = wasm.swap;
+
+    if (inTokenAmount === 0n) return { impact: 0, out: 0n };
+
+    if (!this.prepared) throw "Run prepare first";
+    const prepared = this.prepared;
+
+    const out = swapWASM(
+      prepared.sslInData.slice(),
+      prepared.sslOutData.slice(),
+      prepared.pairData.slice(),
+      prepared.liabilityIn,
+      prepared.liabilityOut,
+      prepared.swappedLiabilityIn,
+      prepared.swappedLiabilityOut,
+      prepared.registry,
+      inTokenAmount
+    );
+
+    const finalResult: Quote = {
+      out: out.out,
+      impact: out.price_impact,
+    };
+
+    return finalResult;
+  }
+
+  public getPairAddress = (tokenA: PublicKey, tokenB: PublicKey) => {
+    const addresses = [tokenA.toBuffer(), tokenB.toBuffer()].sort(
+      Buffer.compare
+    );
+
+    const pairArr = PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("GFX-SSL-Pair", "utf-8"),
+        this.controller.toBuffer(),
+        addresses[0],
+        addresses[1],
+      ],
+      this.programId
+    );
+
+    return pairArr[0];
   };
 }
