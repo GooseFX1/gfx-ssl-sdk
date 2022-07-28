@@ -211,19 +211,19 @@ export class Swap {
   };
 }
 
+type Prepared = {
+  pairData: Buffer;
+  sslInData: Buffer;
+  sslOutData: Buffer;
+  liabilityIn: BigInt;
+  swappedLiabilityIn: BigInt;
+  liabilityOut: BigInt;
+  swappedLiabilityOut: BigInt;
+  registry: wasm.OracleRegistry;
+};
 
-class Quoter {
-  prepared?: {
-    pairData: Buffer;
-    sslInData: Buffer;
-    sslOutData: Buffer;
-    liabilityIn: BigInt;
-    swappedLiabilityIn: BigInt;
-    liabilityOut: BigInt;
-    swappedLiabilityOut: BigInt;
-    registry: wasm.OracleRegistry;
-  };
-
+class Quoter {  
+  private prepared: Prepared | undefined = undefined;
 
   constructor(
     public connection: Connection,
@@ -232,18 +232,26 @@ class Quoter {
     public tokenIn: PublicKey,
     public tokenOut: PublicKey,
     public wasm: any
-  ) { };
+  ) { }
 
   async prepare() {
     const pair = this.getPairAddress(this.tokenIn, this.tokenOut);
     const pairData = await this.connection.getAccountInfo(pair);
     if (!pairData) throw "Cannot get Pair";
 
-    const sslIn = SSL.findAddress(this.controller, this.tokenIn, this.programId);
+    const sslIn = SSL.findAddress(
+      this.controller,
+      this.tokenIn,
+      this.programId
+    );
     const sslInData = await this.connection.getAccountInfo(sslIn);
     if (!sslInData) throw "Cannot get SSL for tokenIn";
 
-    const sslOut = SSL.findAddress(this.controller, this.tokenOut, this.programId);
+    const sslOut = SSL.findAddress(
+      this.controller,
+      this.tokenOut,
+      this.programId
+    );
     const sslOutData = await this.connection.getAccountInfo(sslOut);
     if (!sslOutData) throw "Cannot get SSL for tokenOut";
 
@@ -293,15 +301,14 @@ class Quoter {
       swappedLiabilityOut: swappedLiabilityVaultOut.amount,
       registry: registry,
     };
-
   }
 
-  quote(inTokenAmount: BigInt) {
+  public quote(inTokenAmount: BigInt) {
     const swapWASM = wasm.swap;
 
     if (inTokenAmount === 0n) return { impact: 0, out: 0n };
 
-    if (!this.prepared) throw "Run prepare first";
+    if (this.prepared === undefined) throw "Run prepare first";
     const prepared = this.prepared;
 
     const out = swapWASM(
