@@ -28,6 +28,23 @@ test("should swap", async () => {
 
 });
 
+test("should swap multiple times", async () => {
+  const swap = new Swap(connection);
+
+  const quoter = await swap.getQuoter(
+    new PublicKey("So11111111111111111111111111111111111111112"), //SOL
+    new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"), //USD
+  );
+
+  await quoter.prepare();
+
+  for (let i = 0; i < 3; i += 1) {
+    const { out: outAmount, impact } = quoter.quote(1000000n);
+    console.log(`out: ${outAmount} ${impact}`);
+  }
+
+});
+
 test("is adding 1000000 additional ComputeBudget Instruction", async () => {
   const swap = new Swap(connection);
   const wallet = new Keypair();

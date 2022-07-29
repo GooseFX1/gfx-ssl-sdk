@@ -237,12 +237,10 @@ export function swap(ssl_in, ssl_out, pair, liability_in, liability_out, swapped
         const low6 = u32CvtShim[0];
         const high6 = u32CvtShim[1];
         _assertClass(oracles, OracleRegistry);
-        var ptr7 = oracles.ptr;
-        oracles.ptr = 0;
         uint64CvtShim[0] = amount_in;
-        const low8 = u32CvtShim[0];
-        const high8 = u32CvtShim[1];
-        wasm.swap(retptr, ptr0, len0, ptr1, len1, ptr2, len2, low3, high3, low4, high4, low5, high5, low6, high6, ptr7, low8, high8);
+        const low7 = u32CvtShim[0];
+        const high7 = u32CvtShim[1];
+        wasm.swap(retptr, ptr0, len0, ptr1, len1, ptr2, len2, low3, high3, low4, high4, low5, high5, low6, high6, oracles.ptr, low7, high7);
         var r0 = getInt32Memory0()[retptr / 4 + 0];
         var r1 = getInt32Memory0()[retptr / 4 + 1];
         var r2 = getInt32Memory0()[retptr / 4 + 2];
@@ -1160,6 +1158,10 @@ async function init(input) {
         getInt32Memory0()[arg0 / 4 + 1] = len0;
         getInt32Memory0()[arg0 / 4 + 0] = ptr0;
     };
+    imports.wbg.__wbindgen_is_undefined = function(arg0) {
+        const ret = getObject(arg0) === undefined;
+        return ret;
+    };
     imports.wbg.__wbg_newwithlength_9c398a17849b31ce = function(arg0) {
         const ret = new Array(arg0 >>> 0);
         return addHeapObject(ret);
@@ -1178,10 +1180,6 @@ async function init(input) {
     imports.wbg.__wbg_values_71935f80778b5113 = function(arg0) {
         const ret = getObject(arg0).values();
         return addHeapObject(ret);
-    };
-    imports.wbg.__wbindgen_is_undefined = function(arg0) {
-        const ret = getObject(arg0) === undefined;
-        return ret;
     };
     imports.wbg.__wbg_buffer_5e74a88a1424a2e0 = function(arg0) {
         const ret = getObject(arg0).buffer;
@@ -1217,6 +1215,10 @@ async function init(input) {
     imports.wbg.__wbg_warn_97f10a6b0dbb8c5c = function(arg0) {
         console.warn(getObject(arg0));
     };
+    imports.wbg.__wbg_instruction_new = function(arg0) {
+        const ret = Instruction.__wrap(arg0);
+        return addHeapObject(ret);
+    };
     imports.wbg.__wbg_new_693216e109162396 = function() {
         const ret = new Error();
         return addHeapObject(ret);
@@ -1234,10 +1236,6 @@ async function init(input) {
         } finally {
             wasm.__wbindgen_free(arg0, arg1);
         }
-    };
-    imports.wbg.__wbg_instruction_new = function(arg0) {
-        const ret = Instruction.__wrap(arg0);
-        return addHeapObject(ret);
     };
     imports.wbg.__wbg_pubkey_new = function(arg0) {
         const ret = Pubkey.__wrap(arg0);

@@ -339,9 +339,6 @@ export interface InitOutput {
   readonly __wbg_set_swapresult_price_impact: (a: number, b: number) => void;
   readonly swap: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number, n: number, o: number, p: number, q: number, r: number) => void;
   readonly __wbg_instruction_free: (a: number) => void;
-  readonly __wbg_instructions_free: (a: number) => void;
-  readonly instructions_constructor: () => number;
-  readonly instructions_push: (a: number, b: number) => void;
   readonly systeminstruction_createAccount: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => number;
   readonly systeminstruction_createAccountWithSeed: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number) => number;
   readonly systeminstruction_assign: (a: number, b: number) => number;
@@ -371,6 +368,9 @@ export interface InitOutput {
   readonly hash_toString: (a: number, b: number) => void;
   readonly hash_equals: (a: number, b: number) => number;
   readonly hash_toBytes: (a: number, b: number) => void;
+  readonly __wbg_instructions_free: (a: number) => void;
+  readonly instructions_constructor: () => number;
+  readonly instructions_push: (a: number, b: number) => void;
   readonly __wbg_hash_free: (a: number) => void;
   readonly __wbindgen_malloc: (a: number) => number;
   readonly __wbindgen_realloc: (a: number, b: number, c: number) => number;
