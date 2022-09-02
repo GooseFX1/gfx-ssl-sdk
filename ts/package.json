@@ -1,9 +1,10 @@
 {
-  "name": "goosefx-ssl-sdk",
-  "version": "1.2.7",
+  "name": "@jup-ag/goosefx-ssl-sdk",
+  "version": "1.2.8",
   "description": "SDK for interacting with GooseFX Single-sided Liquidity pools",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "module": "dist/index.mjs",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/GooseFX1/gfx-ssl-sdk.git"
@@ -25,11 +26,11 @@
   },
   "homepage": "https://github.com/GooseFX1/gfx-ssl-sdk/tree/master/ts",
   "scripts": {
-    "build": "tsc -p src",
-    "watch": "tsc -w -p src",
+    "build": "tsup ./src/index.ts --format cjs,esm --dts",
+    "watch": "tsup ./src/index.ts --format cjs,esm --dts -w",
     "prettier-format": "prettier --config .prettierrc 'src/**/*.ts' --write",
     "prepare": "cd .. && husky install",
-    "prepublishOnly": "tsc -p src",
+    "prepublishOnly": "tsup ./src/index.ts --format cjs,esm --dts",
     "test": "jest"
   },
   "dependencies": {
@@ -57,6 +58,7 @@
     "prettier": "^2.3.2",
     "ts-jest": "^28.0.2",
     "ts-loader": "^9.3.0",
+    "tsup": "^6.2.3",
     "typescript": "^4.6.4"
   }
 }

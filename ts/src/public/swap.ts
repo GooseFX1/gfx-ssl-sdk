@@ -22,25 +22,17 @@ import { SSL } from "./ssl";
 
 let wasmInited = false;
 
+export { wasm };
 export interface Quote {
   out: BigInt;
   impact: number;
 }
 
-export class Swap {
+export class SyncSwap {
   constructor(
-    public connection: Connection,
     public controller: PublicKey = ADDRESSES["MAINNET"].GFX_CONTROLLER,
     public programId: PublicKey = ADDRESSES["MAINNET"].SSL_PROGRAM_ID
-  ) { }
-
-  public async getWasm() {
-    if (!wasmInited) {
-      await init(Buffer.from(wasmData, "base64"));
-      wasmInited = true;
-    }
-    return wasm;
-  }
+  ) {}
 
   public getPairAddress = (tokenA: PublicKey, tokenB: PublicKey) => {
     const addresses = [tokenA.toBuffer(), tokenB.toBuffer()].sort(
@@ -60,6 +52,34 @@ export class Swap {
     return pairArr[0];
   };
 
+  getSyncQuoter(tokenIn: PublicKey, tokenOut: PublicKey) {
+    const quoter = new SyncQuoter(
+      this.programId,
+      this.controller,
+      tokenIn,
+      tokenOut
+    );
+
+    return quoter;
+  }
+}
+
+export class Swap extends SyncSwap {
+  constructor(
+    public connection: Connection,
+    controller: PublicKey = ADDRESSES["MAINNET"].GFX_CONTROLLER,
+    programId: PublicKey = ADDRESSES["MAINNET"].SSL_PROGRAM_ID
+  ) {
+    super(controller, programId);
+  }
+
+  public async getWasm() {
+    if (!wasmInited) {
+      await loadWasm();
+    }
+    return wasm;
+  }
+
   public createAssociatedTokenAccountIx = (
     mint: PublicKey,
     associatedAccount: PublicKey,
@@ -74,10 +94,17 @@ export class Swap {
 
   public getQuoter = async (
     tokenIn: PublicKey,
-    tokenOut: PublicKey,
+    tokenOut: PublicKey
   ): Promise<Quoter> => {
     let wasm = await this.getWasm();
-    return new Quoter(this.connection, this.programId, this.controller, tokenIn, tokenOut, wasm);
+    return new Quoter(
+      this.connection,
+      this.programId,
+      this.controller,
+      tokenIn,
+      tokenOut,
+      wasm
+    );
   };
 
   public getQuote = async (
@@ -109,7 +136,7 @@ export class Swap {
     inTokenAmount: BigInt,
     minOut: BigInt,
     wallet: PublicKey,
-    referrerTokenAccount?: PublicKey, // referrerTokenAccount in TokenA
+    referrerTokenAccount?: PublicKey // referrerTokenAccount in TokenA
   ): Promise<Array<TransactionInstruction>> => {
     let ixs = [];
 
@@ -164,7 +191,11 @@ export class Swap {
     const n = Number(nOracle.toString());
     const remainingAccounts = [];
     if (referrerTokenAccount !== undefined) {
-      remainingAccounts.push({ isSigner: false, isWritable: true, pubkey: referrerTokenAccount });
+      remainingAccounts.push({
+        isSigner: false,
+        isWritable: true,
+        pubkey: referrerTokenAccount,
+      });
     }
     for (const oracle of oracles.slice(0, n)) {
       for (const elem of oracle.elements.slice(0, Number(oracle.n))) {
@@ -222,17 +253,115 @@ type Prepared = {
   registry: wasm.OracleRegistry;
 };
 
-class Quoter {  
+export const loadWasm = async () => {
+  await init(Buffer.from(wasmData, "base64"));
+  wasmInited = true;
+};
+
+class SyncQuoter {
+  constructor(
+    public programId: PublicKey,
+    public controller: PublicKey,
+    public tokenIn: PublicKey,
+    public tokenOut: PublicKey
+  ) {}
+
+  public getPairAddress = (tokenA: PublicKey, tokenB: PublicKey) => {
+    const addresses = [tokenA.toBuffer(), tokenB.toBuffer()].sort(
+      Buffer.compare
+    );
+
+    const pairArr = PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("GFX-SSL-Pair", "utf-8"),
+        this.controller.toBuffer(),
+        addresses[0],
+        addresses[1],
+      ],
+      this.programId
+    );
+
+    return pairArr[0];
+  };
+
+  getAccounts() {
+    const pairAddress = this.getPairAddress(this.tokenIn, this.tokenOut);
+
+    const sslIn = SSL.findAddress(
+      this.controller,
+      this.tokenIn,
+      this.programId
+    );
+
+    const sslOut = SSL.findAddress(
+      this.controller,
+      this.tokenOut,
+      this.programId
+    );
+
+    const liabilityVaultIn = findAssociatedTokenAddress(sslIn, this.tokenIn);
+
+    const swappedLiabilityVaultIn = findAssociatedTokenAddress(
+      sslIn,
+      this.tokenOut
+    );
+
+    const liabilityVaultOut = findAssociatedTokenAddress(sslOut, this.tokenOut);
+
+    const swappedLiabilityVaultOut = findAssociatedTokenAddress(
+      sslOut,
+      this.tokenIn
+    );
+
+    return {
+      pairAddress,
+      sslIn,
+      sslOut,
+      liabilityVaultIn,
+      liabilityVaultOut,
+      swappedLiabilityVaultIn,
+      swappedLiabilityVaultOut,
+    };
+  }
+
+  public getQuote(inTokenAmount: BigInt, prepared: Prepared) {
+    const swapWASM = wasm.swap;
+
+    if (inTokenAmount === 0n) return { impact: 0, out: 0n };
+
+    const out = swapWASM(
+      prepared.sslInData.slice(),
+      prepared.sslOutData.slice(),
+      prepared.pairData.slice(),
+      prepared.liabilityIn,
+      prepared.liabilityOut,
+      prepared.swappedLiabilityIn,
+      prepared.swappedLiabilityOut,
+      prepared.registry,
+      inTokenAmount
+    );
+
+    const finalResult: Quote = {
+      out: out.out,
+      impact: out.price_impact,
+    };
+
+    return finalResult;
+  }
+}
+class Quoter extends SyncQuoter {
   private prepared: Prepared | undefined = undefined;
 
   constructor(
     public connection: Connection,
-    public programId: PublicKey,
-    public controller: PublicKey,
-    public tokenIn: PublicKey,
-    public tokenOut: PublicKey,
+    programId: PublicKey,
+    controller: PublicKey,
+    tokenIn: PublicKey,
+    tokenOut: PublicKey,
     public wasm: any
-  ) { }
+  ) {
+    super(programId, controller, tokenIn, tokenOut);
+  }
 
   async prepare() {
     const pair = this.getPairAddress(this.tokenIn, this.tokenOut);
@@ -304,48 +433,11 @@ class Quoter {
   }
 
   public quote(inTokenAmount: BigInt) {
-    const swapWASM = wasm.swap;
-
     if (inTokenAmount === 0n) return { impact: 0, out: 0n };
 
     if (this.prepared === undefined) throw "Run prepare first";
     const prepared = this.prepared;
 
-    const out = swapWASM(
-      prepared.sslInData.slice(),
-      prepared.sslOutData.slice(),
-      prepared.pairData.slice(),
-      prepared.liabilityIn,
-      prepared.liabilityOut,
-      prepared.swappedLiabilityIn,
-      prepared.swappedLiabilityOut,
-      prepared.registry,
-      inTokenAmount
-    );
-
-    const finalResult: Quote = {
-      out: out.out,
-      impact: out.price_impact,
-    };
-
-    return finalResult;
+    return this.getQuote(inTokenAmount, prepared);
   }
-
-  public getPairAddress = (tokenA: PublicKey, tokenB: PublicKey) => {
-    const addresses = [tokenA.toBuffer(), tokenB.toBuffer()].sort(
-      Buffer.compare
-    );
-
-    const pairArr = PublicKey.findProgramAddressSync(
-      [
-        Buffer.from("GFX-SSL-Pair", "utf-8"),
-        this.controller.toBuffer(),
-        addresses[0],
-        addresses[1],
-      ],
-      this.programId
-    );
-
-    return pairArr[0];
-  };
 }

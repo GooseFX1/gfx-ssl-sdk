@@ -3,7 +3,6 @@
     /* Visit https://aka.ms/tsconfig.json to read more about this file */
     /* Projects */
     // "incremental": true,                              /* Enable incremental compilation */
-    "composite": true /* Enable constraints that allow a TypeScript project to be used with project references. */,
     // "tsBuildInfoFile": "./",                          /* Specify the folder for .tsbuildinfo incremental compilation files. */
     // "disableSourceOfProjectReferenceRedirect": true,  /* Disable preferring source files instead of declaration files when referencing composite projects */
     // "disableSolutionSearching": true,                 /* Opt a project out of multi-project reference checking when editing. */
@@ -12,7 +11,7 @@
     // "lib": [
     //   "es2020", "esnext"
     // ],
-    "module": "commonjs",
+    // "module": "commonjs",
     "target": "es2020",
     // "jsx": "preserve",                                /* Specify what JSX code is generated. */
     // "experimentalDecorators": true,                   /* Enable experimental support for TC39 stage 2 draft decorators. */
@@ -42,10 +41,10 @@
     "declaration": true /* Generate .d.ts files from TypeScript and JavaScript files in your project. */,
     // "declarationMap": true,                           /* Create sourcemaps for d.ts files. */
     // "emitDeclarationOnly": true,                      /* Only output d.ts files and not JavaScript files. */
-    "sourceMap": true, /* Create source map files for emitted JavaScript files. */
+    "sourceMap": true /* Create source map files for emitted JavaScript files. */,
     // "outFile": "./",                                  /* Specify a file that bundles all outputs into one JavaScript file. If `declaration` is true, also designates a file that bundles all .d.ts output. */
     "outDir": "./dist" /* Specify an output folder for all emitted files. */,
-    "removeComments": true, /* Disable emitting comments. */
+    "removeComments": true /* Disable emitting comments. */,
     // "noEmit": true,                                   /* Disable emitting files from a compilation. */
     // "importHelpers": true,                            /* Allow importing helper functions from tslib once per project, instead of including them per-file. */
     // "importsNotUsedAsValues": "remove",               /* Specify emit/checking behavior for imports that are only used for types */
@@ -92,8 +91,5 @@
     // "skipDefaultLibCheck": true,                      /* Skip type checking .d.ts files that are included with TypeScript. */
     "skipLibCheck": true /* Skip type checking all .d.ts files. */
   },
-  "include": [
-    "src/**/*",
-    "src/**/*.json"
-  ]
+  "include": ["src/**/*", "src/**/*.json"]
 }
