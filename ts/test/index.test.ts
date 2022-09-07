@@ -18,7 +18,7 @@ const connection = new Connection(
 test("should swap", async () => {
   const swap = new Swap(connection);
 
-  const { out: outAmount, impact } = await swap.getQuote(
+  const { amountOut: outAmount, impact } = await swap.getQuote(
     new PublicKey("So11111111111111111111111111111111111111112"), //SOL
     new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"), //USD
     1000000n
@@ -39,7 +39,7 @@ test("should swap multiple times", async () => {
   await quoter.prepare();
 
   for (let i = 0; i < 3; i += 1) {
-    const { out: outAmount, impact } = quoter.quote(1000000n);
+    const { amountOut: outAmount, impact } = quoter.quote(1000000n);
     console.log(`out: ${outAmount} ${impact}`);
   }
 
