@@ -1,6 +1,6 @@
 <div align="center">
   <img height="142" src="https://github.com/GooseFX1/gfx-web-app/blob/dev/public/img/assets/gfx_logo_gradient_lite.svg" />
-  <h3>GooseFX SDK Mono Repo</h3>
+  <h3>GooseFX Typescript SDK</h3>
   <p>The GooseFX SDK contains a set of simple to use APIs to allow developers to integrate with the GooseFX platform.</p>
   <h4>
     <a href="https://goosefx.io">Website</a>
