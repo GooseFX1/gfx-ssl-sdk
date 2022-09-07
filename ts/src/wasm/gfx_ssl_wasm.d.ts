@@ -122,6 +122,32 @@ export class Instructions {
   push(instruction: Instruction): void;
 }
 /**
+* A vanilla Ed25519 key pair
+*/
+export class Keypair {
+  free(): void;
+/**
+* Create a new `Keypair `
+*/
+  constructor();
+/**
+* Convert a `Keypair` to a `Uint8Array`
+* @returns {Uint8Array}
+*/
+  toBytes(): Uint8Array;
+/**
+* Recover a `Keypair` from a `Uint8Array`
+* @param {Uint8Array} bytes
+* @returns {Keypair}
+*/
+  static fromBytes(bytes: Uint8Array): Keypair;
+/**
+* Return the `Pubkey` for this `Keypair`
+* @returns {Pubkey}
+*/
+  pubkey(): Pubkey;
+}
+/**
 * A Solana transaction message (legacy).
 *
 * See the [`message`] module documentation for further description.
@@ -221,10 +247,25 @@ export class SwapResult {
   free(): void;
 /**
 */
-  out: BigInt;
+  amount_in: BigInt;
+/**
+*/
+  amount_out: BigInt;
+/**
+*/
+  fee_paid: BigInt;
+/**
+*/
+  insta_price: number;
+/**
+*/
+  oracle_price: number;
 /**
 */
   price_impact: number;
+/**
+*/
+  swap_price: number;
 }
 export class SystemInstruction {
   free(): void;
@@ -324,6 +365,69 @@ export class SystemInstruction {
 */
   static authorizeNonceAccount(nonce_pubkey: Pubkey, authorized_pubkey: Pubkey, new_authority: Pubkey): Instruction;
 }
+/**
+* An atomically-commited sequence of instructions.
+*
+* While [`Instruction`]s are the basic unit of computation in Solana,
+* they are submitted by clients in [`Transaction`]s containing one or
+* more instructions, and signed by one or more [`Signer`]s.
+*
+* [`Signer`]: crate::signer::Signer
+*
+* See the [module documentation] for more details about transactions.
+*
+* [module documentation]: self
+*
+* Some constructors accept an optional `payer`, the account responsible for
+* paying the cost of executing a transaction. In most cases, callers should
+* specify the payer explicitly in these constructors. In some cases though,
+* the caller is not _required_ to specify the payer, but is still allowed to:
+* in the [`Message`] structure, the first account is always the fee-payer, so
+* if the caller has knowledge that the first account of the constructed
+* transaction's `Message` is both a signer and the expected fee-payer, then
+* redundantly specifying the fee-payer is not strictly required.
+*/
+export class Transaction {
+  free(): void;
+/**
+* Create a new `Transaction`
+* @param {Instructions} instructions
+* @param {Pubkey | undefined} payer
+*/
+  constructor(instructions: Instructions, payer?: Pubkey);
+/**
+* Return a message containing all data that should be signed.
+* @returns {Message}
+*/
+  message(): Message;
+/**
+* Return the serialized message data to sign.
+* @returns {Uint8Array}
+*/
+  messageData(): Uint8Array;
+/**
+* Verify the transaction
+*/
+  verify(): void;
+/**
+* @param {Keypair} keypair
+* @param {Hash} recent_blockhash
+*/
+  partialSign(keypair: Keypair, recent_blockhash: Hash): void;
+/**
+* @returns {boolean}
+*/
+  isSigned(): boolean;
+/**
+* @returns {Uint8Array}
+*/
+  toBytes(): Uint8Array;
+/**
+* @param {Uint8Array} bytes
+* @returns {Transaction}
+*/
+  static fromBytes(bytes: Uint8Array): Transaction;
+}
 
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
 
@@ -333,11 +437,35 @@ export interface InitOutput {
   readonly oracleregistry_new: () => number;
   readonly oracleregistry_add_oracle: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
   readonly __wbg_swapresult_free: (a: number) => void;
-  readonly __wbg_get_swapresult_out: (a: number, b: number) => void;
-  readonly __wbg_set_swapresult_out: (a: number, b: number, c: number) => void;
+  readonly __wbg_get_swapresult_amount_in: (a: number, b: number) => void;
+  readonly __wbg_set_swapresult_amount_in: (a: number, b: number, c: number) => void;
+  readonly __wbg_get_swapresult_fee_paid: (a: number, b: number) => void;
+  readonly __wbg_set_swapresult_fee_paid: (a: number, b: number, c: number) => void;
+  readonly __wbg_get_swapresult_amount_out: (a: number, b: number) => void;
+  readonly __wbg_set_swapresult_amount_out: (a: number, b: number, c: number) => void;
   readonly __wbg_get_swapresult_price_impact: (a: number) => number;
   readonly __wbg_set_swapresult_price_impact: (a: number, b: number) => void;
+  readonly __wbg_get_swapresult_swap_price: (a: number) => number;
+  readonly __wbg_set_swapresult_swap_price: (a: number, b: number) => void;
+  readonly __wbg_get_swapresult_insta_price: (a: number) => number;
+  readonly __wbg_set_swapresult_insta_price: (a: number, b: number) => void;
+  readonly __wbg_get_swapresult_oracle_price: (a: number) => number;
+  readonly __wbg_set_swapresult_oracle_price: (a: number, b: number) => void;
   readonly swap: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number, n: number, o: number, p: number, q: number, r: number) => void;
+  readonly __wbg_transaction_free: (a: number) => void;
+  readonly transaction_constructor: (a: number, b: number) => number;
+  readonly transaction_message: (a: number) => number;
+  readonly transaction_messageData: (a: number, b: number) => void;
+  readonly transaction_verify: (a: number, b: number) => void;
+  readonly transaction_partialSign: (a: number, b: number, c: number) => void;
+  readonly transaction_isSigned: (a: number) => number;
+  readonly transaction_toBytes: (a: number, b: number) => void;
+  readonly transaction_fromBytes: (a: number, b: number, c: number) => void;
+  readonly __wbg_keypair_free: (a: number) => void;
+  readonly keypair_constructor: () => number;
+  readonly keypair_toBytes: (a: number, b: number) => void;
+  readonly keypair_fromBytes: (a: number, b: number, c: number) => void;
+  readonly keypair_pubkey: (a: number) => number;
   readonly __wbg_instruction_free: (a: number) => void;
   readonly systeminstruction_createAccount: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => number;
   readonly systeminstruction_createAccountWithSeed: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number) => number;
@@ -364,19 +492,19 @@ export interface InitOutput {
   readonly pubkey_createProgramAddress: (a: number, b: number, c: number, d: number) => void;
   readonly pubkey_findProgramAddress: (a: number, b: number, c: number, d: number) => void;
   readonly solana_program_init: () => void;
+  readonly __wbg_instructions_free: (a: number) => void;
+  readonly instructions_constructor: () => number;
+  readonly instructions_push: (a: number, b: number) => void;
   readonly hash_constructor: (a: number, b: number) => void;
   readonly hash_toString: (a: number, b: number) => void;
   readonly hash_equals: (a: number, b: number) => number;
   readonly hash_toBytes: (a: number, b: number) => void;
-  readonly __wbg_instructions_free: (a: number) => void;
-  readonly instructions_constructor: () => number;
-  readonly instructions_push: (a: number, b: number) => void;
   readonly __wbg_hash_free: (a: number) => void;
   readonly __wbindgen_malloc: (a: number) => number;
   readonly __wbindgen_realloc: (a: number, b: number, c: number) => number;
   readonly __wbindgen_add_to_stack_pointer: (a: number) => number;
-  readonly __wbindgen_exn_store: (a: number) => void;
   readonly __wbindgen_free: (a: number, b: number) => void;
+  readonly __wbindgen_exn_store: (a: number) => void;
 }
 
 /**

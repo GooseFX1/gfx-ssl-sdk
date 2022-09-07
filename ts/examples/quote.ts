@@ -8,15 +8,14 @@ const connection = new Connection(
   "finalized"
 );
 
-const quote = async () => {
+const quote = async (input: BigInt) => {
   const swap = new Swap(connection);
-  const { out: outAmount, impact } = await swap.getQuote(
+  const quote = await swap.getQuote(
     new PublicKey("So11111111111111111111111111111111111111112"), //SOL
-    new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"), //USD
-    1000000n
+    new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"), //USDC
+    input
   );
-  console.log(`out: ${outAmount} ${impact}`);
-  return { outAmount, impact };
+  console.log("quote:", quote);
 };
 
-quote();
+quote(BigInt(process.argv[2]));

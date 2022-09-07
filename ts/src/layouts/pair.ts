@@ -17,11 +17,11 @@ interface OracleComponent {
 export const ORACLE_ELEMENT_LAYOUT = lo.struct<OracleComponent>([
   publicKey("address"),
   bool("inverse"),
-  lo.blob(1, "padding"), // padding
 ]);
 
 export const ORACLE_LAYOUT = lo.struct<Oracle>([
   lo.seq(ORACLE_ELEMENT_LAYOUT, 4, "elements"),
+  lo.blob(4, "padding"), // padding
   u64("n"),
   lo.blob(8 * 8), // padding
 ]);

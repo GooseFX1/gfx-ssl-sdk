@@ -23,8 +23,13 @@ import { SSL } from "./ssl";
 let wasmInited = false;
 
 export interface Quote {
-  out: BigInt;
+  amountIn: BigInt;
+  fee: BigInt;
+  amountOut: BigInt;
   impact: number;
+  swapPrice: number;
+  instantPrice: number;
+  oraclePrice: number;
 }
 
 export class Swap {
@@ -83,7 +88,7 @@ export class Swap {
   public getQuote = async (
     tokenIn: PublicKey,
     tokenOut: PublicKey,
-    inTokenAmount: BigInt
+    inTokenAmount: BigInt,
   ): Promise<Quote> => {
     const quoter = await this.getQuoter(tokenIn, tokenOut);
     await quoter.prepare();
@@ -222,7 +227,7 @@ type Prepared = {
   registry: wasm.OracleRegistry;
 };
 
-class Quoter {  
+class Quoter {
   private prepared: Prepared | undefined = undefined;
 
   constructor(
@@ -303,10 +308,18 @@ class Quoter {
     };
   }
 
-  public quote(inTokenAmount: BigInt) {
+  public quote(inTokenAmount: BigInt): Quote {
     const swapWASM = wasm.swap;
 
-    if (inTokenAmount === 0n) return { impact: 0, out: 0n };
+    if (inTokenAmount === 0n) return {
+      amountIn: 0n,
+      fee: 0n,
+      amountOut: 0n,
+      impact: 0,
+      swapPrice: 0,
+      instantPrice: 0,
+      oraclePrice: 0
+    };
 
     if (this.prepared === undefined) throw "Run prepare first";
     const prepared = this.prepared;
@@ -320,12 +333,17 @@ class Quoter {
       prepared.swappedLiabilityIn,
       prepared.swappedLiabilityOut,
       prepared.registry,
-      inTokenAmount
+      inTokenAmount,
     );
 
     const finalResult: Quote = {
-      out: out.out,
+      amountIn: out.amount_in,
+      fee: out.fee_paid,
+      amountOut: out.amount_out,
       impact: out.price_impact,
+      swapPrice: out.swap_price,
+      instantPrice: out.insta_price,
+      oraclePrice: out.oracle_price
     };
 
     return finalResult;
