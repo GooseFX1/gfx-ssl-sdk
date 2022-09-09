@@ -259,6 +259,9 @@ export class SwapResult {
   insta_price: number;
 /**
 */
+  iter: number;
+/**
+*/
   oracle_price: number;
 /**
 */
@@ -451,6 +454,8 @@ export interface InitOutput {
   readonly __wbg_set_swapresult_insta_price: (a: number, b: number) => void;
   readonly __wbg_get_swapresult_oracle_price: (a: number) => number;
   readonly __wbg_set_swapresult_oracle_price: (a: number, b: number) => void;
+  readonly __wbg_get_swapresult_iter: (a: number) => number;
+  readonly __wbg_set_swapresult_iter: (a: number, b: number) => void;
   readonly swap: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number, n: number, o: number, p: number, q: number, r: number) => void;
   readonly __wbg_transaction_free: (a: number) => void;
   readonly transaction_constructor: (a: number, b: number) => number;

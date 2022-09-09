@@ -994,6 +994,18 @@ export class SwapResult {
     set oracle_price(arg0) {
         wasm.__wbg_set_swapresult_oracle_price(this.ptr, arg0);
     }
+    /**
+    */
+    get iter() {
+        const ret = wasm.__wbg_get_swapresult_iter(this.ptr);
+        return ret >>> 0;
+    }
+    /**
+    * @param {number} arg0
+    */
+    set iter(arg0) {
+        wasm.__wbg_set_swapresult_iter(this.ptr, arg0);
+    }
 }
 
 export class SystemInstruction {
