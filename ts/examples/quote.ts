@@ -11,8 +11,9 @@ const connection = new Connection(
 const quote = async (input: BigInt) => {
   const swap = new Swap(connection);
   const quote = await swap.getQuote(
-    new PublicKey("So11111111111111111111111111111111111111112"), //SOL
-    new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"), //USDC
+    // new PublicKey("7i5KKsX2weiTkry7jA4ZwSuXGhs5eJBEjY8vVxR4pfRx"), //SOL
+    new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"), //SOL
+    new PublicKey("So11111111111111111111111111111111111111112"), //USDC
     input
   );
   console.log("quote:", quote);
