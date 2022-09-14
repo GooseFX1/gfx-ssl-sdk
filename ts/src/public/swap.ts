@@ -30,8 +30,6 @@ export interface Quote {
   swapPrice: number;
   instantPrice: number;
   oraclePrice: number;
-  iter: number;
-  estimatedCU: number;
 }
 
 export class Swap {
@@ -321,8 +319,6 @@ class Quoter {
       swapPrice: 0,
       instantPrice: 0,
       oraclePrice: 0,
-      iter: 0,
-      estimatedCU: 0,
     };
 
     if (this.prepared === undefined) throw "Run prepare first";
@@ -348,8 +344,6 @@ class Quoter {
       swapPrice: out.swap_price,
       instantPrice: out.insta_price,
       oraclePrice: out.oracle_price,
-      iter: out.iter,
-      estimatedCU: 120000 + 26809 * out.iter + 43723
     };
 
     return finalResult;
