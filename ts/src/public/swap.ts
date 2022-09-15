@@ -1,5 +1,5 @@
 import { Program, Provider, Idl, BN } from "@project-serum/anchor";
-import { PAIR_LAYOUT } from "../layouts";
+import { PAIR_LAYOUT, SSL_LAYOUT } from "../layouts";
 import {
   TOKEN_PROGRAM_ID,
   NATIVE_MINT,
@@ -225,6 +225,7 @@ type Prepared = {
   liabilityOut: BigInt;
   swappedLiabilityOut: BigInt;
   registry: wasm.OracleRegistry;
+  suspended: boolean;
 };
 
 class Quoter {
@@ -305,10 +306,17 @@ class Quoter {
       liabilityOut: liabilityVaultOut.amount,
       swappedLiabilityOut: swappedLiabilityVaultOut.amount,
       registry: registry,
+      suspended: (new SSL(sslInData)).isSuspended() || (new SSL(sslOutData)).isSuspended(),
     };
   }
 
-  public quote(inTokenAmount: BigInt): Quote {
+  public isSuspended(): boolean {
+    if (this.prepared === undefined) throw "Run prepare first";
+
+    return this.prepared.suspended;
+  }
+
+  public quote(inTokenAmount: BigInt, silent: boolean = true): Quote {
     const swapWASM = wasm.swap;
 
     if (inTokenAmount === 0n) return {
@@ -324,19 +332,36 @@ class Quoter {
     if (this.prepared === undefined) throw "Run prepare first";
     const prepared = this.prepared;
 
-    const out = swapWASM(
-      prepared.sslInData.slice(),
-      prepared.sslOutData.slice(),
-      prepared.pairData.slice(),
-      prepared.liabilityIn,
-      prepared.liabilityOut,
-      prepared.swappedLiabilityIn,
-      prepared.swappedLiabilityOut,
-      prepared.registry,
-      inTokenAmount,
-    );
+    let out;
+    try {
+      out = swapWASM(
+        prepared.sslInData.slice(),
+        prepared.sslOutData.slice(),
+        prepared.pairData.slice(),
+        prepared.liabilityIn,
+        prepared.liabilityOut,
+        prepared.swappedLiabilityIn,
+        prepared.swappedLiabilityOut,
+        prepared.registry,
+        inTokenAmount,
+      );
+    } catch (e) {
+      if (silent) {
+        return {
+          amountIn: inTokenAmount,
+          fee: 0n,
+          amountOut: 0n,
+          impact: 1,
+          swapPrice: 0,
+          instantPrice: 0,
+          oraclePrice: 0,
+        };
+      } else {
+        throw e;
+      }
+    }
 
-    const finalResult: Quote = {
+    return {
       amountIn: out.amount_in,
       fee: out.fee_paid,
       amountOut: out.amount_out,
@@ -346,7 +371,7 @@ class Quoter {
       oraclePrice: out.oracle_price,
     };
 
-    return finalResult;
+
   }
 
   public getPairAddress = (tokenA: PublicKey, tokenB: PublicKey) => {

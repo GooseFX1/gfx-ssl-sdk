@@ -8,12 +8,39 @@ import {
   SystemProgram,
   Transaction,
 } from "@solana/web3.js";
-import { Swap } from "../src";
+import { assert } from "console";
+import { ADDRESSES, SSL, Swap } from "../src";
 
 const connection = new Connection(
   "https://api.mainnet-beta.solana.com/",
   "finalized"
 );
+
+
+test("SOL pool is not suspended", async () => {
+  let ssl = await SSL.loadByMint(
+    connection,
+    ADDRESSES["MAINNET"].GFX_CONTROLLER,
+    new PublicKey("So11111111111111111111111111111111111111112")
+  );
+
+  const suspended = ssl!.isSuspended();
+
+  assert(!suspended);
+});
+
+test("SOL/USDC pair is not suspended", async () => {
+  const swap = new Swap(connection);
+  const quoter = await swap.getQuoter(
+    new PublicKey("So11111111111111111111111111111111111111112"), //SOL
+    new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"), //USD
+  );
+  await quoter.prepare();
+  const suspended = quoter.isSuspended();
+
+  console.log(`SOL/USDC suspended: ${suspended}`);
+  assert(!suspended);
+});
 
 test("should swap", async () => {
   const swap = new Swap(connection);

@@ -58,6 +58,9 @@ export class SSL {
         this.address = SSL.findAddress(this.controller, this.mint, programId);
     }
 
+    public isSuspended(): boolean {
+        return this.inner.suspended;
+    }
 
     async deposit(
         program: Program,
