@@ -32,18 +32,18 @@ export interface PairLayout {
   controller: PublicKey;
   mints: Array<PublicKey>;
   oracles: Array<Oracle>;
-  nOracle: BigInt;
+  nOracle: bigint;
   fee_collector: PublicKey;
   A: number;
   feeRates: Array<number>;
-  maxDelay: BigInt;
-  confidence: BigInt;
+  maxDelay: bigint;
+  confidence: bigint;
   balancer: PublicKey;
   excessiveConfiscateRate: number;
   feeCollector: PublicKey;
   platformFeeRate: Array<number>;
   rebalanceRebates: Array<number>;
-  volumes: Array<BigInt>;
+  volumes: Array<bigint>;
   enableRebalanceSwap: boolean;
 }
 

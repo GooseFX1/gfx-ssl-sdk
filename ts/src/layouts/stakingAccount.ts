@@ -6,8 +6,8 @@ export interface StakingAccountLayout {
     sighash: Uint8Array,
     controller: PublicKey,
     bump: number,
-    share: BigInt,
-    amountStaked: BigInt,
+    share: bigint,
+    amountStaked: bigint,
 }
 
 export const STAKING_ACCOUNT_LAYOUT = lo.struct<StakingAccountLayout>([

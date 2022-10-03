@@ -11,9 +11,9 @@ export interface SSLLayout {
   ptBump: number;
   suspended: boolean;
   cranker: PublicKey;
-  weight: BigInt;
-  swappedLiabilityNative: BigInt;
-  totalShare: BigInt;
+  weight: bigint;
+  swappedLiabilityNative: bigint;
+  totalShare: bigint;
 }
 
 export const SSL_LAYOUT = lo.struct<SSLLayout>([

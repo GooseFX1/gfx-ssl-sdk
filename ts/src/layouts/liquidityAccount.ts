@@ -7,9 +7,9 @@ export interface LiquidityAccountLayout {
     sighash: Uint8Array,
     mint: PublicKey,
     bump: number,
-    share: BigInt,
-    ptMinted: BigInt,
-    amountDeposited: BigInt,
+    share: bigint,
+    ptMinted: bigint,
+    amountDeposited: bigint,
 }
 
 export const LIQUIDITY_ACCOUNT_LAYOUT = lo.struct<LiquidityAccountLayout>([

@@ -10,10 +10,10 @@ export interface ControllerLayout {
     suspended: number,
     decimals: number,
     mint: PublicKey,
-    dailyReward: BigInt,
-    totalStakingShare: BigInt,
-    stakingBalance: BigInt,
-    lastDistributionTime: BigInt,
+    dailyReward: bigint,
+    totalStakingShare: bigint,
+    stakingBalance: bigint,
+    lastDistributionTime: bigint,
     withdrawFee: number,
 }
 

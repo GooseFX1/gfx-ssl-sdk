@@ -8,7 +8,7 @@ const connection = new Connection(
   "finalized"
 );
 
-const quote = async (input: BigInt) => {
+const quote = async (input: bigint) => {
   const swap = new Swap(connection);
   const quote = await swap.getQuote(
     new PublicKey("So11111111111111111111111111111111111111112"), // SOL

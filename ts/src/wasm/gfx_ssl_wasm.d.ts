@@ -4,15 +4,15 @@
 * @param {Uint8Array} ssl_in
 * @param {Uint8Array} ssl_out
 * @param {Uint8Array} pair
-* @param {BigInt} liability_in
-* @param {BigInt} liability_out
-* @param {BigInt} swapped_liability_in
-* @param {BigInt} swapped_liability_out
+* @param {bigint} liability_in
+* @param {bigint} liability_out
+* @param {bigint} swapped_liability_in
+* @param {bigint} swapped_liability_out
 * @param {OracleRegistry} oracles
-* @param {BigInt} amount_in
+* @param {bigint} amount_in
 * @returns {SwapResult}
 */
-export function swap(ssl_in: Uint8Array, ssl_out: Uint8Array, pair: Uint8Array, liability_in: BigInt, liability_out: BigInt, swapped_liability_in: BigInt, swapped_liability_out: BigInt, oracles: OracleRegistry, amount_in: BigInt): SwapResult;
+export function swap(ssl_in: Uint8Array, ssl_out: Uint8Array, pair: Uint8Array, liability_in: bigint, liability_out: bigint, swapped_liability_in: bigint, swapped_liability_out: bigint, oracles: OracleRegistry, amount_in: bigint): SwapResult;
 /**
 * Initialize Javascript logging and panic handler
 */
@@ -21,28 +21,28 @@ export function solana_program_init(): void;
 */
 export class Hash {
   free(): void;
-/**
-* Create a new Hash object
-*
-* * `value` - optional hash as a base58 encoded string, `Uint8Array`, `[number]`
-* @param {any} value
-*/
+  /**
+  * Create a new Hash object
+  *
+  * * `value` - optional hash as a base58 encoded string, `Uint8Array`, `[number]`
+  * @param {any} value
+  */
   constructor(value: any);
-/**
-* Return the base58 string representation of the hash
-* @returns {string}
-*/
+  /**
+  * Return the base58 string representation of the hash
+  * @returns {string}
+  */
   toString(): string;
-/**
-* Checks if two `Hash`s are equal
-* @param {Hash} other
-* @returns {boolean}
-*/
+  /**
+  * Checks if two `Hash`s are equal
+  * @param {Hash} other
+  * @returns {boolean}
+  */
   equals(other: Hash): boolean;
-/**
-* Return the `Uint8Array` representation of the hash
-* @returns {Uint8Array}
-*/
+  /**
+  * Return the `Uint8Array` representation of the hash
+  * @returns {Uint8Array}
+  */
   toBytes(): Uint8Array;
 }
 /**
@@ -113,12 +113,12 @@ export class Instruction {
 */
 export class Instructions {
   free(): void;
-/**
-*/
+  /**
+  */
   constructor();
-/**
-* @param {Instruction} instruction
-*/
+  /**
+  * @param {Instruction} instruction
+  */
   push(instruction: Instruction): void;
 }
 /**
@@ -126,25 +126,25 @@ export class Instructions {
 */
 export class Keypair {
   free(): void;
-/**
-* Create a new `Keypair `
-*/
+  /**
+  * Create a new `Keypair `
+  */
   constructor();
-/**
-* Convert a `Keypair` to a `Uint8Array`
-* @returns {Uint8Array}
-*/
+  /**
+  * Convert a `Keypair` to a `Uint8Array`
+  * @returns {Uint8Array}
+  */
   toBytes(): Uint8Array;
-/**
-* Recover a `Keypair` from a `Uint8Array`
-* @param {Uint8Array} bytes
-* @returns {Keypair}
-*/
+  /**
+  * Recover a `Keypair` from a `Uint8Array`
+  * @param {Uint8Array} bytes
+  * @returns {Keypair}
+  */
   static fromBytes(bytes: Uint8Array): Keypair;
-/**
-* Return the `Pubkey` for this `Keypair`
-* @returns {Pubkey}
-*/
+  /**
+  * Return the `Pubkey` for this `Keypair`
+  * @returns {Pubkey}
+  */
   pubkey(): Pubkey;
 }
 /**
@@ -165,207 +165,207 @@ export class Keypair {
 */
 export class Message {
   free(): void;
-/**
-* The id of a recent ledger entry.
-*/
+  /**
+  * The id of a recent ledger entry.
+  */
   recent_blockhash: Hash;
 }
 /**
 */
 export class OracleRegistry {
   free(): void;
-/**
-*/
+  /**
+  */
   constructor();
-/**
-* @param {Uint8Array} key
-* @param {Uint8Array} data
-*/
+  /**
+  * @param {Uint8Array} key
+  * @param {Uint8Array} data
+  */
   add_oracle(key: Uint8Array, data: Uint8Array): void;
 }
 /**
 */
 export class Pubkey {
   free(): void;
-/**
-* Create a new Pubkey object
-*
-* * `value` - optional public key as a base58 encoded string, `Uint8Array`, `[number]`
-* @param {any} value
-*/
+  /**
+  * Create a new Pubkey object
+  *
+  * * `value` - optional public key as a base58 encoded string, `Uint8Array`, `[number]`
+  * @param {any} value
+  */
   constructor(value: any);
-/**
-* Return the base58 string representation of the public key
-* @returns {string}
-*/
+  /**
+  * Return the base58 string representation of the public key
+  * @returns {string}
+  */
   toString(): string;
-/**
-* Check if a `Pubkey` is on the ed25519 curve.
-* @returns {boolean}
-*/
+  /**
+  * Check if a `Pubkey` is on the ed25519 curve.
+  * @returns {boolean}
+  */
   isOnCurve(): boolean;
-/**
-* Checks if two `Pubkey`s are equal
-* @param {Pubkey} other
-* @returns {boolean}
-*/
+  /**
+  * Checks if two `Pubkey`s are equal
+  * @param {Pubkey} other
+  * @returns {boolean}
+  */
   equals(other: Pubkey): boolean;
-/**
-* Return the `Uint8Array` representation of the public key
-* @returns {Uint8Array}
-*/
+  /**
+  * Return the `Uint8Array` representation of the public key
+  * @returns {Uint8Array}
+  */
   toBytes(): Uint8Array;
-/**
-* Derive a Pubkey from another Pubkey, string seed, and a program id
-* @param {Pubkey} base
-* @param {string} seed
-* @param {Pubkey} owner
-* @returns {Pubkey}
-*/
+  /**
+  * Derive a Pubkey from another Pubkey, string seed, and a program id
+  * @param {Pubkey} base
+  * @param {string} seed
+  * @param {Pubkey} owner
+  * @returns {Pubkey}
+  */
   static createWithSeed(base: Pubkey, seed: string, owner: Pubkey): Pubkey;
-/**
-* Derive a program address from seeds and a program id
-* @param {any[]} seeds
-* @param {Pubkey} program_id
-* @returns {Pubkey}
-*/
+  /**
+  * Derive a program address from seeds and a program id
+  * @param {any[]} seeds
+  * @param {Pubkey} program_id
+  * @returns {Pubkey}
+  */
   static createProgramAddress(seeds: any[], program_id: Pubkey): Pubkey;
-/**
-* Find a valid program address
-*
-* Returns:
-* * `[PubKey, number]` - the program address and bump seed
-* @param {any[]} seeds
-* @param {Pubkey} program_id
-* @returns {any}
-*/
+  /**
+  * Find a valid program address
+  *
+  * Returns:
+  * * `[PubKey, number]` - the program address and bump seed
+  * @param {any[]} seeds
+  * @param {Pubkey} program_id
+  * @returns {any}
+  */
   static findProgramAddress(seeds: any[], program_id: Pubkey): any;
 }
 /**
 */
 export class SwapResult {
   free(): void;
-/**
-*/
-  amount_in: BigInt;
-/**
-*/
-  amount_out: BigInt;
-/**
-*/
-  fee_paid: BigInt;
-/**
-*/
+  /**
+  */
+  amount_in: bigint;
+  /**
+  */
+  amount_out: bigint;
+  /**
+  */
+  fee_paid: bigint;
+  /**
+  */
   insta_price: number;
-/**
-*/
+  /**
+  */
   iter: number;
-/**
-*/
+  /**
+  */
   oracle_price: number;
-/**
-*/
+  /**
+  */
   price_impact: number;
-/**
-*/
+  /**
+  */
   swap_price: number;
 }
 export class SystemInstruction {
   free(): void;
-/**
-* @param {Pubkey} from_pubkey
-* @param {Pubkey} to_pubkey
-* @param {BigInt} lamports
-* @param {BigInt} space
-* @param {Pubkey} owner
-* @returns {Instruction}
-*/
-  static createAccount(from_pubkey: Pubkey, to_pubkey: Pubkey, lamports: BigInt, space: BigInt, owner: Pubkey): Instruction;
-/**
-* @param {Pubkey} from_pubkey
-* @param {Pubkey} to_pubkey
-* @param {Pubkey} base
-* @param {string} seed
-* @param {BigInt} lamports
-* @param {BigInt} space
-* @param {Pubkey} owner
-* @returns {Instruction}
-*/
-  static createAccountWithSeed(from_pubkey: Pubkey, to_pubkey: Pubkey, base: Pubkey, seed: string, lamports: BigInt, space: BigInt, owner: Pubkey): Instruction;
-/**
-* @param {Pubkey} pubkey
-* @param {Pubkey} owner
-* @returns {Instruction}
-*/
+  /**
+  * @param {Pubkey} from_pubkey
+  * @param {Pubkey} to_pubkey
+  * @param {bigint} lamports
+  * @param {bigint} space
+  * @param {Pubkey} owner
+  * @returns {Instruction}
+  */
+  static createAccount(from_pubkey: Pubkey, to_pubkey: Pubkey, lamports: bigint, space: bigint, owner: Pubkey): Instruction;
+  /**
+  * @param {Pubkey} from_pubkey
+  * @param {Pubkey} to_pubkey
+  * @param {Pubkey} base
+  * @param {string} seed
+  * @param {bigint} lamports
+  * @param {bigint} space
+  * @param {Pubkey} owner
+  * @returns {Instruction}
+  */
+  static createAccountWithSeed(from_pubkey: Pubkey, to_pubkey: Pubkey, base: Pubkey, seed: string, lamports: bigint, space: bigint, owner: Pubkey): Instruction;
+  /**
+  * @param {Pubkey} pubkey
+  * @param {Pubkey} owner
+  * @returns {Instruction}
+  */
   static assign(pubkey: Pubkey, owner: Pubkey): Instruction;
-/**
-* @param {Pubkey} pubkey
-* @param {Pubkey} base
-* @param {string} seed
-* @param {Pubkey} owner
-* @returns {Instruction}
-*/
+  /**
+  * @param {Pubkey} pubkey
+  * @param {Pubkey} base
+  * @param {string} seed
+  * @param {Pubkey} owner
+  * @returns {Instruction}
+  */
   static assignWithSeed(pubkey: Pubkey, base: Pubkey, seed: string, owner: Pubkey): Instruction;
-/**
-* @param {Pubkey} from_pubkey
-* @param {Pubkey} to_pubkey
-* @param {BigInt} lamports
-* @returns {Instruction}
-*/
-  static transfer(from_pubkey: Pubkey, to_pubkey: Pubkey, lamports: BigInt): Instruction;
-/**
-* @param {Pubkey} from_pubkey
-* @param {Pubkey} from_base
-* @param {string} from_seed
-* @param {Pubkey} from_owner
-* @param {Pubkey} to_pubkey
-* @param {BigInt} lamports
-* @returns {Instruction}
-*/
-  static transferWithSeed(from_pubkey: Pubkey, from_base: Pubkey, from_seed: string, from_owner: Pubkey, to_pubkey: Pubkey, lamports: BigInt): Instruction;
-/**
-* @param {Pubkey} pubkey
-* @param {BigInt} space
-* @returns {Instruction}
-*/
-  static allocate(pubkey: Pubkey, space: BigInt): Instruction;
-/**
-* @param {Pubkey} address
-* @param {Pubkey} base
-* @param {string} seed
-* @param {BigInt} space
-* @param {Pubkey} owner
-* @returns {Instruction}
-*/
-  static allocateWithSeed(address: Pubkey, base: Pubkey, seed: string, space: BigInt, owner: Pubkey): Instruction;
-/**
-* @param {Pubkey} from_pubkey
-* @param {Pubkey} nonce_pubkey
-* @param {Pubkey} authority
-* @param {BigInt} lamports
-* @returns {Array<any>}
-*/
-  static createNonceAccount(from_pubkey: Pubkey, nonce_pubkey: Pubkey, authority: Pubkey, lamports: BigInt): Array<any>;
-/**
-* @param {Pubkey} nonce_pubkey
-* @param {Pubkey} authorized_pubkey
-* @returns {Instruction}
-*/
+  /**
+  * @param {Pubkey} from_pubkey
+  * @param {Pubkey} to_pubkey
+  * @param {bigint} lamports
+  * @returns {Instruction}
+  */
+  static transfer(from_pubkey: Pubkey, to_pubkey: Pubkey, lamports: bigint): Instruction;
+  /**
+  * @param {Pubkey} from_pubkey
+  * @param {Pubkey} from_base
+  * @param {string} from_seed
+  * @param {Pubkey} from_owner
+  * @param {Pubkey} to_pubkey
+  * @param {bigint} lamports
+  * @returns {Instruction}
+  */
+  static transferWithSeed(from_pubkey: Pubkey, from_base: Pubkey, from_seed: string, from_owner: Pubkey, to_pubkey: Pubkey, lamports: bigint): Instruction;
+  /**
+  * @param {Pubkey} pubkey
+  * @param {bigint} space
+  * @returns {Instruction}
+  */
+  static allocate(pubkey: Pubkey, space: bigint): Instruction;
+  /**
+  * @param {Pubkey} address
+  * @param {Pubkey} base
+  * @param {string} seed
+  * @param {bigint} space
+  * @param {Pubkey} owner
+  * @returns {Instruction}
+  */
+  static allocateWithSeed(address: Pubkey, base: Pubkey, seed: string, space: bigint, owner: Pubkey): Instruction;
+  /**
+  * @param {Pubkey} from_pubkey
+  * @param {Pubkey} nonce_pubkey
+  * @param {Pubkey} authority
+  * @param {bigint} lamports
+  * @returns {Array<any>}
+  */
+  static createNonceAccount(from_pubkey: Pubkey, nonce_pubkey: Pubkey, authority: Pubkey, lamports: bigint): Array<any>;
+  /**
+  * @param {Pubkey} nonce_pubkey
+  * @param {Pubkey} authorized_pubkey
+  * @returns {Instruction}
+  */
   static advanceNonceAccount(nonce_pubkey: Pubkey, authorized_pubkey: Pubkey): Instruction;
-/**
-* @param {Pubkey} nonce_pubkey
-* @param {Pubkey} authorized_pubkey
-* @param {Pubkey} to_pubkey
-* @param {BigInt} lamports
-* @returns {Instruction}
-*/
-  static withdrawNonceAccount(nonce_pubkey: Pubkey, authorized_pubkey: Pubkey, to_pubkey: Pubkey, lamports: BigInt): Instruction;
-/**
-* @param {Pubkey} nonce_pubkey
-* @param {Pubkey} authorized_pubkey
-* @param {Pubkey} new_authority
-* @returns {Instruction}
-*/
+  /**
+  * @param {Pubkey} nonce_pubkey
+  * @param {Pubkey} authorized_pubkey
+  * @param {Pubkey} to_pubkey
+  * @param {bigint} lamports
+  * @returns {Instruction}
+  */
+  static withdrawNonceAccount(nonce_pubkey: Pubkey, authorized_pubkey: Pubkey, to_pubkey: Pubkey, lamports: bigint): Instruction;
+  /**
+  * @param {Pubkey} nonce_pubkey
+  * @param {Pubkey} authorized_pubkey
+  * @param {Pubkey} new_authority
+  * @returns {Instruction}
+  */
   static authorizeNonceAccount(nonce_pubkey: Pubkey, authorized_pubkey: Pubkey, new_authority: Pubkey): Instruction;
 }
 /**
@@ -392,43 +392,43 @@ export class SystemInstruction {
 */
 export class Transaction {
   free(): void;
-/**
-* Create a new `Transaction`
-* @param {Instructions} instructions
-* @param {Pubkey | undefined} payer
-*/
+  /**
+  * Create a new `Transaction`
+  * @param {Instructions} instructions
+  * @param {Pubkey | undefined} payer
+  */
   constructor(instructions: Instructions, payer?: Pubkey);
-/**
-* Return a message containing all data that should be signed.
-* @returns {Message}
-*/
+  /**
+  * Return a message containing all data that should be signed.
+  * @returns {Message}
+  */
   message(): Message;
-/**
-* Return the serialized message data to sign.
-* @returns {Uint8Array}
-*/
+  /**
+  * Return the serialized message data to sign.
+  * @returns {Uint8Array}
+  */
   messageData(): Uint8Array;
-/**
-* Verify the transaction
-*/
+  /**
+  * Verify the transaction
+  */
   verify(): void;
-/**
-* @param {Keypair} keypair
-* @param {Hash} recent_blockhash
-*/
+  /**
+  * @param {Keypair} keypair
+  * @param {Hash} recent_blockhash
+  */
   partialSign(keypair: Keypair, recent_blockhash: Hash): void;
-/**
-* @returns {boolean}
-*/
+  /**
+  * @returns {boolean}
+  */
   isSigned(): boolean;
-/**
-* @returns {Uint8Array}
-*/
+  /**
+  * @returns {Uint8Array}
+  */
   toBytes(): Uint8Array;
-/**
-* @param {Uint8Array} bytes
-* @returns {Transaction}
-*/
+  /**
+  * @param {Uint8Array} bytes
+  * @returns {Transaction}
+  */
   static fromBytes(bytes: Uint8Array): Transaction;
 }
 
@@ -520,4 +520,4 @@ export interface InitOutput {
 *
 * @returns {Promise<InitOutput>}
 */
-export default function init (module_or_path: InitInput | Promise<InitInput>): Promise<InitOutput>;
+export default function init(module_or_path: InitInput | Promise<InitInput>): Promise<InitOutput>;

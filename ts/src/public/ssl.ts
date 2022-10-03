@@ -66,7 +66,7 @@ export class SSL {
         program: Program,
         controller: PublicKey,
         wallet: PublicKey,
-        amount: BigInt,
+        amount: bigint,
         programId: PublicKey = ADDRESSES["MAINNET"].SSL_PROGRAM_ID
     ): Promise<TransactionInstruction> {
         const inst = program.instruction;
