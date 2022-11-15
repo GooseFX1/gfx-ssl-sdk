@@ -19,6 +19,7 @@ import wasmData from "../wasm/gfx_ssl_wasm_data";
 import init, * as wasm from "../wasm/gfx_ssl_wasm";
 import { getAccount } from "@solana/spl-token";
 import { SSL } from "./ssl";
+import { parsePriceData } from "@pythnetwork/client";
 
 let wasmInited = false;
 
@@ -226,6 +227,8 @@ type Prepared = {
   swappedLiabilityOut: bigint;
   registry: wasm.OracleRegistry;
   suspended: boolean;
+  publishedSlots: Array<bigint>;
+  maxDelay: bigint;
 };
 
 class Quoter {
@@ -283,8 +286,9 @@ class Quoter {
 
     const OracleRegistry = wasm.OracleRegistry;
     const decoded = PAIR_LAYOUT.decode(pairData.data);
-    const { oracles, nOracle } = decoded;
+    const { maxDelay, oracles, nOracle } = decoded;
     const n = Number(nOracle.toString());
+    let publishedSlots = [];
     const registry = new OracleRegistry();
     for (const oracle of oracles.slice(0, n)) {
       const n = Number(oracle.n);
@@ -293,6 +297,7 @@ class Quoter {
         const acctInfo = await this.connection.getAccountInfo(elem.address);
         if (acctInfo?.data) {
           registry.add_oracle(elem.address.toBuffer(), acctInfo.data);
+          publishedSlots.push(parsePriceData(acctInfo.data).aggregate.publishSlot);
         }
       }
     }
@@ -307,13 +312,20 @@ class Quoter {
       swappedLiabilityOut: swappedLiabilityVaultOut.amount,
       registry: registry,
       suspended: (new SSL(sslInData)).isSuspended() || (new SSL(sslOutData)).isSuspended(),
+      publishedSlots: publishedSlots.map((val) => BigInt(val)),
+      maxDelay: maxDelay
     };
   }
 
-  public isSuspended(): boolean {
+  public isSuspended(currentSlot?: bigint): boolean {
     if (this.prepared === undefined) throw "Run prepare first";
-
-    return this.prepared.suspended;
+    let suspended = this.prepared.suspended;
+    if (currentSlot !== undefined) {
+      for (const pubSlot of this.prepared.publishedSlots) {
+        suspended ||= pubSlot + this.prepared.maxDelay <= currentSlot;
+      }
+    }
+    return suspended;
   }
 
   public quote(inTokenAmount: bigint, silent: boolean = true): Quote {
