@@ -8,7 +8,7 @@ import {
   SystemProgram,
   Transaction,
 } from "@solana/web3.js";
-import { ADDRESSES, mergeu64, splitu64, SSL, Swap } from "../src";
+import { ADDRESSES, SSL, Swap } from "../src";
 
 const connection = new Connection(
   "https://api.mainnet-beta.solana.com/",
@@ -121,19 +121,4 @@ test("is adding 1000000 additional ComputeBudget Instruction", async () => {
 
 });
 
-test("split/merge u64 to/from two numbers", async () => {
-  const u32CvtShim = new Uint32Array(2);
-  const uint64CvtShim = new BigUint64Array(u32CvtShim.buffer);
 
-  const number = 588410519551n;
-  const [low, high] = splitu64(number);
-  uint64CvtShim[0] = number;
-
-  expect(low).toBe(u32CvtShim[0]);
-  expect(high).toBe(u32CvtShim[1]);
-
-  const number_ = mergeu64(low, high);
-
-  expect(number_).toBe(number);
-
-});

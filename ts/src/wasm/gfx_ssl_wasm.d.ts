@@ -21,28 +21,28 @@ export function solana_program_init(): void;
 */
 export class Hash {
   free(): void;
-  /**
-  * Create a new Hash object
-  *
-  * * `value` - optional hash as a base58 encoded string, `Uint8Array`, `[number]`
-  * @param {any} value
-  */
+/**
+* Create a new Hash object
+*
+* * `value` - optional hash as a base58 encoded string, `Uint8Array`, `[number]`
+* @param {any} value
+*/
   constructor(value: any);
-  /**
-  * Return the base58 string representation of the hash
-  * @returns {string}
-  */
+/**
+* Return the base58 string representation of the hash
+* @returns {string}
+*/
   toString(): string;
-  /**
-  * Checks if two `Hash`s are equal
-  * @param {Hash} other
-  * @returns {boolean}
-  */
+/**
+* Checks if two `Hash`s are equal
+* @param {Hash} other
+* @returns {boolean}
+*/
   equals(other: Hash): boolean;
-  /**
-  * Return the `Uint8Array` representation of the hash
-  * @returns {Uint8Array}
-  */
+/**
+* Return the `Uint8Array` representation of the hash
+* @returns {Uint8Array}
+*/
   toBytes(): Uint8Array;
 }
 /**
@@ -113,12 +113,12 @@ export class Instruction {
 */
 export class Instructions {
   free(): void;
-  /**
-  */
+/**
+*/
   constructor();
-  /**
-  * @param {Instruction} instruction
-  */
+/**
+* @param {Instruction} instruction
+*/
   push(instruction: Instruction): void;
 }
 /**
@@ -126,25 +126,25 @@ export class Instructions {
 */
 export class Keypair {
   free(): void;
-  /**
-  * Create a new `Keypair `
-  */
+/**
+* Create a new `Keypair `
+*/
   constructor();
-  /**
-  * Convert a `Keypair` to a `Uint8Array`
-  * @returns {Uint8Array}
-  */
+/**
+* Convert a `Keypair` to a `Uint8Array`
+* @returns {Uint8Array}
+*/
   toBytes(): Uint8Array;
-  /**
-  * Recover a `Keypair` from a `Uint8Array`
-  * @param {Uint8Array} bytes
-  * @returns {Keypair}
-  */
+/**
+* Recover a `Keypair` from a `Uint8Array`
+* @param {Uint8Array} bytes
+* @returns {Keypair}
+*/
   static fromBytes(bytes: Uint8Array): Keypair;
-  /**
-  * Return the `Pubkey` for this `Keypair`
-  * @returns {Pubkey}
-  */
+/**
+* Return the `Pubkey` for this `Keypair`
+* @returns {Pubkey}
+*/
   pubkey(): Pubkey;
 }
 /**
@@ -165,208 +165,110 @@ export class Keypair {
 */
 export class Message {
   free(): void;
-  /**
-  * The id of a recent ledger entry.
-  */
+/**
+* The id of a recent ledger entry.
+*/
   recent_blockhash: Hash;
 }
 /**
 */
 export class OracleRegistry {
   free(): void;
-  /**
-  */
+/**
+*/
   constructor();
-  /**
-  * @param {Uint8Array} key
-  * @param {Uint8Array} data
-  */
+/**
+* @param {Uint8Array} key
+* @param {Uint8Array} data
+*/
   add_oracle(key: Uint8Array, data: Uint8Array): void;
 }
 /**
 */
 export class Pubkey {
   free(): void;
-  /**
-  * Create a new Pubkey object
-  *
-  * * `value` - optional public key as a base58 encoded string, `Uint8Array`, `[number]`
-  * @param {any} value
-  */
+/**
+* Create a new Pubkey object
+*
+* * `value` - optional public key as a base58 encoded string, `Uint8Array`, `[number]`
+* @param {any} value
+*/
   constructor(value: any);
-  /**
-  * Return the base58 string representation of the public key
-  * @returns {string}
-  */
+/**
+* Return the base58 string representation of the public key
+* @returns {string}
+*/
   toString(): string;
-  /**
-  * Check if a `Pubkey` is on the ed25519 curve.
-  * @returns {boolean}
-  */
+/**
+* Check if a `Pubkey` is on the ed25519 curve.
+* @returns {boolean}
+*/
   isOnCurve(): boolean;
-  /**
-  * Checks if two `Pubkey`s are equal
-  * @param {Pubkey} other
-  * @returns {boolean}
-  */
+/**
+* Checks if two `Pubkey`s are equal
+* @param {Pubkey} other
+* @returns {boolean}
+*/
   equals(other: Pubkey): boolean;
-  /**
-  * Return the `Uint8Array` representation of the public key
-  * @returns {Uint8Array}
-  */
+/**
+* Return the `Uint8Array` representation of the public key
+* @returns {Uint8Array}
+*/
   toBytes(): Uint8Array;
-  /**
-  * Derive a Pubkey from another Pubkey, string seed, and a program id
-  * @param {Pubkey} base
-  * @param {string} seed
-  * @param {Pubkey} owner
-  * @returns {Pubkey}
-  */
+/**
+* Derive a Pubkey from another Pubkey, string seed, and a program id
+* @param {Pubkey} base
+* @param {string} seed
+* @param {Pubkey} owner
+* @returns {Pubkey}
+*/
   static createWithSeed(base: Pubkey, seed: string, owner: Pubkey): Pubkey;
-  /**
-  * Derive a program address from seeds and a program id
-  * @param {any[]} seeds
-  * @param {Pubkey} program_id
-  * @returns {Pubkey}
-  */
+/**
+* Derive a program address from seeds and a program id
+* @param {any[]} seeds
+* @param {Pubkey} program_id
+* @returns {Pubkey}
+*/
   static createProgramAddress(seeds: any[], program_id: Pubkey): Pubkey;
-  /**
-  * Find a valid program address
-  *
-  * Returns:
-  * * `[PubKey, number]` - the program address and bump seed
-  * @param {any[]} seeds
-  * @param {Pubkey} program_id
-  * @returns {any}
-  */
+/**
+* Find a valid program address
+*
+* Returns:
+* * `[PubKey, number]` - the program address and bump seed
+* @param {any[]} seeds
+* @param {Pubkey} program_id
+* @returns {any}
+*/
   static findProgramAddress(seeds: any[], program_id: Pubkey): any;
 }
 /**
 */
 export class SwapResult {
   free(): void;
-  /**
-  */
+/**
+*/
   amount_in: bigint;
-  /**
-  */
+/**
+*/
   amount_out: bigint;
-  /**
-  */
+/**
+*/
   fee_paid: bigint;
-  /**
-  */
+/**
+*/
   insta_price: number;
-  /**
-  */
+/**
+*/
   iter: number;
-  /**
-  */
+/**
+*/
   oracle_price: number;
-  /**
-  */
+/**
+*/
   price_impact: number;
-  /**
-  */
+/**
+*/
   swap_price: number;
-}
-export class SystemInstruction {
-  free(): void;
-  /**
-  * @param {Pubkey} from_pubkey
-  * @param {Pubkey} to_pubkey
-  * @param {bigint} lamports
-  * @param {bigint} space
-  * @param {Pubkey} owner
-  * @returns {Instruction}
-  */
-  static createAccount(from_pubkey: Pubkey, to_pubkey: Pubkey, lamports: bigint, space: bigint, owner: Pubkey): Instruction;
-  /**
-  * @param {Pubkey} from_pubkey
-  * @param {Pubkey} to_pubkey
-  * @param {Pubkey} base
-  * @param {string} seed
-  * @param {bigint} lamports
-  * @param {bigint} space
-  * @param {Pubkey} owner
-  * @returns {Instruction}
-  */
-  static createAccountWithSeed(from_pubkey: Pubkey, to_pubkey: Pubkey, base: Pubkey, seed: string, lamports: bigint, space: bigint, owner: Pubkey): Instruction;
-  /**
-  * @param {Pubkey} pubkey
-  * @param {Pubkey} owner
-  * @returns {Instruction}
-  */
-  static assign(pubkey: Pubkey, owner: Pubkey): Instruction;
-  /**
-  * @param {Pubkey} pubkey
-  * @param {Pubkey} base
-  * @param {string} seed
-  * @param {Pubkey} owner
-  * @returns {Instruction}
-  */
-  static assignWithSeed(pubkey: Pubkey, base: Pubkey, seed: string, owner: Pubkey): Instruction;
-  /**
-  * @param {Pubkey} from_pubkey
-  * @param {Pubkey} to_pubkey
-  * @param {bigint} lamports
-  * @returns {Instruction}
-  */
-  static transfer(from_pubkey: Pubkey, to_pubkey: Pubkey, lamports: bigint): Instruction;
-  /**
-  * @param {Pubkey} from_pubkey
-  * @param {Pubkey} from_base
-  * @param {string} from_seed
-  * @param {Pubkey} from_owner
-  * @param {Pubkey} to_pubkey
-  * @param {bigint} lamports
-  * @returns {Instruction}
-  */
-  static transferWithSeed(from_pubkey: Pubkey, from_base: Pubkey, from_seed: string, from_owner: Pubkey, to_pubkey: Pubkey, lamports: bigint): Instruction;
-  /**
-  * @param {Pubkey} pubkey
-  * @param {bigint} space
-  * @returns {Instruction}
-  */
-  static allocate(pubkey: Pubkey, space: bigint): Instruction;
-  /**
-  * @param {Pubkey} address
-  * @param {Pubkey} base
-  * @param {string} seed
-  * @param {bigint} space
-  * @param {Pubkey} owner
-  * @returns {Instruction}
-  */
-  static allocateWithSeed(address: Pubkey, base: Pubkey, seed: string, space: bigint, owner: Pubkey): Instruction;
-  /**
-  * @param {Pubkey} from_pubkey
-  * @param {Pubkey} nonce_pubkey
-  * @param {Pubkey} authority
-  * @param {bigint} lamports
-  * @returns {Array<any>}
-  */
-  static createNonceAccount(from_pubkey: Pubkey, nonce_pubkey: Pubkey, authority: Pubkey, lamports: bigint): Array<any>;
-  /**
-  * @param {Pubkey} nonce_pubkey
-  * @param {Pubkey} authorized_pubkey
-  * @returns {Instruction}
-  */
-  static advanceNonceAccount(nonce_pubkey: Pubkey, authorized_pubkey: Pubkey): Instruction;
-  /**
-  * @param {Pubkey} nonce_pubkey
-  * @param {Pubkey} authorized_pubkey
-  * @param {Pubkey} to_pubkey
-  * @param {bigint} lamports
-  * @returns {Instruction}
-  */
-  static withdrawNonceAccount(nonce_pubkey: Pubkey, authorized_pubkey: Pubkey, to_pubkey: Pubkey, lamports: bigint): Instruction;
-  /**
-  * @param {Pubkey} nonce_pubkey
-  * @param {Pubkey} authorized_pubkey
-  * @param {Pubkey} new_authority
-  * @returns {Instruction}
-  */
-  static authorizeNonceAccount(nonce_pubkey: Pubkey, authorized_pubkey: Pubkey, new_authority: Pubkey): Instruction;
 }
 /**
 * An atomically-commited sequence of instructions.
@@ -392,43 +294,43 @@ export class SystemInstruction {
 */
 export class Transaction {
   free(): void;
-  /**
-  * Create a new `Transaction`
-  * @param {Instructions} instructions
-  * @param {Pubkey | undefined} payer
-  */
+/**
+* Create a new `Transaction`
+* @param {Instructions} instructions
+* @param {Pubkey | undefined} payer
+*/
   constructor(instructions: Instructions, payer?: Pubkey);
-  /**
-  * Return a message containing all data that should be signed.
-  * @returns {Message}
-  */
+/**
+* Return a message containing all data that should be signed.
+* @returns {Message}
+*/
   message(): Message;
-  /**
-  * Return the serialized message data to sign.
-  * @returns {Uint8Array}
-  */
+/**
+* Return the serialized message data to sign.
+* @returns {Uint8Array}
+*/
   messageData(): Uint8Array;
-  /**
-  * Verify the transaction
-  */
+/**
+* Verify the transaction
+*/
   verify(): void;
-  /**
-  * @param {Keypair} keypair
-  * @param {Hash} recent_blockhash
-  */
+/**
+* @param {Keypair} keypair
+* @param {Hash} recent_blockhash
+*/
   partialSign(keypair: Keypair, recent_blockhash: Hash): void;
-  /**
-  * @returns {boolean}
-  */
+/**
+* @returns {boolean}
+*/
   isSigned(): boolean;
-  /**
-  * @returns {Uint8Array}
-  */
+/**
+* @returns {Uint8Array}
+*/
   toBytes(): Uint8Array;
-  /**
-  * @param {Uint8Array} bytes
-  * @returns {Transaction}
-  */
+/**
+* @param {Uint8Array} bytes
+* @returns {Transaction}
+*/
   static fromBytes(bytes: Uint8Array): Transaction;
 }
 
@@ -440,12 +342,12 @@ export interface InitOutput {
   readonly oracleregistry_new: () => number;
   readonly oracleregistry_add_oracle: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
   readonly __wbg_swapresult_free: (a: number) => void;
-  readonly __wbg_get_swapresult_amount_in: (a: number, b: number) => void;
-  readonly __wbg_set_swapresult_amount_in: (a: number, b: number, c: number) => void;
-  readonly __wbg_get_swapresult_fee_paid: (a: number, b: number) => void;
-  readonly __wbg_set_swapresult_fee_paid: (a: number, b: number, c: number) => void;
-  readonly __wbg_get_swapresult_amount_out: (a: number, b: number) => void;
-  readonly __wbg_set_swapresult_amount_out: (a: number, b: number, c: number) => void;
+  readonly __wbg_get_swapresult_amount_in: (a: number) => number;
+  readonly __wbg_set_swapresult_amount_in: (a: number, b: number) => void;
+  readonly __wbg_get_swapresult_fee_paid: (a: number) => number;
+  readonly __wbg_set_swapresult_fee_paid: (a: number, b: number) => void;
+  readonly __wbg_get_swapresult_amount_out: (a: number) => number;
+  readonly __wbg_set_swapresult_amount_out: (a: number, b: number) => void;
   readonly __wbg_get_swapresult_price_impact: (a: number) => number;
   readonly __wbg_set_swapresult_price_impact: (a: number, b: number) => void;
   readonly __wbg_get_swapresult_swap_price: (a: number) => number;
@@ -456,7 +358,7 @@ export interface InitOutput {
   readonly __wbg_set_swapresult_oracle_price: (a: number, b: number) => void;
   readonly __wbg_get_swapresult_iter: (a: number) => number;
   readonly __wbg_set_swapresult_iter: (a: number, b: number) => void;
-  readonly swap: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number, n: number, o: number, p: number, q: number, r: number) => void;
+  readonly swap: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number) => void;
   readonly __wbg_transaction_free: (a: number) => void;
   readonly transaction_constructor: (a: number, b: number) => number;
   readonly transaction_message: (a: number) => number;
@@ -472,17 +374,17 @@ export interface InitOutput {
   readonly keypair_fromBytes: (a: number, b: number, c: number) => void;
   readonly keypair_pubkey: (a: number) => number;
   readonly __wbg_instruction_free: (a: number) => void;
-  readonly systeminstruction_createAccount: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => number;
-  readonly systeminstruction_createAccountWithSeed: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number) => number;
+  readonly systeminstruction_createAccount: (a: number, b: number, c: number, d: number, e: number) => number;
+  readonly systeminstruction_createAccountWithSeed: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => number;
   readonly systeminstruction_assign: (a: number, b: number) => number;
   readonly systeminstruction_assignWithSeed: (a: number, b: number, c: number, d: number, e: number) => number;
-  readonly systeminstruction_transfer: (a: number, b: number, c: number, d: number) => number;
-  readonly systeminstruction_transferWithSeed: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => number;
-  readonly systeminstruction_allocate: (a: number, b: number, c: number) => number;
-  readonly systeminstruction_allocateWithSeed: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => number;
-  readonly systeminstruction_createNonceAccount: (a: number, b: number, c: number, d: number, e: number) => number;
+  readonly systeminstruction_transfer: (a: number, b: number, c: number) => number;
+  readonly systeminstruction_transferWithSeed: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => number;
+  readonly systeminstruction_allocate: (a: number, b: number) => number;
+  readonly systeminstruction_allocateWithSeed: (a: number, b: number, c: number, d: number, e: number, f: number) => number;
+  readonly systeminstruction_createNonceAccount: (a: number, b: number, c: number, d: number) => number;
   readonly systeminstruction_advanceNonceAccount: (a: number, b: number) => number;
-  readonly systeminstruction_withdrawNonceAccount: (a: number, b: number, c: number, d: number, e: number) => number;
+  readonly systeminstruction_withdrawNonceAccount: (a: number, b: number, c: number, d: number) => number;
   readonly systeminstruction_authorizeNonceAccount: (a: number, b: number, c: number) => number;
   readonly __wbg_message_free: (a: number) => void;
   readonly __wbg_get_message_recent_blockhash: (a: number) => number;
@@ -497,13 +399,13 @@ export interface InitOutput {
   readonly pubkey_createProgramAddress: (a: number, b: number, c: number, d: number) => void;
   readonly pubkey_findProgramAddress: (a: number, b: number, c: number, d: number) => void;
   readonly solana_program_init: () => void;
-  readonly __wbg_instructions_free: (a: number) => void;
-  readonly instructions_constructor: () => number;
-  readonly instructions_push: (a: number, b: number) => void;
   readonly hash_constructor: (a: number, b: number) => void;
   readonly hash_toString: (a: number, b: number) => void;
   readonly hash_equals: (a: number, b: number) => number;
   readonly hash_toBytes: (a: number, b: number) => void;
+  readonly __wbg_instructions_free: (a: number) => void;
+  readonly instructions_constructor: () => number;
+  readonly instructions_push: (a: number, b: number) => void;
   readonly __wbg_hash_free: (a: number) => void;
   readonly __wbindgen_malloc: (a: number) => number;
   readonly __wbindgen_realloc: (a: number, b: number, c: number) => number;
@@ -511,6 +413,17 @@ export interface InitOutput {
   readonly __wbindgen_free: (a: number, b: number) => void;
   readonly __wbindgen_exn_store: (a: number) => void;
 }
+
+export type SyncInitInput = BufferSource | WebAssembly.Module;
+/**
+* Instantiates the given `module`, which can either be bytes or
+* a precompiled `WebAssembly.Module`.
+*
+* @param {SyncInitInput} module
+*
+* @returns {InitOutput}
+*/
+export function initSync(module: SyncInitInput): InitOutput;
 
 /**
 * If `module_or_path` is {RequestInfo} or {URL}, makes a request and
@@ -520,4 +433,4 @@ export interface InitOutput {
 *
 * @returns {Promise<InitOutput>}
 */
-export default function init(module_or_path: InitInput | Promise<InitInput>): Promise<InitOutput>;
+export default function init (module_or_path: InitInput | Promise<InitInput>): Promise<InitOutput>;
