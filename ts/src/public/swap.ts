@@ -19,7 +19,7 @@ import wasmData from "../wasm/gfx_ssl_wasm_data";
 import init, * as wasm from "../wasm/gfx_ssl_wasm";
 import { getAccount } from "@solana/spl-token";
 import { SSL } from "./ssl";
-import { parsePriceData } from "@pythnetwork/client";
+import { parsePriceData, PriceStatus } from "@pythnetwork/client";
 
 let wasmInited = false;
 
@@ -228,6 +228,7 @@ type Prepared = {
   registry: wasm.OracleRegistry;
   suspended: boolean;
   publishedSlots: Array<bigint>;
+  pythStatus: Array<PriceStatus>;
   maxDelay: bigint;
 };
 
@@ -289,6 +290,7 @@ class Quoter {
     const { maxDelay, oracles, nOracle } = decoded;
     const n = Number(nOracle.toString());
     let publishedSlots = [];
+    let pythStatus = [];
     const registry = new OracleRegistry();
     for (const oracle of oracles.slice(0, n)) {
       const n = Number(oracle.n);
@@ -297,7 +299,9 @@ class Quoter {
         const acctInfo = await this.connection.getAccountInfo(elem.address);
         if (acctInfo?.data) {
           registry.add_oracle(elem.address.toBuffer(), acctInfo.data);
-          publishedSlots.push(parsePriceData(acctInfo.data).aggregate.publishSlot);
+          let priceData = parsePriceData(acctInfo.data);
+          publishedSlots.push(priceData.aggregate.publishSlot);
+          pythStatus.push(priceData.aggregate.status);
         }
       }
     }
@@ -313,6 +317,7 @@ class Quoter {
       registry: registry,
       suspended: (new SSL(sslInData)).isSuspended() || (new SSL(sslOutData)).isSuspended(),
       publishedSlots: publishedSlots.map((val) => BigInt(val)),
+      pythStatus,
       maxDelay: maxDelay
     };
   }
@@ -324,6 +329,9 @@ class Quoter {
       for (const pubSlot of this.prepared.publishedSlots) {
         suspended ||= pubSlot + this.prepared.maxDelay <= currentSlot;
       }
+    }
+    for (const pythStatus of this.prepared.pythStatus) {
+      suspended ||= pythStatus !== PriceStatus.Trading;
     }
     return suspended;
   }
