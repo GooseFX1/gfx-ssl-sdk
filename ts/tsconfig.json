@@ -94,6 +94,7 @@
   },
   "include": [
     "src/**/*",
-    "src/**/*.json"
+    "src/**/*.json",
+    "test/*"
   ]
 }

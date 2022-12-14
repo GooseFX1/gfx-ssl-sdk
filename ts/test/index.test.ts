@@ -15,110 +15,44 @@ const connection = new Connection(
   "finalized"
 );
 
-
-test("SOL pool is not suspended", async () => {
-  let ssl = await SSL.loadByMint(
-    connection,
-    ADDRESSES["MAINNET"].GFX_CONTROLLER,
-    new PublicKey("So11111111111111111111111111111111111111112")
-  );
-
-  const suspended = ssl!.isSuspended();
-
-  expect(suspended).toBe(false);
-});
-
-test("SOL/USDC pair is not suspended", async () => {
-  const swap = new Swap(connection);
-  const quoter = await swap.getQuoter(
-    new PublicKey("So11111111111111111111111111111111111111112"), //SOL
-    new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"), //USD
-  );
-  await quoter.prepare();
-  const suspended = quoter.isSuspended();
-
-  console.log(`SOL/USDC suspended: ${suspended}`);
-  expect(suspended).toBe(false);
-});
-
-test("SOL/USDC pair is not suspended with latest oracle update", async () => {
-  const swap = new Swap(connection);
-  const quoter = await swap.getQuoter(
-    new PublicKey("So11111111111111111111111111111111111111112"), //SOL
-    new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"), //USD
-  );
-  await quoter.prepare();
-  let slot = await connection.getSlot();
-  const suspended = quoter.isSuspended(BigInt(slot));
-
-  console.log(`SOL/USDC suspended: ${suspended}`);
-  expect(suspended).toBe(false);
-});
-
-
-test("SOL/USDC pair is suspended with 100 slot oracle lag", async () => {
-  const swap = new Swap(connection);
-  const quoter = await swap.getQuoter(
-    new PublicKey("So11111111111111111111111111111111111111112"), //SOL
-    new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"), //USD
-  );
-  await quoter.prepare();
-  let slot = await connection.getSlot();
-  const suspended = quoter.isSuspended(BigInt(slot) + 100n);
-
-  console.log(`SOL/USDC suspended: ${suspended}`);
-  expect(suspended).toBe(true);
-});
+const TOKENS_TO_TEST = [
+  {
+    mint1: "So11111111111111111111111111111111111111112",
+    name1: "SOL",
+    mint2: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+    name2: "USDC",
+    amount_1_2: 10_000_000_000n,
+    amount_2_1: 10_000_000n,
+  },
+];
 
 test("should swap", async () => {
+  jest.useFakeTimers("legacy");
+  jest.setTimeout(60000);
+
   const swap = new Swap(connection);
 
-  const { amountOut: outAmount, impact } = await swap.getQuote(
-    new PublicKey("So11111111111111111111111111111111111111112"), //SOL
-    new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"), //USD
-    1000000n
-  );
+  for (let i = 0; i < TOKENS_TO_TEST.length; i++) {
+    const { amountOut: outAmount1, impact: impact1 } = await swap.getQuote(
+      new PublicKey(TOKENS_TO_TEST[i].mint1), //SOL
+      new PublicKey(TOKENS_TO_TEST[i].mint2), //USD
+      TOKENS_TO_TEST[i].amount_1_2
+    );
 
-  console.log(`out: ${outAmount} ${impact}`);
+    console.log(
+      TOKENS_TO_TEST[i].name1 + " --> " + TOKENS_TO_TEST[i].name2,
+      `out: ${outAmount1} ${impact1}`
+    );
 
-});
+    const { amountOut: outAmount2, impact: impact2 } = await swap.getQuote(
+      new PublicKey(TOKENS_TO_TEST[i].mint2), //SOL
+      new PublicKey(TOKENS_TO_TEST[i].mint1), //USD
+      TOKENS_TO_TEST[i].amount_2_1
+    );
 
-test("should swap multiple times", async () => {
-  const swap = new Swap(connection);
-
-  const quoter = await swap.getQuoter(
-    new PublicKey("So11111111111111111111111111111111111111112"), //SOL
-    new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"), //USD
-  );
-
-  await quoter.prepare();
-
-  for (let i = 0; i < 3; i += 1) {
-    const { amountOut: outAmount, impact } = quoter.quote(1000000n);
-    console.log(`out: ${outAmount} ${impact}`);
+    console.log(
+      TOKENS_TO_TEST[i].name2 + " --> " + TOKENS_TO_TEST[i].name1,
+      `out: ${outAmount2} ${impact2}`
+    );
   }
-
 });
-
-test("is adding 1000000 additional ComputeBudget Instruction", async () => {
-  const swap = new Swap(connection);
-  const wallet = new Keypair();
-
-  const ixs = await swap.createSwapIx(
-    new PublicKey("So11111111111111111111111111111111111111112"),
-    new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"),
-    100000n, // 0.0001 SOL
-    100n, // 0.0001 USDC
-    wallet.publicKey
-  );
-
-  const result = JSON.parse(JSON.stringify(ixs));
-
-  expect(result[0].programId).toBe("ComputeBudget111111111111111111111111111111");
-  expect(result[0].data[0]).toBe(0);
-  expect(JSON.stringify(result[0].data.slice(1, 5))).toBe("[64,66,15,0]");
-  expect(JSON.stringify(result[0].data.slice(5))).toBe("[0,0,0,0]");
-
-});
-
-
