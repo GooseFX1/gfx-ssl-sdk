@@ -11,7 +11,7 @@ import {
 import { ADDRESSES, SSL, Swap } from "../src";
 
 const connection = new Connection(
-  "https://solana-api.syndica.io/access-token/0gySHOxquJsGffID7CEWJRa03x53taOZIFcULMNPmd5aDJ1gs3Hd2zISJumMMdf8/rpc",
+  "https://api.mainnet-beta.solana.com/",
   "finalized"
 );
 
