@@ -8,7 +8,7 @@ import {
   SystemProgram,
   Transaction,
 } from "@solana/web3.js";
-import { ADDRESSES, SSL, Swap } from "../src";
+import { ADDRESSES, SSL, Swap, wasmData } from "../src";
 
 const connection = new Connection(
   "https://solana-api.syndica.io/access-token/0gySHOxquJsGffID7CEWJRa03x53taOZIFcULMNPmd5aDJ1gs3Hd2zISJumMMdf8/rpc",
@@ -179,7 +179,7 @@ test(
   10 * 1000
 );
 
-test.only(
+test(
   "should swap",
   async () => {
     const swap = new Swap(connection);
@@ -189,6 +189,8 @@ test.only(
         amountOut: outAmount1,
         impact: impact1,
         oraclePrice: oraclePrice1,
+        swapPrice: swapPrice1,
+        instantPrice: instaPrice1,
       } = await swap.getQuote(
         new PublicKey(TOKENS_TO_TEST[i].mint1),
         new PublicKey(TOKENS_TO_TEST[i].mint2),
@@ -200,13 +202,15 @@ test.only(
         `out: ${displayPrice(
           outAmount1,
           TOKENS_TO_TEST[i].decimal2
-        )} \n oracle price: ${oraclePrice1} \n impact: ${impact1}`
+        )} \n oracle price: ${oraclePrice1} \n impact: ${impact1} \n swapPrice: ${swapPrice1} \n instaPrice: ${instaPrice1}`
       );
 
       const {
         amountOut: outAmount2,
         impact: impact2,
         oraclePrice: oraclePrice2,
+        swapPrice: swapPrice2,
+        instantPrice: instaPrice2,
       } = await swap.getQuote(
         new PublicKey(TOKENS_TO_TEST[i].mint2),
         new PublicKey(TOKENS_TO_TEST[i].mint1),
@@ -218,7 +222,7 @@ test.only(
         `out: ${displayPrice(
           outAmount2,
           TOKENS_TO_TEST[i].decimal1
-        )} \n impact: ${impact2}`
+        )} \n impact: ${impact2} \n swapPrice: ${1 / swapPrice2} \n instaPrice: ${1 / instaPrice2}`
       );
     }
   },

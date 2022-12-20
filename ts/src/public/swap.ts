@@ -12,7 +12,7 @@ import {
   TransactionInstruction,
 } from "@solana/web3.js";
 import { Buffer } from "buffer";
-import { Network, ADDRESSES } from "../constants";
+import { ADDRESSES } from "../constants";
 import * as SwapIDL from "../idl/gfx_ssl_idl.json";
 import { findAssociatedTokenAddress } from "./utils";
 import wasmData from "../wasm/gfx_ssl_wasm_data";
@@ -20,6 +20,7 @@ import init, * as wasm from "../wasm/gfx_ssl_wasm";
 import { getAccount } from "@solana/spl-token";
 import { SSL } from "./ssl";
 import { parsePriceData, PriceStatus } from "@pythnetwork/client";
+export { default as wasmData } from "../wasm/gfx_ssl_wasm_data";
 
 let wasmInited = false;
 
@@ -336,7 +337,7 @@ class Quoter {
     return suspended;
   }
 
-  public quote(inTokenAmount: bigint, silent: boolean = true): Quote {
+  public quote(inTokenAmount: bigint, silent: boolean = true, niter: number = 64): Quote {
     const swapWASM = wasm.swap;
 
     if (inTokenAmount === 0n) return {
@@ -364,6 +365,7 @@ class Quoter {
         prepared.swappedLiabilityOut,
         prepared.registry,
         inTokenAmount,
+        niter
       );
     } catch (e) {
       if (silent) {

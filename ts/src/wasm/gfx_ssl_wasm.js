@@ -212,9 +212,10 @@ function _assertClass(instance, klass) {
 * @param {bigint} swapped_liability_out
 * @param {OracleRegistry} oracles
 * @param {bigint} amount_in
+* @param {number} niter
 * @returns {SwapResult}
 */
-export function swap(ssl_in, ssl_out, pair, liability_in, liability_out, swapped_liability_in, swapped_liability_out, oracles, amount_in) {
+export function swap(ssl_in, ssl_out, pair, liability_in, liability_out, swapped_liability_in, swapped_liability_out, oracles, amount_in, niter) {
     try {
         const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
         const ptr0 = passArray8ToWasm0(ssl_in, wasm.__wbindgen_malloc);
@@ -224,7 +225,7 @@ export function swap(ssl_in, ssl_out, pair, liability_in, liability_out, swapped
         const ptr2 = passArray8ToWasm0(pair, wasm.__wbindgen_malloc);
         const len2 = WASM_VECTOR_LEN;
         _assertClass(oracles, OracleRegistry);
-        wasm.swap(retptr, ptr0, len0, ptr1, len1, ptr2, len2, liability_in, liability_out, swapped_liability_in, swapped_liability_out, oracles.ptr, amount_in);
+        wasm.swap(retptr, ptr0, len0, ptr1, len1, ptr2, len2, liability_in, liability_out, swapped_liability_in, swapped_liability_out, oracles.ptr, amount_in, niter);
         var r0 = getInt32Memory0()[retptr / 4 + 0];
         var r1 = getInt32Memory0()[retptr / 4 + 1];
         var r2 = getInt32Memory0()[retptr / 4 + 2];

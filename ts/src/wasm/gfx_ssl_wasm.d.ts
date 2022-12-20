@@ -10,9 +10,10 @@
 * @param {bigint} swapped_liability_out
 * @param {OracleRegistry} oracles
 * @param {bigint} amount_in
+* @param {number} niter
 * @returns {SwapResult}
 */
-export function swap(ssl_in: Uint8Array, ssl_out: Uint8Array, pair: Uint8Array, liability_in: bigint, liability_out: bigint, swapped_liability_in: bigint, swapped_liability_out: bigint, oracles: OracleRegistry, amount_in: bigint): SwapResult;
+export function swap(ssl_in: Uint8Array, ssl_out: Uint8Array, pair: Uint8Array, liability_in: bigint, liability_out: bigint, swapped_liability_in: bigint, swapped_liability_out: bigint, oracles: OracleRegistry, amount_in: bigint, niter: number): SwapResult;
 /**
 * Initialize Javascript logging and panic handler
 */
@@ -358,7 +359,7 @@ export interface InitOutput {
   readonly __wbg_set_swapresult_oracle_price: (a: number, b: number) => void;
   readonly __wbg_get_swapresult_iter: (a: number) => number;
   readonly __wbg_set_swapresult_iter: (a: number, b: number) => void;
-  readonly swap: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number) => void;
+  readonly swap: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number, n: number) => void;
   readonly __wbg_transaction_free: (a: number) => void;
   readonly transaction_constructor: (a: number, b: number) => number;
   readonly transaction_message: (a: number) => number;

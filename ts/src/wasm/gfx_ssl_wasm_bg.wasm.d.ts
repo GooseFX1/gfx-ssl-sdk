@@ -21,7 +21,7 @@ export function __wbg_get_swapresult_oracle_price(a: number): number;
 export function __wbg_set_swapresult_oracle_price(a: number, b: number): void;
 export function __wbg_get_swapresult_iter(a: number): number;
 export function __wbg_set_swapresult_iter(a: number, b: number): void;
-export function swap(a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number): void;
+export function swap(a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number, n: number): void;
 export function __wbg_transaction_free(a: number): void;
 export function transaction_constructor(a: number, b: number): number;
 export function transaction_message(a: number): number;
