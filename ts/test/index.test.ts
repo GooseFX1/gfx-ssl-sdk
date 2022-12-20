@@ -11,7 +11,7 @@ import {
 import { ADDRESSES, SSL, Swap } from "../src";
 
 const connection = new Connection(
-  "https://api.mainnet-beta.solana.com/",
+  "https://solana-api.syndica.io/access-token/0gySHOxquJsGffID7CEWJRa03x53taOZIFcULMNPmd5aDJ1gs3Hd2zISJumMMdf8/rpc",
   "finalized"
 );
 
@@ -179,7 +179,7 @@ test(
   10 * 1000
 );
 
-test(
+test.only(
   "should swap",
   async () => {
     const swap = new Swap(connection);
