@@ -10,12 +10,14 @@ const connection = new Connection(
 
 const quote = async (input: bigint) => {
   const swap = new Swap(connection);
-  const quote = await swap.getQuote(
+  const quoter = await swap.getQuoter(
     new PublicKey("So11111111111111111111111111111111111111112"), // SOL
-    new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"), // USDC
-    input
+    new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v") // USDC
   );
+  await quoter.prepare();
+  const quote = quoter.quote(input, false);
   console.log("quote:", quote);
+  console.log("suspended:", quoter.isSuspended());
 };
 
 quote(BigInt(process.argv[2]));

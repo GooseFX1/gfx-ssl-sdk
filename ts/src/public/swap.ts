@@ -91,10 +91,11 @@ export class Swap {
     tokenIn: PublicKey,
     tokenOut: PublicKey,
     inTokenAmount: bigint,
+    silent: boolean = true,
   ): Promise<Quote> => {
     const quoter = await this.getQuoter(tokenIn, tokenOut);
     await quoter.prepare();
-    return quoter.quote(inTokenAmount);
+    return quoter.quote(inTokenAmount, silent);
   };
 
   public getMinimumQuote = async (
@@ -230,6 +231,8 @@ type Prepared = {
   suspended: boolean;
   publishedSlots: Array<bigint>;
   pythStatus: Array<PriceStatus>;
+  pythConfs: Array<number>;
+  confidence: bigint;
   maxDelay: bigint;
 };
 
@@ -292,6 +295,7 @@ class Quoter {
     const n = Number(nOracle.toString());
     let publishedSlots = [];
     let pythStatus = [];
+    let pythConfs = [];
     const registry = new OracleRegistry();
     for (const oracle of oracles.slice(0, n)) {
       const n = Number(oracle.n);
@@ -303,6 +307,10 @@ class Quoter {
           let priceData = parsePriceData(acctInfo.data);
           publishedSlots.push(priceData.aggregate.publishSlot);
           pythStatus.push(priceData.aggregate.status);
+
+          let price = priceData.aggregate.price / Math.pow(10, -priceData.exponent);
+          let std = priceData.aggregate.confidence / Math.pow(10, -priceData.exponent);
+          pythConfs.push(price / std);
         }
       }
     }
@@ -319,6 +327,8 @@ class Quoter {
       suspended: (new SSL(sslInData)).isSuspended() || (new SSL(sslOutData)).isSuspended(),
       publishedSlots: publishedSlots.map((val) => BigInt(val)),
       pythStatus,
+      pythConfs,
+      confidence: decoded.confidence,
       maxDelay: maxDelay
     };
   }
@@ -331,9 +341,15 @@ class Quoter {
         suspended ||= pubSlot + this.prepared.maxDelay <= currentSlot;
       }
     }
+
     for (const pythStatus of this.prepared.pythStatus) {
       suspended ||= pythStatus !== PriceStatus.Trading;
     }
+
+    for (const conf of this.prepared.pythConfs) {
+      suspended ||= this.prepared.confidence > conf;
+    }
+
     return suspended;
   }
 
