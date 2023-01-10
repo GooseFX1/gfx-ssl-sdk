@@ -1,8 +1,7 @@
 use std::ops::{Deref, Index, IndexMut};
-use std::{
-    fmt::{self, Debug},
-    mem::{forget, zeroed},
-};
+use std::mem::{forget, zeroed};
+#[cfg(feature = "no-entrypoint")]
+use std::fmt::{self, Debug};
 
 #[derive(Copy, Clone)]
 #[repr(C)]
