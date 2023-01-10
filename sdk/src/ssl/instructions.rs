@@ -1,6 +1,6 @@
-use anchor_client::anchor_lang::prelude::*;
-use anchor_client::anchor_lang::InstructionData;
-use anchor_client::anchor_lang::ToAccountMetas;
+use anchor_lang::prelude::*;
+use anchor_lang::InstructionData;
+use anchor_lang::ToAccountMetas;
 use anchor_spl::associated_token::get_associated_token_address;
 use anchor_spl::token::Token;
 use solana_program::instruction::Instruction;
