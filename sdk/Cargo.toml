@@ -1,0 +1,16 @@
+[package]
+name = "gfx-ssl-sdk-rust"
+version = "0.1.0"
+description = "High-level API for interacting with the `gfx-ssl` and `gfx-controller` programs"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+gfx-ssl-sdk = { path = "../programs/gfx-ssl", features = ["no-entrypoint"] }
+anyhow = "1.0.66"
+anchor-client = "0.26.0"
+anchor-spl = "0.26.0"
+solana-sdk = "1.14.11"
+solana-program = "1.14.11"
+solana-client = "1.14.11"

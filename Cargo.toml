@@ -1,6 +1,7 @@
 [workspace]
 members = [
   "programs/*",
+  "sdk",
 ]
 
 default-members = ["programs/*"]
