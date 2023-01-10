@@ -9,7 +9,7 @@ edition = "2021"
 [dependencies]
 gfx-ssl-sdk = { path = "../programs/gfx-ssl", features = ["no-entrypoint"] }
 gfx-controller-sdk = { path = "../programs/gfx-controller", features = ["no-entrypoint"] }
-anyhow = "1.0.66"
+thiserror = "1.0.38"
 anchor-lang = "0.26.0"
 anchor-spl = "0.26.0"
 solana-sdk = "1.14.11"
