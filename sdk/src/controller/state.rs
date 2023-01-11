@@ -1,7 +1,6 @@
-use anchor_lang::AccountDeserialize;
 use solana_program::pubkey::Pubkey;
 use gfx_controller_sdk::{Controller, StakingAccount};
-use crate::error::{GfxSdkError, Result};
+use crate::error::Result;
 
 #[cfg(not(target_arch = "wasm32"))]
 use solana_client::nonblocking::rpc_client::RpcClient;

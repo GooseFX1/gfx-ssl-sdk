@@ -2,11 +2,12 @@
 pub mod contexts;
 pub mod errors;
 pub mod states;
-mod utils;
+pub mod utils;
 
 pub use self::{contexts::*, errors::ErrorCode, states::*, utils::BP_DECIMAL};
 use anchor_lang::prelude::*;
 pub use program_id::*;
+pub use utils::PDAIdentifier;
 
 mod program_id {
     use anchor_lang::prelude::*;

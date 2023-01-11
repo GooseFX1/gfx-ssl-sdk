@@ -1,6 +1,5 @@
-use anchor_lang::AccountDeserialize;
 use solana_program::pubkey::Pubkey;
-use crate::error::{GfxSdkError, Result};
+use crate::error::Result;
 use gfx_ssl_sdk::{LiquidityAccount, Pair, PTMint, SSL};
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -18,9 +17,10 @@ pub async fn get_pair(address: &Pubkey, client: &RpcClient) -> Result<Pair> {
     get_state(address, client, "Pair").await
 }
 
-pub async fn get_pt_mint(address: &Pubkey, client: &RpcClient) -> Result<PTMint> {
-    get_state(address, client, "PTMint").await
-}
+// TODO Fix: `the trait AccountDeserialize is not implemented for PTMint`
+// pub async fn get_pt_mint(address: &Pubkey, client: &RpcClient) -> Result<PTMint> {
+//     get_state(address, client, "PTMint").await
+// }
 
 pub async fn get_ssl(address: &Pubkey, client: &RpcClient) -> Result<SSL> {
     get_state(address, client, "SSL").await

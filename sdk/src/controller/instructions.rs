@@ -7,6 +7,7 @@ use solana_program::instruction::Instruction;
 use solana_program::pubkey::Pubkey;
 use solana_program::sysvar::SysvarId;
 use gfx_controller_sdk::StakingAccount;
+use gfx_controller_sdk::PDAIdentifier;
 
 
 /// The instructions all contain nearly the same required arguments.
@@ -89,7 +90,7 @@ pub fn unstake(
     ctx: &ControllerInstructionContext,
     controller_mint: &Pubkey,
     controller_admin: &Pubkey,
-    amount: u64,
+    unstake_percent: u64,
 ) -> Instruction {
     let vault = get_associated_token_address(
         &ctx.controller,
@@ -103,8 +104,8 @@ pub fn unstake(
         controller_admin,
         controller_mint,
     );
-    let data = gfx_controller_sdk::instruction::Stake { amount }.data();
-    let accounts = gfx_controller_sdk::accounts::Stake {
+    let data = gfx_controller_sdk::instruction::Unstake { unstake_percent }.data();
+    let accounts = gfx_controller_sdk::accounts::Unstake {
         controller: ctx.controller.clone(),
         staking_account: ctx.staking_account.clone(),
         vault,

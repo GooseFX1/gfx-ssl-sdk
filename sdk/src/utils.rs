@@ -9,7 +9,7 @@ pub async fn get_state<T: AccountDeserialize>(
     client: &RpcClient,
     type_name: &str,
 ) -> error::Result<T> {
-    let mut data = client.get_account_data(address).await
+    let data = client.get_account_data(address).await
         .map_err(|_| GfxSdkError::AccountNotFound(address.clone()))?;
     let state = T::try_deserialize(&mut data.as_slice())
         .map_err(|_| GfxSdkError::DeserializeFailure(
