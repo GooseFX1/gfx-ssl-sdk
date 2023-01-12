@@ -31,16 +31,6 @@ pub mod contract {
     }
 
     #[allow(unused_variables)]
-    pub fn mint_pt(ctx: Context<MintPT>, amount_to_mint: u64) -> Result<()> {
-        Ok(())
-    }
-
-    #[allow(unused_variables)]
-    pub fn burn_pt(ctx: Context<BurnPT>, amount_to_burn: u64) -> Result<()> {
-        Ok(())
-    }
-
-    #[allow(unused_variables)]
     pub fn swap(ctx: Context<Swap>, amount_in: u64, min_out: u64) -> Result<()> {
         Ok(())
     }

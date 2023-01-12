@@ -1,4 +1,3 @@
-#![allow(unused_variables)]
 pub mod contexts;
 pub mod errors;
 pub mod states;
@@ -18,14 +17,17 @@ mod program_id {
 pub mod contract {
     use super::*;
 
+    #[allow(unused_variables)]
     pub fn create_staking_account(ctx: Context<CreateStakingAccount>) -> Result<()> {
         Ok(())
     }
 
+    #[allow(unused_variables)]
     pub fn stake(ctx: Context<Stake>, amount: u64) -> Result<()> {
         Ok(())
     }
 
+    #[allow(unused_variables)]
     pub fn unstake(ctx: Context<Unstake>, unstake_percent: u64) -> Result<()> {
         Ok(())
     }

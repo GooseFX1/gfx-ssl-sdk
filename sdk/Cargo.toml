@@ -5,15 +5,22 @@ description = "High-level API for interacting with the `gfx-ssl` and `gfx-contro
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[features]
+default = ["jupiter_amm"]
+jupiter_amm = ["jupiter", "jupiter-core"]
 
 [dependencies]
 gfx-ssl-sdk = { path = "../programs/gfx-ssl", features = ["no-entrypoint"] }
 gfx-controller-sdk = { path = "../programs/gfx-controller", features = ["no-entrypoint"] }
 thiserror = "1.0.38"
-anchor-lang = "0.26.0"
-anchor-spl = "0.26.0"
+anchor-lang = "0.26"
+anchor-spl = "0.26"
 solana-sdk = "1.14.11"
 solana-program = "1.14.11"
+jupiter-core = { git = "https://github.com/jup-ag/rust-amm-implementation", optional = true }
+jupiter = { git = "https://github.com/jup-ag/rust-amm-implementation", optional = true }
+rust_decimal = "1.27.0"
+anyhow = "1.0.68"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 solana-client = "1.14.11"

@@ -5,7 +5,7 @@ use anchor_spl::associated_token::get_associated_token_address;
 use anchor_spl::token::Token;
 use solana_program::instruction::Instruction;
 use solana_program::sysvar::SysvarId;
-use gfx_ssl_sdk::{LiquidityAccount, Pair, PTMint, skey, SSL};
+use gfx_ssl_sdk::{LiquidityAccount, Pair, skey, SSL};
 use gfx_ssl_sdk::PDAIdentifier;
 
 /// The instructions all contain nearly the same required arguments.
@@ -117,67 +117,6 @@ pub fn withdraw(
         program_id: gfx_ssl_sdk::id(),
     }
 }
-
-// pub fn mint_pt(
-//     ctx: &SSLInstructionContext,
-//     amount_to_mint: u64,
-// ) -> Instruction {
-//     let rt_vault = get_associated_token_address(
-//         &ctx.ssl, &ctx.ssl_mint);
-//     let pt_mint = PTMint::get_address(
-//         &[
-//             ctx.controller.as_ref(),
-//             ctx.ssl_mint.as_ref(),
-//         ],
-//     );
-//     let user_pt_ata = get_associated_token_address(
-//         &ctx.user_wallet, &pt_mint);
-//     let data = gfx_ssl_sdk::instruction::MintPt { amount_to_mint }.data();
-//     let accounts = gfx_ssl_sdk::accounts::MintPt {
-//         controller: ctx.controller.clone(),
-//         ssl: ctx.ssl.clone(),
-//         rt_vault,
-//         liquidity_account: ctx.liquidity_account.clone(),
-//         pt_mint,
-//         user_pt_ata,
-//         user_wallet: ctx.user_wallet.clone(),
-//         token_program: Token::id(),
-//     }.to_account_metas(None);
-//     Instruction {
-//         data,
-//         accounts,
-//         program_id: gfx_ssl_sdk::id(),
-//     }
-// }
-//
-// pub fn burn_pt(
-//     ctx: &SSLInstructionContext,
-//     amount_to_burn: u64,
-// ) -> Instruction {
-//     let pt_mint = PTMint::get_address(
-//         &[
-//             ctx.controller.as_ref(),
-//             ctx.ssl_mint.as_ref(),
-//         ],
-//     );
-//     let user_pt_ata = get_associated_token_address(
-//         &ctx.user_wallet, &pt_mint);
-//     let data = gfx_ssl_sdk::instruction::BurnPt { amount_to_burn }.data();
-//     let accounts = gfx_ssl_sdk::accounts::BurnPt {
-//         controller: ctx.controller.clone(),
-//         ssl: ctx.ssl.clone(),
-//         liquidity_account: ctx.liquidity_account.clone(),
-//         pt_mint,
-//         user_pt_ata,
-//         user_wallet: ctx.user_wallet.clone(),
-//         token_program: Token::id(),
-//     }.to_account_metas(None);
-//     Instruction {
-//         data,
-//         accounts,
-//         program_id: gfx_ssl_sdk::id(),
-//     }
-// }
 
 pub fn swap(
     ctx: &SSLInstructionContext,
