@@ -11,7 +11,7 @@ use anchor_spl::associated_token::get_associated_token_address;
 use anchor_spl::token::TokenAccount;
 use jupiter::jupiter_override::{Swap, SwapLeg};
 use lazy_static::lazy_static;
-use pyth_sdk_solana::state::PriceAccount;
+use pyth_sdk_solana::state::{load_price_account, PriceAccount};
 use solana_client::rpc_client::RpcClient;
 use solana_program::pubkey::Pubkey;
 use solana_sdk::pubkey;
@@ -22,6 +22,7 @@ use crate::ssl::state::get_pair_blocking;
 
 const DISCRIMINANT: usize = 8;
 
+// TODO Put the correct value here, maybe make an enum for this.
 const CONTROLLER: Pubkey = pubkey!("11111111111111111111111111111111");
 
 lazy_static! {
@@ -132,6 +133,8 @@ pub struct GfxAmm {
     /// XXX = liability RT
     /// YYY = swapped liability RT
     label: String,
+    /// This object's state must be cranked twice before you can pull quotes from it.
+    /// This enum keeps track of whether that's occurred.
     account_state: AmmAccountState,
     ssl_a: Option<SSL>,
     ssl_a_mint: Pubkey,
@@ -157,17 +160,21 @@ pub struct GfxAmm {
 
 impl GfxAmm {
     pub fn new(base_mint: Pubkey, quote_mint: Pubkey) -> anyhow::Result<Self> {
-
+        // Arrange them in order first
         let (ssl_a_mint, ssl_b_mint) = if base_mint > quote_mint {
             (quote_mint, base_mint)
         } else {
             (base_mint, quote_mint)
         };
-        let label_front = MINTS.get(&base_mint)
-            .ok_or(anyhow!("This mint is not offered {}", base_mint))?;
-        let label_back = MINTS.get(&quote_mint)
-            .ok_or(anyhow!("This mint is not offered {}", base_mint))?;
+
+        // Get label, and ensure these pairs are offered.
+        let label_front = MINTS.get(&ssl_a_mint)
+            .ok_or(anyhow!("This mint is not offered {}", ssl_a_mint))?;
+        let label_back = MINTS.get(&ssl_b_mint)
+            .ok_or(anyhow!("This mint is not offered {}", ssl_b_mint))?;
         let label = format!("{}/{}", label_front, label_back);
+
+        // Calculate PDAs of GFX accounts
         let ssl_a_pubkey = SSL::get_address(
             &[
                 CONTROLLER.as_ref(),
@@ -189,20 +196,21 @@ impl GfxAmm {
         );
         let ssl_a_vault_a = get_associated_token_address(
             &ssl_a_pubkey,
-            &base_mint,
+            &ssl_a_mint,
         );
         let ssl_a_vault_b = get_associated_token_address(
             &ssl_a_pubkey,
-            &quote_mint,
+            &ssl_b_mint,
         );
         let ssl_b_vault_a = get_associated_token_address(
             &ssl_b_pubkey,
-            &base_mint,
+            &ssl_a_mint,
         );
         let ssl_b_vault_b = get_associated_token_address(
             &ssl_b_pubkey,
-            &quote_mint,
+            &ssl_b_mint,
         );
+
         Ok(Self {
             label,
             account_state: AmmAccountState::Empty,
@@ -227,7 +235,6 @@ impl GfxAmm {
             ssl_b_vault_b_balance: 0,
             oracles: Default::default(),
         })
-
     }
 }
 
@@ -254,6 +261,7 @@ impl Amm for GfxAmm {
             self.ssl_b_vault_a,
             self.ssl_b_vault_b,
         ];
+        // TODO Should we store a list of oracles on all updates instead of this?
         if let Some(pair) = &self.pair {
             accounts.extend::<Vec<_>>(
                 pair.oracles
@@ -276,6 +284,7 @@ impl Amm for GfxAmm {
             Ok::<_, anyhow::Error>(())
         };
         for (pubkey, data) in accounts_map {
+            // TODO Code readability?
             if *pubkey == self.ssl_a_pubkey {
                 let data: [u8; mem::size_of::<SSL>() + DISCRIMINANT] = data.clone().try_into()
                     .map_err(|_| anyhow!("Invalid data size for SSL"))?;
@@ -301,7 +310,11 @@ impl Amm for GfxAmm {
                 update_token_account(&mut self.ssl_b_vault_b_balance, &mut data.as_slice())?;
             } else {
                 // Assume it's an oracle
-                let price_account = load::<PriceAccount>(&mut data.as_slice())
+                // TODO This assumption is tenuous, should maybe make this safer
+                //    by saving a list of oracles. Depends on whether you think
+                //    we should fail loudly in the case where they pass in
+                //    an account that we do not need to update.
+                let price_account = load_price_account(&mut data.as_slice())
                      .map_err(|_| anyhow!("Invalid oracle data"))?;
                 self.oracles.insert(*pubkey, *price_account);
             }
@@ -434,7 +447,7 @@ impl Amm for GfxAmm {
             account_metas: swap_account_metas(
                 &SSLInstructionContext::new(
                     CONTROLLER,
-                    Default::default(), // Doesn't matter for this instruction
+                    Default::default(), // Doesn't matter for this instruction, uses in/out
                     swap_params.user_transfer_authority,
                 ),
                 &swap_params.source_mint,
@@ -446,16 +459,5 @@ impl Amm for GfxAmm {
 
     fn clone_amm(&self) -> Box<dyn Amm + Send + Sync> {
         Box::new(self.clone())
-    }
-}
-
-fn load<T: Pod>(data: &[u8]) -> Result<&T, PodCastError> {
-    let size = mem::size_of::<T>();
-    if data.len() >= size {
-        Ok(from_bytes(cast_slice::<u8, u8>(try_cast_slice(
-            &data[0..size],
-        )?)))
-    } else {
-        Err(PodCastError::SizeMismatch)
     }
 }
