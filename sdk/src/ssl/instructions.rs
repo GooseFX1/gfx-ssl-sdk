@@ -118,14 +118,13 @@ pub fn withdraw(
     }
 }
 
-pub fn swap(
+/// Factored out for use in `jupiter` module to fulfill `Amm` trait contract.
+pub(crate) fn swap_account_metas(
     ctx: &SSLInstructionContext,
     ssl_in_mint: &Pubkey,
     ssl_out_mint: &Pubkey,
     fee_collector: &Pubkey,
-    amount_in: u64,
-    min_out: u64,
-) -> Instruction {
+) -> Vec<AccountMeta> {
     let ssl_in = SSL::get_address(
         &[
             ctx.controller.as_ref(),
@@ -158,9 +157,7 @@ pub fn swap(
         &ctx.user_wallet, ssl_out_mint);
     let fee_collector_ata = get_associated_token_address(
         &fee_collector, ssl_in_mint);
-
-    let data = gfx_ssl_sdk::instruction::Swap { amount_in, min_out }.data();
-    let accounts = gfx_ssl_sdk::accounts::Swap {
+    gfx_ssl_sdk::accounts::Swap {
         controller: ctx.controller.clone(),
         pair,
         ssl_in,
@@ -175,7 +172,24 @@ pub fn swap(
         user_wallet: ctx.user_wallet.clone(),
         fee_collector: fee_collector.clone(),
         token_program: Token::id(),
-    }.to_account_metas(None);
+    }.to_account_metas(None)
+}
+
+pub fn swap(
+    ctx: &SSLInstructionContext,
+    ssl_in_mint: &Pubkey,
+    ssl_out_mint: &Pubkey,
+    fee_collector: &Pubkey,
+    amount_in: u64,
+    min_out: u64,
+) -> Instruction {
+    let data = gfx_ssl_sdk::instruction::Swap { amount_in, min_out }.data();
+    let accounts = swap_account_metas(
+        ctx,
+        ssl_in_mint,
+        ssl_out_mint,
+        fee_collector,
+    );
     Instruction {
         data,
         accounts,

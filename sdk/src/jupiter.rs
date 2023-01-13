@@ -2,16 +2,27 @@ use std::collections::HashMap;
 use std::ffi::CStr;
 use std::fmt::Debug;
 use std::mem;
+use anchor_lang::__private::bytemuck::{cast_slice, from_bytes, Pod, PodCastError, try_cast_slice};
 use anyhow::anyhow;
 use jupiter_core::amm::{Amm, Quote, QuoteParams, SwapLegAndAccountMetas, SwapParams};
 use rust_decimal::Decimal;
 use anchor_lang::AccountDeserialize;
+use anchor_spl::associated_token::get_associated_token_address;
+use anchor_spl::token::TokenAccount;
 use jupiter::jupiter_override::{Swap, SwapLeg};
-use jupiter::jupiter_override::SwapLeg::Swap;
+use pyth_sdk_solana::state::PriceAccount;
+use solana_client::rpc_client::RpcClient;
 use solana_program::pubkey::Pubkey;
-use gfx_ssl_sdk::{Pair, SSL};
+use solana_sdk::pubkey;
+use gfx_ssl_sdk::{Pair, PDAIdentifier, skey, SSL};
+use crate::ssl::FEE_COLLECTOR;
+use crate::ssl::instructions::{SSLInstructionContext, swap_account_metas};
+use crate::ssl::state::get_pair_blocking;
 
 const DISCRIMINANT: usize = 8;
+
+const CONTROLLER: Pubkey = pubkey!("11111111111111111111111111111111");
+
 
 #[repr(C)]
 pub struct SwapResult {
@@ -32,6 +43,9 @@ enum QuoteResult {
     Error(*mut i8),
 }
 
+#[repr(C)]
+pub struct OracleEntry([u8; 32], PriceAccount);
+
 extern "C" {
     fn quote(
         ssl_in: &[u8; mem::size_of::<SSL>() + DISCRIMINANT],
@@ -41,67 +55,147 @@ extern "C" {
         liability_out: u64,
         swapped_liability_in: u64,
         swapped_liability_out: u64,
+        oracles: *const OracleEntry,
+        num_oracles: usize,
         amount_in: u64,
     ) -> QuoteResult;
 }
 
+pub fn pair_from_mints_blocking(base: Pubkey, quote: Pubkey, client: &RpcClient) -> crate::error::Result<Pair> {
+    let pair_pubkey = Pair::get_address(
+        &[
+            CONTROLLER.as_ref(),
+            skey::<_, true>(&base, &quote).as_ref(),
+            skey::<_, false>(&base, &quote).as_ref(),
+        ]
+    );
+    get_pair_blocking(&pair_pubkey, client)
+}
+
+#[derive(Debug, Copy, Clone)]
+enum AmmAccountState {
+    /// If there have been no account state updates via a call to
+    /// [Amm::update], we cannot provide any quotes.
+    Empty,
+    /// After the first [Amm::update], we know which oracles we need to fetch,
+    /// but we haven't fetched them yet. A second [Amm::update] is required to crank
+    /// the [GfxAmm] into a ready state.
+    NeedOracleData,
+    Ok,
+}
+
+/// Struct that implements the `jupiter_core::amm::Amm` trait.
+///
+/// This struct requires two calls to [Amm::get_accounts_to_update] and [Amm::update],
+/// as some of the accounts required cannot be known for a given pair until
+/// other account state is fetched first.
+///
+/// ```rust
+/// use solana_program::pubkey::Pubkey;
+/// use solana_sdk::pubkey;
+/// use gfx_ssl_sdk_rust::jupiter::GfxAmm;
+///
+/// let base: Pubkey = pubkey!("GFX1ZjR2P15tmrSwow6FjyDYcEkoFb4p4gJCpLBjaxHD");
+/// let quote: Pubkey = pubkey!("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
+/// let gfx_amm = GfxAmm::new(base, quote);
+/// ```
+///
 #[derive(Debug, Clone)]
 pub struct GfxAmm {
     /// "XXX/YYY" where:
     /// XXX = liability RT
     /// YYY = swapped liability RT
     label: String,
-    liability: SSL,
-    liability_data: [u8; mem::size_of::<SSL>() + DISCRIMINANT],
-    liability_pubkey: Pubkey,
-    swapped_liability: SSL,
-    swapped_liability_data: [u8; mem::size_of::<SSL>() + DISCRIMINANT],
-    swapped_liability_pubkey: Pubkey,
-    pair: Pair,
+    account_state: AmmAccountState,
+    ssl_a: Option<SSL>,
+    ssl_a_mint: Pubkey,
+    ssl_a_data: [u8; mem::size_of::<SSL>() + DISCRIMINANT],
+    ssl_a_pubkey: Pubkey,
+    ssl_b: Option<SSL>,
+    ssl_b_mint: Pubkey,
+    ssl_b_data: [u8; mem::size_of::<SSL>() + DISCRIMINANT],
+    ssl_b_pubkey: Pubkey,
+    pair: Option<Pair>,
     pair_data: [u8; mem::size_of::<Pair>() + DISCRIMINANT],
     pair_pubkey: Pubkey,
-    // TODO There are more accounts to save here -- vaults for SSL in and SSL out
+    ssl_a_vault_a: Pubkey,
+    ssl_a_vault_a_balance: u64,
+    ssl_a_vault_b: Pubkey,
+    ssl_a_vault_b_balance: u64,
+    ssl_b_vault_a: Pubkey,
+    ssl_b_vault_a_balance: u64,
+    ssl_b_vault_b: Pubkey,
+    ssl_b_vault_b_balance: u64,
+    oracles: HashMap<Pubkey, PriceAccount>,
 }
 
 impl GfxAmm {
-    // TODO don't distinguish liability / swapped_liability,
-    //   only do so when you get input to the quote function
-    pub fn new(
-        label: String,
-        liability_pubkey: Pubkey,
-        liability_data: Vec<u8>,
-        swapped_liability_pubkey: Pubkey,
-        swapped_liability_data: Vec<u8>,
-        pair_pubkey: Pubkey,
-        pair_data: Vec<u8>,
-    ) -> anyhow::Result<Self> {
-        let liability = SSL::try_deserialize(&mut liability_data.as_slice())
-            .map_err(|_| anyhow!("Invalid account data for SSL"))?;
-        let liability_data: [u8; mem::size_of::<SSL>() + DISCRIMINANT] = liability_data
-            .try_into().map_err(|_| anyhow!("Invalid data size for SSL account"))?;
-        let swapped_liability = SSL::try_deserialize(&mut swapped_liability_data.as_slice())
-            .map_err(|_| anyhow!("Invalid account data for SSL"))?;
-        let swapped_liability_data: [u8; mem::size_of::<SSL>() + DISCRIMINANT] = swapped_liability_data
-            .try_into().map_err(|_| anyhow!("Invalid data size for SSL account"))?;
-        let pair = Pair::try_deserialize(&mut pair_data.as_slice())
-            .map_err(|_| anyhow!("Invalid account data for Pair"))?;
-        let pair_data: [u8; mem::size_of::<Pair>() + DISCRIMINANT] = pair_data
-            .try_into().map_err(|_| anyhow!("Invalid data size for Pair account"))?;
-        if pair.mints != (liability_pubkey, swapped_liability_pubkey) {
-            return Err(anyhow!("Invalid pubkeys"));
-        }
+    pub fn new(base_mint: Pubkey, quote_mint: Pubkey) -> anyhow::Result<Self> {
+        let (ssl_a_mint, ssl_b_mint) = if base_mint > quote_mint {
+            (quote_mint, base_mint)
+        } else {
+            (base_mint, quote_mint)
+        };
+        let ssl_a_pubkey = SSL::get_address(
+            &[
+                CONTROLLER.as_ref(),
+                ssl_a_mint.as_ref(),
+            ]
+        );
+        let ssl_b_pubkey = SSL::get_address(
+            &[
+                CONTROLLER.as_ref(),
+                ssl_b_mint.as_ref(),
+            ]
+        );
+        let pair_pubkey = Pair::get_address(
+            &[
+                CONTROLLER.as_ref(),
+                skey::<_, true>(&ssl_a_mint, &ssl_b_mint).as_ref(),
+                skey::<_, false>(&ssl_a_mint, &ssl_b_mint).as_ref(),
+            ]
+        );
+        let ssl_a_vault_a = get_associated_token_address(
+            &ssl_a_pubkey,
+            &base_mint,
+        );
+        let ssl_a_vault_b = get_associated_token_address(
+            &ssl_a_pubkey,
+            &quote_mint,
+        );
+        let ssl_b_vault_a = get_associated_token_address(
+            &ssl_b_pubkey,
+            &base_mint,
+        );
+        let ssl_b_vault_b = get_associated_token_address(
+            &ssl_b_pubkey,
+            &quote_mint,
+        );
         Ok(Self {
-            label,
-            liability,
-            liability_data,
-            liability_pubkey,
-            swapped_liability,
-            swapped_liability_data,
-            swapped_liability_pubkey,
-            pair,
-            pair_data,
+            label: "".to_string(),
+            account_state: AmmAccountState::Empty,
+            ssl_a: None,
+            ssl_a_mint,
+            ssl_a_data: [0; DISCRIMINANT + mem::size_of::<SSL>()],
+            ssl_a_pubkey,
+            ssl_b: None,
+            ssl_b_mint,
+            ssl_b_data: [0; DISCRIMINANT + mem::size_of::<SSL>()],
+            ssl_b_pubkey,
+            pair: None,
+            pair_data: [0; DISCRIMINANT + mem::size_of::<Pair>()],
             pair_pubkey,
+            ssl_a_vault_a,
+            ssl_a_vault_a_balance: 0,
+            ssl_a_vault_b,
+            ssl_a_vault_b_balance: 0,
+            ssl_b_vault_a,
+            ssl_b_vault_a_balance: 0,
+            ssl_b_vault_b,
+            ssl_b_vault_b_balance: 0,
+            oracles: Default::default(),
         })
+
     }
 }
 
@@ -118,92 +212,168 @@ impl Amm for GfxAmm {
 
     fn get_reserve_mints(&self) -> Vec<Pubkey> {
         vec![
-            self.liability.mint,
-            self.swapped_liability.mint,
+            self.ssl_a_mint,
+            self.ssl_b_mint,
         ]
     }
 
     fn get_accounts_to_update(&self) -> Vec<Pubkey> {
-        vec![
-            self.liability_pubkey.clone(),
-            self.swapped_liability_pubkey.clone(),
-            self.pair_pubkey.clone(),
-            // TODO SSL Vaults
-            // TODO Also all the oracles stored in the pair
-        ]
+        let mut accounts = vec![
+            self.ssl_a_pubkey,
+            self.ssl_b_pubkey,
+            self.pair_pubkey,
+            self.ssl_a_vault_a,
+            self.ssl_a_vault_b,
+            self.ssl_b_vault_a,
+            self.ssl_b_vault_b,
+        ];
+        if let Some(pair) = &self.pair {
+            accounts.extend::<Vec<_>>(
+                pair.oracles
+                    .iter()
+                    .map(|o| o.path
+                            .iter()
+                            .map(|p| p.0)
+                    )
+                    .flatten()
+                    .collect()
+            );
+        }
+        accounts
     }
 
     fn update(&mut self, accounts_map: &HashMap<Pubkey, Vec<u8>>) -> anyhow::Result<()> {
         for (pubkey, data) in accounts_map {
-            if *pubkey == self.liability_pubkey {
+            if *pubkey == self.ssl_a_pubkey {
                 let data: [u8; mem::size_of::<SSL>() + DISCRIMINANT] = data.clone().try_into()
                     .map_err(|_| anyhow!("Invalid data size for SSL"))?;
-                self.liability_data = data;
-                self.liability = SSL::try_deserialize(&mut data.as_slice())?;
-            } else if *pubkey == self.swapped_liability_pubkey {
+                self.ssl_a_data = data;
+                self.ssl_a = Some(SSL::try_deserialize(&mut data.as_slice())?);
+            } else if *pubkey == self.ssl_b_pubkey {
                 let data: [u8; mem::size_of::<SSL>() + DISCRIMINANT] = data.clone().try_into()
                     .map_err(|_| anyhow!("Invalid data size for SSL"))?;
-                self.swapped_liability_data = data;
-                self.swapped_liability = SSL::try_deserialize(&mut data.as_slice())?;
+                self.ssl_b_data = data;
+                self.ssl_b = Some(SSL::try_deserialize(&mut data.as_slice())?);
             } else if *pubkey == self.pair_pubkey {
                 let data: [u8; mem::size_of::<Pair>() + DISCRIMINANT] = data.clone().try_into()
                     .map_err(|_| anyhow!("Invalid data size for Pair"))?;
                 self.pair_data = data;
-                self.pair = Pair::try_deserialize(&mut data.as_slice())?;
+                self.pair = Some(Pair::try_deserialize(&mut data.as_slice())?);
+            } else if *pubkey == self.ssl_a_vault_a {
+                let token_account = TokenAccount::try_deserialize(&mut data.as_slice())?;
+                self.ssl_a_vault_a_balance = token_account.amount;
+            } else if *pubkey == self.ssl_a_vault_b {
+                let token_account = TokenAccount::try_deserialize(&mut data.as_slice())?;
+                self.ssl_a_vault_b_balance = token_account.amount;
+            } else if *pubkey == self.ssl_b_vault_a {
+                let token_account = TokenAccount::try_deserialize(&mut data.as_slice())?;
+                self.ssl_b_vault_a_balance = token_account.amount;
+            } else if *pubkey == self.ssl_b_vault_b {
+                let token_account = TokenAccount::try_deserialize(&mut data.as_slice())?;
+                self.ssl_b_vault_b_balance = token_account.amount;
             } else {
-                return Err(anyhow!("cannot update data on unknown key"));
+                // Assume it's an oracle
+                let price_account = load::<PriceAccount>(&mut data.as_slice())
+                     .map_err(|_| anyhow!("Invalid oracle data"))?;
+                self.oracles.insert(*pubkey, *price_account);
             }
+        }
+        match self.account_state {
+            AmmAccountState::Empty => {
+                self.account_state = AmmAccountState::NeedOracleData;
+            }
+            AmmAccountState::NeedOracleData => {
+                self.account_state = AmmAccountState::Ok;
+            }
+            AmmAccountState::Ok => {}
         }
         Ok(())
     }
 
     // TODO Review whether this logic is correct
     fn quote(&self, quote_params: &QuoteParams) -> anyhow::Result<Quote> {
-        let mut ssl_in = &self.liability_data;
-        let mut ssl_out = &self.swapped_liability_data;
-        let mut is_reversed = false;
-        if quote_params.input_mint == self.swapped_liability.mint {
-            is_reversed = true;
-            ssl_in = &self.swapped_liability_data;
-            ssl_out = &self.liability_data;
+        match self.account_state {
+            AmmAccountState::Ok => {},
+            _ => {
+                return Err(anyhow!("Cannot quote until account state is populated"));
+            }
         }
-        // TODO Explicitly check that both mints match (ssl_in == input_mint)
-        // TODO No zeroes, instead it should be token vault balances for SSL in vault,
-        //   SSL out vault
+        // Orient each side of the pair as "in" our "out".
+        // Keep a boolean flag that helps keep track of whether to flip
+        // other arguments later in this function
+        let mut is_reversed = false;
+        if quote_params.input_mint == self.ssl_b_mint && quote_params.output_mint == self.ssl_a_mint {
+            is_reversed = true;
+        } else if quote_params.input_mint != self.ssl_a_mint || quote_params.output_mint != self.ssl_b_mint {
+            return Err(anyhow!("Invalid quote params, input and output mints do not match this Amm pair"));
+        }
+
+        let (
+            ssl_in,
+            ssl_out,
+            liability_in,
+            liability_out,
+            swapped_liability_in,
+            swapped_liability_out,
+        ) = if is_reversed {
+            (
+                self.ssl_a_data,
+                self.ssl_b_data,
+                self.ssl_a_vault_a_balance,
+                self.ssl_a_vault_b_balance,
+                self.ssl_b_vault_a_balance,
+                self.ssl_b_vault_b_balance,
+            )
+        } else {
+            (
+                self.ssl_b_data,
+                self.ssl_a_data,
+                self.ssl_b_vault_b_balance,
+                self.ssl_b_vault_a_balance,
+                self.ssl_a_vault_b_balance,
+                self.ssl_a_vault_a_balance,
+            )
+        };
+
+        let oracles = self.oracles
+            .iter()
+            .map(|(pubkey, act)| {
+                let mut pubkey_arr: [u8; 32] = Default::default();
+                pubkey_arr.copy_from_slice(pubkey.as_ref());
+                OracleEntry(pubkey_arr, *act)
+            })
+            .collect::<Vec<_>>()
+            .as_slice()
+            .as_ptr();
         match unsafe {
             quote(
-                ssl_in,
-                ssl_out,
+                &ssl_in,
+                &ssl_out,
                 &self.pair_data,
-                if !is_reversed { quote_params.in_amount } else { 0 },
-                0,
-                if is_reversed { quote_params.in_amount } else { 0 },
-                0,
+                liability_in,
+                liability_out,
+                swapped_liability_in,
+                swapped_liability_out,
+                oracles,
+                self.oracles.len(),
                 quote_params.in_amount,
             )
         } {
             QuoteResult::Ok(swap_result) => {
-                // To divide u64 and convert to Decimal type,
-                // we'll first convert to i128, then to Decimal, then divide.
-                let fee_paid: i128 = swap_result.fee_paid.into();
-                let fee_paid = Decimal::from_i128_with_scale(fee_paid, 0);
-                let amount_in: i128 = swap_result.amount_in.into();
-                let amount_in = Decimal::from_i128_with_scale(amount_in, 0);
-                // TODO How to convert this to a Decimal?
-                // TODO Explicitly get the correct index based on input_mint
-                let fee_pct = self.pair.fee_rate.0;
-                // TODO turn fee_pct into Decimal, scale = 4
-                // 40bps = 0.0040
-                let fee_pct: Decimal = fee_paid / amount_in;
-                // Price impact can be directly converted to decimal.
+                let fee_pct = if !is_reversed {
+                    self.pair.unwrap().fee_rate.0
+                } else {
+                    self.pair.unwrap().fee_rate.1
+                };
+                let fee_pct = Decimal::new(fee_pct.into(), 4);
                 let price_impact_pct = Decimal::from_f64_retain(swap_result.price_impact)
                     .ok_or(anyhow!("Invalid price impact pct decimal"))?;
 
                 // Here, fee_mint is always the input mint
                 let fee_mint = if !is_reversed {
-                    self.liability_pubkey.clone()
+                    self.ssl_a_mint
                 } else {
-                    self.swapped_liability_pubkey.clone()
+                    self.ssl_b_mint
                 };
                 let quote = Quote {
                     not_enough_liquidity: false,
@@ -233,11 +403,31 @@ impl Amm for GfxAmm {
             swap_leg: SwapLeg::Swap {
                 swap: Swap::GooseFX
             },
-            account_metas: gfx_ssl_sdk::accounts::Swap { ... }.to_account_metas(),
+            account_metas: swap_account_metas(
+                &SSLInstructionContext::new(
+                    CONTROLLER,
+                    Default::default(), // Doesn't matter for this instruction
+                    swap_params.user_transfer_authority,
+                ),
+                &swap_params.source_mint,
+                &swap_params.destination_mint,
+                &FEE_COLLECTOR,
+            ),
         })
     }
 
     fn clone_amm(&self) -> Box<dyn Amm + Send + Sync> {
         Box::new(self.clone())
+    }
+}
+
+fn load<T: Pod>(data: &[u8]) -> Result<&T, PodCastError> {
+    let size = mem::size_of::<T>();
+    if data.len() >= size {
+        Ok(from_bytes(cast_slice::<u8, u8>(try_cast_slice(
+            &data[0..size],
+        )?)))
+    } else {
+        Err(PodCastError::SizeMismatch)
     }
 }
