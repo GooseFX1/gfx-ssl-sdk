@@ -1585,6 +1585,7 @@ dependencies = [
  "gfx-ssl-sdk",
  "jupiter",
  "jupiter-core",
+ "lazy_static",
  "pyth-sdk-solana",
  "rust_decimal",
  "solana-client",

@@ -10,6 +10,7 @@ use anchor_lang::AccountDeserialize;
 use anchor_spl::associated_token::get_associated_token_address;
 use anchor_spl::token::TokenAccount;
 use jupiter::jupiter_override::{Swap, SwapLeg};
+use lazy_static::lazy_static;
 use pyth_sdk_solana::state::PriceAccount;
 use solana_client::rpc_client::RpcClient;
 use solana_program::pubkey::Pubkey;
@@ -23,6 +24,31 @@ const DISCRIMINANT: usize = 8;
 
 const CONTROLLER: Pubkey = pubkey!("11111111111111111111111111111111");
 
+lazy_static! {
+    pub static ref MINTS: HashMap<Pubkey, &'static str> = {
+        let mut mints = HashMap::new();
+        vec![
+            (pubkey!("So11111111111111111111111111111111111111112"), "WSOL"),
+            (pubkey!("7vfCXTUXx5WJV5JADk17DUJ4ksgau7utNKj4b963voxs"), "ETH"),
+            (pubkey!("mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So"), "MSOL"),
+            (pubkey!("SRMuApVNdxXokk5GT7XD5cUUgXMBCoAz2LHeuAoKWRt"), "SRM"),
+            (pubkey!("7i5KKsX2weiTkry7jA4ZwSuXGhs5eJBEjY8vVxR4pfRx"), "GMT"),
+            (pubkey!("Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB"), "USDT"),
+            (pubkey!("orcaEKTdK7LKz57vaAYr9QeNsVEPfiu6QeMU1kektZE"), "ORCA"),
+            (pubkey!("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"), "USDC"),
+            (pubkey!("7dHbWXmci3dT8UFYWYZweBLXgycu7Y3iL6trKn1Y7ARj"), "STSOL"),
+            (pubkey!("9n4nbM75f5Ui33ZbPYXn59EwSgE8CGsHtAeTH5YFeJ9E"), "BTC"),
+            (pubkey!("6LNeTYMqtNm1pBFN8PfhQaoLyegAH8GD32WmHU9erXKN"), "APT"),
+        ].into_iter()
+        .for_each(|(mint, name)| {
+            mints.insert(mint, name);
+        });
+        mints
+    };
+    pub static ref RESERVE_MINTS: Vec<Pubkey> = {
+        MINTS.keys().map(|p| *p).collect()
+    };
+}
 
 #[repr(C)]
 pub struct SwapResult {
@@ -131,11 +157,17 @@ pub struct GfxAmm {
 
 impl GfxAmm {
     pub fn new(base_mint: Pubkey, quote_mint: Pubkey) -> anyhow::Result<Self> {
+
         let (ssl_a_mint, ssl_b_mint) = if base_mint > quote_mint {
             (quote_mint, base_mint)
         } else {
             (base_mint, quote_mint)
         };
+        let label_front = MINTS.get(&base_mint)
+            .ok_or(anyhow!("This mint is not offered {}", base_mint))?;
+        let label_back = MINTS.get(&quote_mint)
+            .ok_or(anyhow!("This mint is not offered {}", base_mint))?;
+        let label = format!("{}/{}", label_front, label_back);
         let ssl_a_pubkey = SSL::get_address(
             &[
                 CONTROLLER.as_ref(),
@@ -172,7 +204,7 @@ impl GfxAmm {
             &quote_mint,
         );
         Ok(Self {
-            label: "".to_string(),
+            label,
             account_state: AmmAccountState::Empty,
             ssl_a: None,
             ssl_a_mint,
@@ -201,20 +233,15 @@ impl GfxAmm {
 
 impl Amm for GfxAmm {
     fn label(&self) -> String {
-        // TODO Lookup table to convert Mint pubkey to Symbol
-        //   manually maintained in this SDK repo.
         self.label.clone()
     }
 
     fn key(&self) -> Pubkey {
-        self.pair_pubkey.clone()
+        self.pair_pubkey
     }
 
     fn get_reserve_mints(&self) -> Vec<Pubkey> {
-        vec![
-            self.ssl_a_mint,
-            self.ssl_b_mint,
-        ]
+        RESERVE_MINTS.clone()
     }
 
     fn get_accounts_to_update(&self) -> Vec<Pubkey> {
@@ -243,6 +270,11 @@ impl Amm for GfxAmm {
     }
 
     fn update(&mut self, accounts_map: &HashMap<Pubkey, Vec<u8>>) -> anyhow::Result<()> {
+        let update_token_account = |amount: &mut u64, data: &mut &[u8]| {
+            let token_account = TokenAccount::try_deserialize(data)?;
+            *amount = token_account.amount;
+            Ok::<_, anyhow::Error>(())
+        };
         for (pubkey, data) in accounts_map {
             if *pubkey == self.ssl_a_pubkey {
                 let data: [u8; mem::size_of::<SSL>() + DISCRIMINANT] = data.clone().try_into()
@@ -260,17 +292,13 @@ impl Amm for GfxAmm {
                 self.pair_data = data;
                 self.pair = Some(Pair::try_deserialize(&mut data.as_slice())?);
             } else if *pubkey == self.ssl_a_vault_a {
-                let token_account = TokenAccount::try_deserialize(&mut data.as_slice())?;
-                self.ssl_a_vault_a_balance = token_account.amount;
+                update_token_account(&mut self.ssl_a_vault_a_balance, &mut data.as_slice())?;
             } else if *pubkey == self.ssl_a_vault_b {
-                let token_account = TokenAccount::try_deserialize(&mut data.as_slice())?;
-                self.ssl_a_vault_b_balance = token_account.amount;
+                update_token_account(&mut self.ssl_a_vault_b_balance, &mut data.as_slice())?;
             } else if *pubkey == self.ssl_b_vault_a {
-                let token_account = TokenAccount::try_deserialize(&mut data.as_slice())?;
-                self.ssl_b_vault_a_balance = token_account.amount;
+                update_token_account(&mut self.ssl_b_vault_a_balance, &mut data.as_slice())?;
             } else if *pubkey == self.ssl_b_vault_b {
-                let token_account = TokenAccount::try_deserialize(&mut data.as_slice())?;
-                self.ssl_b_vault_b_balance = token_account.amount;
+                update_token_account(&mut self.ssl_b_vault_b_balance, &mut data.as_slice())?;
             } else {
                 // Assume it's an oracle
                 let price_account = load::<PriceAccount>(&mut data.as_slice())
