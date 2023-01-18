@@ -1,5 +1,5 @@
 fn main() {
-    println!("cargo:rustc-link-lib=gfx_black_box");
+    println!("cargo:rustc-link-lib=dylib=gfx_black_box");
 
     println!("cargo:rustc-link-search=./lib");
     // NOTE: When replacing the above with the line below,
