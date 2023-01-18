@@ -4,7 +4,13 @@ version = "0.1.0"
 description = "High-level API for interacting with the `gfx-ssl` and `gfx-controller` programs"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[[bench]]
+name = "quote_fn"
+harness = false
+
+[[example]]
+name = "jupiter"
+
 [features]
 default = ["jupiter_amm"]
 jupiter_amm = ["jupiter", "jupiter-core"]
@@ -17,10 +23,14 @@ anchor-lang = "0.26"
 anchor-spl = "0.26"
 solana-sdk = "1.14.11"
 solana-program = "1.14.11"
+solana-client = "1.14.12"
 jupiter-core = { git = "https://github.com/jup-ag/rust-amm-implementation", optional = true }
 jupiter = { git = "https://github.com/jup-ag/rust-amm-implementation", optional = true }
 rust_decimal = "1.27.0"
 anyhow = "1.0.68"
-solana-client = "1.14.11"
 pyth-sdk-solana = "0.7.0"
 lazy_static = "1.4.0"
+
+
+[dev-dependencies]
+criterion = "0.4.0"

@@ -2,7 +2,6 @@ use std::collections::HashMap;
 use std::ffi::CStr;
 use std::fmt::Debug;
 use std::mem;
-use anchor_lang::__private::bytemuck::{cast_slice, from_bytes, Pod, PodCastError, try_cast_slice};
 use anyhow::anyhow;
 use jupiter_core::amm::{Amm, Quote, QuoteParams, SwapLegAndAccountMetas, SwapParams};
 use rust_decimal::Decimal;
@@ -12,13 +11,11 @@ use anchor_spl::token::TokenAccount;
 use jupiter::jupiter_override::{Swap, SwapLeg};
 use lazy_static::lazy_static;
 use pyth_sdk_solana::state::{load_price_account, PriceAccount};
-use solana_client::rpc_client::RpcClient;
 use solana_program::pubkey::Pubkey;
 use solana_sdk::pubkey;
 use gfx_ssl_sdk::{Pair, PDAIdentifier, skey, SSL};
 use crate::ssl::FEE_COLLECTOR;
 use crate::ssl::instructions::{SSLInstructionContext, swap_account_metas};
-use crate::ssl::state::get_pair_blocking;
 
 const DISCRIMINANT: usize = 8;
 
@@ -85,17 +82,6 @@ extern "C" {
         num_oracles: usize,
         amount_in: u64,
     ) -> QuoteResult;
-}
-
-pub fn pair_from_mints_blocking(base: Pubkey, quote: Pubkey, client: &RpcClient) -> crate::error::Result<Pair> {
-    let pair_pubkey = Pair::get_address(
-        &[
-            CONTROLLER.as_ref(),
-            skey::<_, true>(&base, &quote).as_ref(),
-            skey::<_, false>(&base, &quote).as_ref(),
-        ]
-    );
-    get_pair_blocking(&pair_pubkey, client)
 }
 
 #[derive(Debug, Copy, Clone)]
