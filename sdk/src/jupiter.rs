@@ -22,8 +22,7 @@ use crate::ssl::state::get_pair_blocking;
 
 const DISCRIMINANT: usize = 8;
 
-// TODO Put the correct value here, maybe make an enum for this.
-const CONTROLLER: Pubkey = pubkey!("11111111111111111111111111111111");
+const CONTROLLER: Pubkey = pubkey!("8CxKnuJeoeQXFwiG6XiGY2akBjvJA5k3bE52BfnuEmNQ");
 
 lazy_static! {
     pub static ref MINTS: HashMap<Pubkey, &'static str> = {
@@ -111,6 +110,7 @@ enum AmmAccountState {
     Ok,
 }
 
+
 /// Struct that implements the `jupiter_core::amm::Amm` trait.
 ///
 /// This struct requires two calls to [Amm::get_accounts_to_update] and [Amm::update],
@@ -130,8 +130,6 @@ enum AmmAccountState {
 #[derive(Debug, Clone)]
 pub struct GfxAmm {
     /// "XXX/YYY" where:
-    /// XXX = liability RT
-    /// YYY = swapped liability RT
     label: String,
     /// This object's state must be cranked twice before you can pull quotes from it.
     /// This enum keeps track of whether that's occurred.
@@ -261,7 +259,6 @@ impl Amm for GfxAmm {
             self.ssl_b_vault_a,
             self.ssl_b_vault_b,
         ];
-        // TODO Should we store a list of oracles on all updates instead of this?
         if let Some(pair) = &self.pair {
             accounts.extend::<Vec<_>>(
                 pair.oracles
@@ -284,7 +281,6 @@ impl Amm for GfxAmm {
             Ok::<_, anyhow::Error>(())
         };
         for (pubkey, data) in accounts_map {
-            // TODO Code readability?
             if *pubkey == self.ssl_a_pubkey {
                 let data: [u8; mem::size_of::<SSL>() + DISCRIMINANT] = data.clone().try_into()
                     .map_err(|_| anyhow!("Invalid data size for SSL"))?;
@@ -310,10 +306,6 @@ impl Amm for GfxAmm {
                 update_token_account(&mut self.ssl_b_vault_b_balance, &mut data.as_slice())?;
             } else {
                 // Assume it's an oracle
-                // TODO This assumption is tenuous, should maybe make this safer
-                //    by saving a list of oracles. Depends on whether you think
-                //    we should fail loudly in the case where they pass in
-                //    an account that we do not need to update.
                 let price_account = load_price_account(&mut data.as_slice())
                      .map_err(|_| anyhow!("Invalid oracle data"))?;
                 self.oracles.insert(*pubkey, *price_account);
@@ -331,7 +323,6 @@ impl Amm for GfxAmm {
         Ok(())
     }
 
-    // TODO Review whether this logic is correct
     fn quote(&self, quote_params: &QuoteParams) -> anyhow::Result<Quote> {
         match self.account_state {
             AmmAccountState::Ok => {},
@@ -376,16 +367,15 @@ impl Amm for GfxAmm {
             )
         };
 
-        let oracles = self.oracles
+        let oracles: Vec<OracleEntry> = self.oracles
             .iter()
             .map(|(pubkey, act)| {
                 let mut pubkey_arr: [u8; 32] = Default::default();
                 pubkey_arr.copy_from_slice(pubkey.as_ref());
                 OracleEntry(pubkey_arr, *act)
             })
-            .collect::<Vec<_>>()
-            .as_slice()
-            .as_ptr();
+            .collect();
+
         match unsafe {
             quote(
                 &ssl_in,
@@ -395,7 +385,7 @@ impl Amm for GfxAmm {
                 liability_out,
                 swapped_liability_in,
                 swapped_liability_out,
-                oracles,
+                oracles.as_ptr(),
                 self.oracles.len(),
                 quote_params.in_amount,
             )
