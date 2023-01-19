@@ -190,6 +190,7 @@ pub struct GfxAmm {
     ssl_b_vault_b_balance: u64,
     // Indexed by Pubkey of the [PriceAccount].
     oracles: HashMap<Pubkey, PriceAccount>,
+    // Fetched from a lookup table during construction.
     oracle_addresses: Vec<Pubkey>,
 }
 
@@ -271,13 +272,14 @@ impl Amm for GfxAmm {
         self.pair_pubkey
     }
 
-    /// Fetches mints offered by GFX for swap.
+    /// Returns mints offered by GFX for swap. Any pair of
+    /// distinct elements from this Vec makes a valid swap pair.
     fn get_reserve_mints(&self) -> Vec<Pubkey> {
         RESERVE_MINTS.clone()
     }
 
-    /// Fetch all accounts required for providing accurate quotes
-    /// and swap instructions.
+    /// Returns pubkeys of all the accounts required
+    /// for providing accurate quotes and swap instructions.
     fn get_accounts_to_update(&self) -> Vec<Pubkey> {
         let mut accounts = vec![
             self.ssl_a_pubkey,
@@ -292,7 +294,7 @@ impl Amm for GfxAmm {
         accounts
     }
 
-    /// Update account state
+    /// Update the account state contained in self.
     fn update(&mut self, accounts_map: &HashMap<Pubkey, Vec<u8>>) -> anyhow::Result<()> {
         let update_token_account = |amount: &mut u64, data: &mut &[u8]| {
             let token_account = TokenAccount::try_deserialize(data)?;
@@ -339,7 +341,7 @@ impl Amm for GfxAmm {
         Ok(())
     }
 
-    /// Get a swap quote
+    /// Get a GooseFX SSL swap quote
     fn quote(&self, quote_params: &QuoteParams) -> anyhow::Result<Quote> {
         if self.pair.is_none() {
             return Err(anyhow!("Account state is not initialized"));
@@ -452,8 +454,7 @@ impl Amm for GfxAmm {
     }
 
     /// Get account metas for a GFX swap instruction,
-    /// and additional metadata such as the variant of [SwapLeg],
-    /// and the platform facilitating the swap (GFX in this case).
+    /// and marker denoting a [SwapLeg::Swap], and a [Swap::GooseFx].
     fn get_swap_leg_and_account_metas(
         &self,
         swap_params: &SwapParams,
