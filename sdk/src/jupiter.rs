@@ -87,16 +87,15 @@ lazy_static! {
     pub static ref ORACLE_USD_ADDRESSES: HashMap<&'static str, Pubkey> = {
         let mut paths = HashMap::new();
         vec![
-            ("SOL", pubkey!("H6ARHf6YXhGYeQfUzQNGk6rDNnLBQKrenN712K4AQJEG")),
             ("WSOL", pubkey!("H6ARHf6YXhGYeQfUzQNGk6rDNnLBQKrenN712K4AQJEG")),
-            ("MSOL", pubkey!("E4v1BBgoso9s64TQvmyownAVJbhbEPGyzA3qn4n46qj9")),
-            ("STSOL", pubkey!("Bt1hEbY62aMriY1SyQqbeZbm8VmSbQVGBFzSzMuVNWzN")),
             ("ETH", pubkey!("JBu1AL4obBcCMqKBBxhpWCNUt136ijcuMZLFvTP7iWdB")),
+            ("MSOL", pubkey!("E4v1BBgoso9s64TQvmyownAVJbhbEPGyzA3qn4n46qj9")),
             ("SRM", pubkey!("3NBReDRTLKMQEKiLD5tGcx4kXbTf88b7f2xLS9UuGjym")),
             ("GMT", pubkey!("DZYZkJcFJThN9nZy4nK3hrHra1LaWeiyoZ9SMdLFEFpY")),
             ("USDT", pubkey!("3vxLXJqLqF3JG5TCbYycbKWRBbCJQLxQmBGCkyqEEefL")),
             ("ORCA", pubkey!("4ivThkX8uRxBpHsdWSqyXYihzKF3zpRGAUCqyuagnLoV")),
             ("USDC", pubkey!("Gnt27xtC473ZT2Mw5u8wZ68Z3gULkSTb5DuxJy7eJotD")),
+            ("STSOL", pubkey!("Bt1hEbY62aMriY1SyQqbeZbm8VmSbQVGBFzSzMuVNWzN")),
             ("BTC", pubkey!("GVXRSBjFk6e6J3NbVPXohDJetcTjaeeuykUpbQF8UoMU")),
             ("APT", pubkey!("FNNvb1AFDnDVPkocEri8mWbJ1952HQZtFLuwPiUjSJQ")),
         ]
@@ -181,7 +180,7 @@ enum AmmAccountState {
 /// ```rust
 /// use solana_program::pubkey::Pubkey;
 /// use solana_sdk::pubkey;
-/// use gfx_ssl_sdk_rust::jupiter::GfxAmm;
+/// use gfx_ssl_sdk::jupiter::GfxAmm;
 ///
 /// let base: Pubkey = pubkey!("GFX1ZjR2P15tmrSwow6FjyDYcEkoFb4p4gJCpLBjaxHD");
 /// let quote: Pubkey = pubkey!("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
@@ -190,7 +189,6 @@ enum AmmAccountState {
 ///
 #[derive(Debug, Clone)]
 pub struct GfxAmm {
-    /// "XXX/YYY" where:
     label: String,
     /// This object's state must be cranked twice before you can pull quotes from it.
     /// This enum keeps track of whether that's occurred.
@@ -216,8 +214,7 @@ pub struct GfxAmm {
     ssl_b_vault_b_balance: u64,
     // Indexed by Pubkey of the [PriceAccount].
     oracles: HashMap<Pubkey, PriceAccount>,
-    // Maps mint pubkeys to their respective "path" accounts.
-    //oracle_paths: HashMap<Pubkey, Pubkey>,
+    //oracle_addresses: HashMap<Pubkey, Pubkey>,
 }
 
 impl GfxAmm {
@@ -240,7 +237,7 @@ impl GfxAmm {
 
         // TODO This could obviate the need to call update twice
         //    before the quote fn becomes usable
-        // // Oracle paths
+        // // Oracle addresses
         // let mut oracle_addresses = HashMap::new();
         // oracle_addresses.insert(
         //   ssl_a_mint, *ORACLE_USD_ADDRESSES.get(label_front).unwrap(),
