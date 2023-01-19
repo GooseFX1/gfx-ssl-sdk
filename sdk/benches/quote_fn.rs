@@ -15,23 +15,20 @@ pub fn criterion_benchmark(c: &mut Criterion) {
     let mut amm = GfxAmm::new(ETH_MINT, USDC_MINT)
         .unwrap();
 
-    // We need to run the update function twice, because the addresses of
-    // some necessary accounts are stored as account data.
-    for _ in 0..2 {
-        let acts_to_update = amm.get_accounts_to_update();
-        let acts_data = client.get_multiple_accounts(&acts_to_update)
-            .unwrap()
-            .into_iter()
-            .map(|act| {
-                act.unwrap().data
-            })
-            .collect::<Vec<_>>();
-        let acts: HashMap<Pubkey, Vec<u8>> = acts_to_update
-            .into_iter()
-            .zip(acts_data)
-            .collect();
-        amm.update(&acts).unwrap();
-    }
+    // Initialize the account state
+    let acts_to_update = amm.get_accounts_to_update();
+    let acts_data = client.get_multiple_accounts(&acts_to_update)
+        .unwrap()
+        .into_iter()
+        .map(|act| {
+            act.unwrap().data
+        })
+        .collect::<Vec<_>>();
+    let acts: HashMap<Pubkey, Vec<u8>> = acts_to_update
+        .into_iter()
+        .zip(acts_data)
+        .collect();
+    amm.update(&acts).unwrap();
 
     c.bench_function("quote_fn", |b| b.iter(|| {
         amm.quote(black_box(&QuoteParams {

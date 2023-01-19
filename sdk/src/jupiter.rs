@@ -152,30 +152,7 @@ extern "C" {
     ) -> QuoteResult;
 }
 
-/// Instances of [GfxAmm] cannot serve up quotes until they've been "cranked"
-/// through the two-step process of [Amm::get_accounts_to_update] and [Amm:update] twice.
-/// The first "crank" acquires additional accounts off of the account data
-/// it is first passed. Those additional accounts are then returned out of the second
-/// call to [Amm::get_accounts_to_update] (and subsequent calls).
-///
-/// This enum is a stateful guard for ensuring safety regarding this limitation.
-#[derive(Debug, Copy, Clone)]
-enum AmmAccountState {
-    /// If there have been no account state updates via a call to
-    /// [Amm::update], we cannot provide any quotes.
-    Empty,
-    /// After the first [Amm::update], we know which oracles we need to fetch,
-    /// but we haven't fetched them yet. A second [Amm::update] is required to crank
-    /// the [GfxAmm] into a ready state.
-    NeedOracleData,
-    Ok,
-}
-
 /// Struct that implements the `jupiter_core::amm::Amm` trait.
-///
-/// This struct requires two calls to [Amm::get_accounts_to_update] and [Amm::update],
-/// as some of the accounts required cannot be known for a given pair until
-/// other account state is fetched first.
 ///
 /// ```rust
 /// use solana_program::pubkey::Pubkey;
@@ -192,7 +169,6 @@ pub struct GfxAmm {
     label: String,
     /// This object's state must be cranked twice before you can pull quotes from it.
     /// This enum keeps track of whether that's occurred.
-    account_state: AmmAccountState,
     ssl_a: Option<SSL>,
     ssl_a_mint: Pubkey,
     ssl_a_data: [u8; mem::size_of::<SSL>() + DISCRIMINANT],
@@ -214,7 +190,7 @@ pub struct GfxAmm {
     ssl_b_vault_b_balance: u64,
     // Indexed by Pubkey of the [PriceAccount].
     oracles: HashMap<Pubkey, PriceAccount>,
-    //oracle_addresses: HashMap<Pubkey, Pubkey>,
+    oracle_addresses: Vec<Pubkey>,
 }
 
 impl GfxAmm {
@@ -235,16 +211,14 @@ impl GfxAmm {
             .ok_or(anyhow!("This mint is not offered {}", ssl_b_mint))?;
         let label = format!("{}/{}", &label_front, &label_back);
 
-        // TODO This could obviate the need to call update twice
-        //    before the quote fn becomes usable
-        // // Oracle addresses
-        // let mut oracle_addresses = HashMap::new();
-        // oracle_addresses.insert(
-        //   ssl_a_mint, *ORACLE_USD_ADDRESSES.get(label_front).unwrap(),
-        // );
-        // oracle_addresses.insert(
-        //     ssl_a_mint, *ORACLE_USD_ADDRESSES.get(label_back).unwrap(),
-        // );
+        // Oracle addresses
+        let mut oracle_addresses = Vec::new();
+        oracle_addresses.push(
+          *ORACLE_USD_ADDRESSES.get(label_front).unwrap(),
+        );
+        oracle_addresses.push(
+            *ORACLE_USD_ADDRESSES.get(label_back).unwrap(),
+        );
 
         // Calculate PDAs of GFX accounts
         let ssl_a_pubkey = SSL::get_address(&[CONTROLLER.as_ref(), ssl_a_mint.as_ref()]);
@@ -261,7 +235,6 @@ impl GfxAmm {
 
         Ok(Self {
             label,
-            account_state: AmmAccountState::Empty,
             ssl_a: None,
             ssl_a_mint,
             ssl_a_data: [0; DISCRIMINANT + mem::size_of::<SSL>()],
@@ -282,7 +255,7 @@ impl GfxAmm {
             ssl_b_vault_b,
             ssl_b_vault_b_balance: 0,
             oracles: Default::default(),
-            // oracle_addresses,
+            oracle_addresses,
         })
     }
 }
@@ -315,15 +288,7 @@ impl Amm for GfxAmm {
             self.ssl_b_vault_a,
             self.ssl_b_vault_b,
         ];
-        if let Some(pair) = &self.pair {
-            accounts.extend::<Vec<_>>(
-                pair.oracles
-                    .iter()
-                    .map(|o| o.path.iter().map(|p| p.0))
-                    .flatten()
-                    .collect(),
-            );
-        }
+        accounts.extend(&self.oracle_addresses);
         accounts
     }
 
@@ -371,25 +336,13 @@ impl Amm for GfxAmm {
                 self.oracles.insert(*pubkey, *price_account);
             }
         }
-        match self.account_state {
-            AmmAccountState::Empty => {
-                self.account_state = AmmAccountState::NeedOracleData;
-            }
-            AmmAccountState::NeedOracleData => {
-                self.account_state = AmmAccountState::Ok;
-            }
-            AmmAccountState::Ok => {}
-        }
         Ok(())
     }
 
     /// Get a swap quote
     fn quote(&self, quote_params: &QuoteParams) -> anyhow::Result<Quote> {
-        match self.account_state {
-            AmmAccountState::Ok => {}
-            _ => {
-                return Err(anyhow!("Cannot quote until account state is populated"));
-            }
+        if self.pair.is_none() {
+            return Err(anyhow!("Account state is not initialized"));
         }
         // Orient each side of the pair as "in" our "out".
         // Keep a boolean flag that helps keep track of whether to flip
