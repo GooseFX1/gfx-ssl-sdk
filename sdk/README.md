@@ -21,3 +21,9 @@ For example, you can run the Jupiter example from the root of this repo like so:
 ```commandline
 LD_LIBRARY_PATH="./lib" cargo build --example jupiter -p gfx-ssl-sdk
 ```
+
+### Testing
+From inside this same directory where this Readme is located:
+```
+LD_LIBRARY_PATH="../lib" cargo test --test all_pairs
+```
