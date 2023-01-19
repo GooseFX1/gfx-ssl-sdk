@@ -1632,11 +1632,21 @@ dependencies = [
 ]
 
 [[package]]
-name = "gfx-controller-sdk"
+name = "gfx-controller-interface"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
  "anchor-spl",
+]
+
+[[package]]
+name = "gfx-ssl-interface"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "anchor-spl",
+ "gfx-controller-interface",
+ "solana-program",
 ]
 
 [[package]]
@@ -1645,20 +1655,10 @@ version = "0.1.0"
 dependencies = [
  "anchor-lang",
  "anchor-spl",
- "gfx-controller-sdk",
- "solana-program",
-]
-
-[[package]]
-name = "gfx-ssl-sdk-rust"
-version = "0.1.0"
-dependencies = [
- "anchor-lang",
- "anchor-spl",
  "anyhow",
  "criterion",
- "gfx-controller-sdk",
- "gfx-ssl-sdk",
+ "gfx-controller-interface",
+ "gfx-ssl-interface",
  "jupiter",
  "jupiter-core",
  "lazy_static",

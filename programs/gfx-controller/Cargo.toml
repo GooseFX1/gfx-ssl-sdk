@@ -1,12 +1,12 @@
 [package]
 description = "Created with Anchor"
 edition = "2021"
-name = "gfx-controller-sdk"
+name = "gfx-controller-interface"
 version = "0.1.0"
 
 [lib]
 crate-type = ["lib"]
-name = "gfx_controller_sdk"
+name = "gfx_controller_interface"
 
 [features]
 cpi = ["no-entrypoint"]

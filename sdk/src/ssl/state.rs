@@ -1,5 +1,5 @@
 use crate::error::Result;
-use gfx_ssl_sdk::{LiquidityAccount, Pair, SSL};
+use gfx_ssl_interface::{LiquidityAccount, Pair, SSL};
 use solana_program::pubkey::Pubkey;
 
 use solana_client::nonblocking::rpc_client::RpcClient;

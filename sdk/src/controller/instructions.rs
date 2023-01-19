@@ -6,8 +6,8 @@ use anchor_spl::token::Token;
 use solana_program::instruction::Instruction;
 use solana_program::pubkey::Pubkey;
 use solana_program::sysvar::SysvarId;
-use gfx_controller_sdk::StakingAccount;
-use gfx_controller_sdk::PDAIdentifier;
+use gfx_controller_interface::StakingAccount;
+use gfx_controller_interface::PDAIdentifier;
 
 
 /// The instructions all contain nearly the same required arguments.
@@ -42,8 +42,8 @@ impl ControllerInstructionContext {
 pub fn create_staking_account(
     ctx: &ControllerInstructionContext,
 ) -> Instruction {
-    let data = gfx_controller_sdk::instruction::CreateStakingAccount.data();
-    let accounts = gfx_controller_sdk::accounts::CreateStakingAccount {
+    let data = gfx_controller_interface::instruction::CreateStakingAccount.data();
+    let accounts = gfx_controller_interface::accounts::CreateStakingAccount {
         controller: ctx.controller.clone(),
         staking_account: ctx.staking_account.clone(),
         user_wallet: ctx.user_wallet.clone(),
@@ -53,7 +53,7 @@ pub fn create_staking_account(
     Instruction {
         data,
         accounts,
-        program_id: gfx_controller_sdk::id(),
+        program_id: gfx_controller_interface::id(),
     }
 }
 
@@ -70,8 +70,8 @@ pub fn stake(
         &ctx.user_wallet,
         controller_mint,
     );
-    let data = gfx_controller_sdk::instruction::Stake { amount }.data();
-    let accounts = gfx_controller_sdk::accounts::Stake {
+    let data = gfx_controller_interface::instruction::Stake { amount }.data();
+    let accounts = gfx_controller_interface::accounts::Stake {
         controller: ctx.controller.clone(),
         staking_account: ctx.staking_account.clone(),
         vault,
@@ -82,7 +82,7 @@ pub fn stake(
     Instruction {
         data,
         accounts,
-        program_id: gfx_controller_sdk::id(),
+        program_id: gfx_controller_interface::id(),
     }
 }
 
@@ -104,8 +104,8 @@ pub fn unstake(
         controller_admin,
         controller_mint,
     );
-    let data = gfx_controller_sdk::instruction::Unstake { unstake_percent }.data();
-    let accounts = gfx_controller_sdk::accounts::Unstake {
+    let data = gfx_controller_interface::instruction::Unstake { unstake_percent }.data();
+    let accounts = gfx_controller_interface::accounts::Unstake {
         controller: ctx.controller.clone(),
         staking_account: ctx.staking_account.clone(),
         vault,
@@ -117,6 +117,6 @@ pub fn unstake(
     Instruction {
         data,
         accounts,
-        program_id: gfx_controller_sdk::id(),
+        program_id: gfx_controller_interface::id(),
     }
 }

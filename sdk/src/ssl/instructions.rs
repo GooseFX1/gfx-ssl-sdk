@@ -5,8 +5,8 @@ use anchor_spl::associated_token::get_associated_token_address;
 use anchor_spl::token::Token;
 use solana_program::instruction::Instruction;
 use solana_program::sysvar::SysvarId;
-use gfx_ssl_sdk::{LiquidityAccount, Pair, skey, SSL};
-use gfx_ssl_sdk::PDAIdentifier;
+use gfx_ssl_interface::{LiquidityAccount, Pair, skey, SSL};
+use gfx_ssl_interface::PDAIdentifier;
 
 /// The instructions all contain nearly the same required arguments.
 /// This struct provides a more succinct, reusable input to
@@ -52,8 +52,8 @@ impl SSLInstructionContext {
 pub fn create_liquidity_account(
     ctx: &SSLInstructionContext,
 ) -> Instruction {
-    let data = gfx_ssl_sdk::instruction::CreateLiquidityAccount.data();
-    let accounts = gfx_ssl_sdk::accounts::CreateLiquidityAccount {
+    let data = gfx_ssl_interface::instruction::CreateLiquidityAccount.data();
+    let accounts = gfx_ssl_interface::accounts::CreateLiquidityAccount {
         controller: ctx.controller.clone(),
         ssl: ctx.ssl.clone(),
         liquidity_account: ctx.liquidity_account.clone(),
@@ -64,7 +64,7 @@ pub fn create_liquidity_account(
     Instruction {
         data,
         accounts,
-        program_id: gfx_ssl_sdk::id(),
+        program_id: gfx_ssl_interface::id(),
     }
 }
 
@@ -76,8 +76,8 @@ pub fn deposit(
         &ctx.ssl, &ctx.ssl_mint);
     let user_rt_ata = get_associated_token_address(
         &ctx.user_wallet, &ctx.ssl_mint);
-    let data = gfx_ssl_sdk::instruction::Deposit { amount }.data();
-    let accounts = gfx_ssl_sdk::accounts::Deposit {
+    let data = gfx_ssl_interface::instruction::Deposit { amount }.data();
+    let accounts = gfx_ssl_interface::accounts::Deposit {
         controller: ctx.controller.clone(),
         ssl: ctx.ssl.clone(),
         liquidity_account: ctx.liquidity_account.clone(),
@@ -89,7 +89,7 @@ pub fn deposit(
     Instruction {
         data,
         accounts,
-        program_id: gfx_ssl_sdk::id(),
+        program_id: gfx_ssl_interface::id(),
     }
 }
 
@@ -101,8 +101,8 @@ pub fn withdraw(
         &ctx.ssl, &ctx.ssl_mint);
     let user_rt_ata = get_associated_token_address(
         &ctx.user_wallet, &ctx.ssl_mint);
-    let data = gfx_ssl_sdk::instruction::Withdraw { withdraw_percent }.data();
-    let accounts = gfx_ssl_sdk::accounts::Withdraw {
+    let data = gfx_ssl_interface::instruction::Withdraw { withdraw_percent }.data();
+    let accounts = gfx_ssl_interface::accounts::Withdraw {
         controller: ctx.controller.clone(),
         ssl: ctx.ssl.clone(),
         liquidity_account: ctx.liquidity_account.clone(),
@@ -114,7 +114,7 @@ pub fn withdraw(
     Instruction {
         data,
         accounts,
-        program_id: gfx_ssl_sdk::id(),
+        program_id: gfx_ssl_interface::id(),
     }
 }
 
@@ -157,7 +157,7 @@ pub(crate) fn swap_account_metas(
         &ctx.user_wallet, ssl_out_mint);
     let fee_collector_ata = get_associated_token_address(
         &fee_collector, ssl_in_mint);
-    gfx_ssl_sdk::accounts::Swap {
+    gfx_ssl_interface::accounts::Swap {
         controller: ctx.controller.clone(),
         pair,
         ssl_in,
@@ -183,7 +183,7 @@ pub fn swap(
     amount_in: u64,
     min_out: u64,
 ) -> Instruction {
-    let data = gfx_ssl_sdk::instruction::Swap { amount_in, min_out }.data();
+    let data = gfx_ssl_interface::instruction::Swap { amount_in, min_out }.data();
     let accounts = swap_account_metas(
         ctx,
         ssl_in_mint,
@@ -193,6 +193,6 @@ pub fn swap(
     Instruction {
         data,
         accounts,
-        program_id: gfx_ssl_sdk::id(),
+        program_id: gfx_ssl_interface::id(),
     }
 }

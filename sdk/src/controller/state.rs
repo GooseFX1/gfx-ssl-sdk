@@ -1,5 +1,5 @@
 use solana_program::pubkey::Pubkey;
-use gfx_controller_sdk::{Controller, StakingAccount};
+use gfx_controller_interface::{Controller, StakingAccount};
 use crate::error::Result;
 
 #[cfg(not(target_arch = "wasm32"))]

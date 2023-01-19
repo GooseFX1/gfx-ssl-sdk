@@ -4,15 +4,15 @@ use jupiter_core::amm::{Amm, QuoteParams};
 use solana_client::rpc_client::RpcClient;
 use solana_program::pubkey::Pubkey;
 use solana_sdk::pubkey;
-use gfx_ssl_sdk_rust::jupiter::GfxAmm;
+use gfx_ssl_sdk::jupiter::GfxAmm;
 
-const BTC_MINT: Pubkey = pubkey!("9n4nbM75f5Ui33ZbPYXn59EwSgE8CGsHtAeTH5YFeJ9E");
+const ETH_MINT: Pubkey = pubkey!("7vfCXTUXx5WJV5JADk17DUJ4ksgau7utNKj4b963voxs");
 const USDC_MINT: Pubkey = pubkey!("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
 
 fn main() {
     let client = RpcClient::new("https://api.mainnet-beta.solana.com");
 
-    let mut amm = GfxAmm::new(BTC_MINT, USDC_MINT)
+    let mut amm = GfxAmm::new(ETH_MINT, USDC_MINT)
         .unwrap();
 
     // We need to run the update function twice, because the addresses of
@@ -35,7 +35,7 @@ fn main() {
 
     let quote = amm.quote(black_box(&QuoteParams {
         in_amount: 40000,
-        input_mint: BTC_MINT,
+        input_mint: ETH_MINT,
         output_mint: USDC_MINT,
     })).unwrap();
     println!("{:?}", quote);

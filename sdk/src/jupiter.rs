@@ -1,52 +1,114 @@
+use crate::ssl::instructions::{swap_account_metas, SSLInstructionContext};
+use crate::ssl::FEE_COLLECTOR;
+use anchor_lang::AccountDeserialize;
+use anchor_spl::associated_token::get_associated_token_address;
+use anchor_spl::token::TokenAccount;
+use anyhow::anyhow;
+use gfx_ssl_interface::{skey, PDAIdentifier, Pair, SSL};
+use jupiter::jupiter_override::{Swap, SwapLeg};
+use jupiter_core::amm::{Amm, Quote, QuoteParams, SwapLegAndAccountMetas, SwapParams};
+use lazy_static::lazy_static;
+use pyth_sdk_solana::state::{load_price_account, PriceAccount};
+use rust_decimal::Decimal;
+use solana_program::pubkey::Pubkey;
+use solana_sdk::pubkey;
 use std::collections::HashMap;
 use std::ffi::CStr;
 use std::fmt::Debug;
 use std::mem;
-use anyhow::anyhow;
-use jupiter_core::amm::{Amm, Quote, QuoteParams, SwapLegAndAccountMetas, SwapParams};
-use rust_decimal::Decimal;
-use anchor_lang::AccountDeserialize;
-use anchor_spl::associated_token::get_associated_token_address;
-use anchor_spl::token::TokenAccount;
-use jupiter::jupiter_override::{Swap, SwapLeg};
-use lazy_static::lazy_static;
-use pyth_sdk_solana::state::{load_price_account, PriceAccount};
-use solana_program::pubkey::Pubkey;
-use solana_sdk::pubkey;
-use gfx_ssl_sdk::{Pair, PDAIdentifier, skey, SSL};
-use crate::ssl::FEE_COLLECTOR;
-use crate::ssl::instructions::{SSLInstructionContext, swap_account_metas};
 
 const DISCRIMINANT: usize = 8;
 
+/// The current mainnet value
 const CONTROLLER: Pubkey = pubkey!("8CxKnuJeoeQXFwiG6XiGY2akBjvJA5k3bE52BfnuEmNQ");
 
 lazy_static! {
+    /// The tokens currently offered on SSL mainnet,
+    /// paired to their human-readable names.
     pub static ref MINTS: HashMap<Pubkey, &'static str> = {
         let mut mints = HashMap::new();
         vec![
-            (pubkey!("So11111111111111111111111111111111111111112"), "WSOL"),
-            (pubkey!("7vfCXTUXx5WJV5JADk17DUJ4ksgau7utNKj4b963voxs"), "ETH"),
-            (pubkey!("mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So"), "MSOL"),
-            (pubkey!("SRMuApVNdxXokk5GT7XD5cUUgXMBCoAz2LHeuAoKWRt"), "SRM"),
-            (pubkey!("7i5KKsX2weiTkry7jA4ZwSuXGhs5eJBEjY8vVxR4pfRx"), "GMT"),
-            (pubkey!("Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB"), "USDT"),
-            (pubkey!("orcaEKTdK7LKz57vaAYr9QeNsVEPfiu6QeMU1kektZE"), "ORCA"),
-            (pubkey!("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"), "USDC"),
-            (pubkey!("7dHbWXmci3dT8UFYWYZweBLXgycu7Y3iL6trKn1Y7ARj"), "STSOL"),
-            (pubkey!("9n4nbM75f5Ui33ZbPYXn59EwSgE8CGsHtAeTH5YFeJ9E"), "BTC"),
-            (pubkey!("6LNeTYMqtNm1pBFN8PfhQaoLyegAH8GD32WmHU9erXKN"), "APT"),
-        ].into_iter()
+            (
+                pubkey!("So11111111111111111111111111111111111111112"),
+                "WSOL",
+            ),
+            (
+                pubkey!("7vfCXTUXx5WJV5JADk17DUJ4ksgau7utNKj4b963voxs"),
+                "ETH",
+            ),
+            (
+                pubkey!("mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So"),
+                "MSOL",
+            ),
+            (
+                pubkey!("SRMuApVNdxXokk5GT7XD5cUUgXMBCoAz2LHeuAoKWRt"),
+                "SRM",
+            ),
+            (
+                pubkey!("7i5KKsX2weiTkry7jA4ZwSuXGhs5eJBEjY8vVxR4pfRx"),
+                "GMT",
+            ),
+            (
+                pubkey!("Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB"),
+                "USDT",
+            ),
+            (
+                pubkey!("orcaEKTdK7LKz57vaAYr9QeNsVEPfiu6QeMU1kektZE"),
+                "ORCA",
+            ),
+            (
+                pubkey!("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"),
+                "USDC",
+            ),
+            (
+                pubkey!("7dHbWXmci3dT8UFYWYZweBLXgycu7Y3iL6trKn1Y7ARj"),
+                "STSOL",
+            ),
+            (
+                pubkey!("9n4nbM75f5Ui33ZbPYXn59EwSgE8CGsHtAeTH5YFeJ9E"),
+                "BTC",
+            ),
+            (
+                pubkey!("6LNeTYMqtNm1pBFN8PfhQaoLyegAH8GD32WmHU9erXKN"),
+                "APT",
+            ),
+        ]
+        .into_iter()
         .for_each(|(mint, name)| {
             mints.insert(mint, name);
         });
         mints
     };
-    pub static ref RESERVE_MINTS: Vec<Pubkey> = {
-        MINTS.keys().map(|p| *p).collect()
+    /// The tokens currently offered on SSL mainnet.
+    pub static ref RESERVE_MINTS: Vec<Pubkey> = MINTS.keys().map(|p| *p).collect();
+
+    /// Oracle addresses for various tokens against USD,
+    /// indexed by their human readable names.
+    pub static ref ORACLE_USD_ADDRESSES: HashMap<&'static str, Pubkey> = {
+        let mut paths = HashMap::new();
+        vec![
+            ("SOL", pubkey!("H6ARHf6YXhGYeQfUzQNGk6rDNnLBQKrenN712K4AQJEG")),
+            ("WSOL", pubkey!("H6ARHf6YXhGYeQfUzQNGk6rDNnLBQKrenN712K4AQJEG")),
+            ("MSOL", pubkey!("E4v1BBgoso9s64TQvmyownAVJbhbEPGyzA3qn4n46qj9")),
+            ("STSOL", pubkey!("Bt1hEbY62aMriY1SyQqbeZbm8VmSbQVGBFzSzMuVNWzN")),
+            ("ETH", pubkey!("JBu1AL4obBcCMqKBBxhpWCNUt136ijcuMZLFvTP7iWdB")),
+            ("SRM", pubkey!("3NBReDRTLKMQEKiLD5tGcx4kXbTf88b7f2xLS9UuGjym")),
+            ("GMT", pubkey!("DZYZkJcFJThN9nZy4nK3hrHra1LaWeiyoZ9SMdLFEFpY")),
+            ("USDT", pubkey!("3vxLXJqLqF3JG5TCbYycbKWRBbCJQLxQmBGCkyqEEefL")),
+            ("ORCA", pubkey!("4ivThkX8uRxBpHsdWSqyXYihzKF3zpRGAUCqyuagnLoV")),
+            ("USDC", pubkey!("Gnt27xtC473ZT2Mw5u8wZ68Z3gULkSTb5DuxJy7eJotD")),
+            ("BTC", pubkey!("GVXRSBjFk6e6J3NbVPXohDJetcTjaeeuykUpbQF8UoMU")),
+            ("APT", pubkey!("FNNvb1AFDnDVPkocEri8mWbJ1952HQZtFLuwPiUjSJQ")),
+        ]
+        .into_iter()
+        .for_each(|(label, pubkey)| {
+            paths.insert(label, pubkey);
+        });
+        paths
     };
 }
 
+/// The tagged data for the "Ok" variant of [QuoteResult].
 #[repr(C)]
 pub struct SwapResult {
     pub amount_in: u64,
@@ -59,6 +121,8 @@ pub struct SwapResult {
     pub iter: u32,
 }
 
+/// The output type for the FFI call used in the implementation of[Amm::quote]
+/// for [GfxAmm].
 #[allow(dead_code)]
 #[repr(C)]
 enum QuoteResult {
@@ -66,10 +130,15 @@ enum QuoteResult {
     Error(*mut i8),
 }
 
+/// A safe type to pass across the FFI boundary,
+/// we pass a collection of these oracle addresses and account data.
+#[derive(Debug)]
 #[repr(C)]
 pub struct OracleEntry([u8; 32], PriceAccount);
 
 extern "C" {
+    /// A function in a pre-compiled dylib that does
+    /// the heavy lifting to derive an accurate swap quote.
     fn quote(
         ssl_in: &[u8; mem::size_of::<SSL>() + DISCRIMINANT],
         ssl_out: &[u8; mem::size_of::<SSL>() + DISCRIMINANT],
@@ -84,6 +153,13 @@ extern "C" {
     ) -> QuoteResult;
 }
 
+/// Instances of [GfxAmm] cannot serve up quotes until they've been "cranked"
+/// through the two-step process of [Amm::get_accounts_to_update] and [Amm:update] twice.
+/// The first "crank" acquires additional accounts off of the account data
+/// it is first passed. Those additional accounts are then returned out of the second
+/// call to [Amm::get_accounts_to_update] (and subsequent calls).
+///
+/// This enum is a stateful guard for ensuring safety regarding this limitation.
 #[derive(Debug, Copy, Clone)]
 enum AmmAccountState {
     /// If there have been no account state updates via a call to
@@ -95,7 +171,6 @@ enum AmmAccountState {
     NeedOracleData,
     Ok,
 }
-
 
 /// Struct that implements the `jupiter_core::amm::Amm` trait.
 ///
@@ -139,7 +214,10 @@ pub struct GfxAmm {
     ssl_b_vault_a_balance: u64,
     ssl_b_vault_b: Pubkey,
     ssl_b_vault_b_balance: u64,
+    // Indexed by Pubkey of the [PriceAccount].
     oracles: HashMap<Pubkey, PriceAccount>,
+    // Maps mint pubkeys to their respective "path" accounts.
+    //oracle_paths: HashMap<Pubkey, Pubkey>,
 }
 
 impl GfxAmm {
@@ -152,48 +230,37 @@ impl GfxAmm {
         };
 
         // Get label, and ensure these pairs are offered.
-        let label_front = MINTS.get(&ssl_a_mint)
+        let label_front = MINTS
+            .get(&ssl_a_mint)
             .ok_or(anyhow!("This mint is not offered {}", ssl_a_mint))?;
-        let label_back = MINTS.get(&ssl_b_mint)
+        let label_back = MINTS
+            .get(&ssl_b_mint)
             .ok_or(anyhow!("This mint is not offered {}", ssl_b_mint))?;
-        let label = format!("{}/{}", label_front, label_back);
+        let label = format!("{}/{}", &label_front, &label_back);
+
+        // TODO This could obviate the need to call update twice
+        //    before the quote fn becomes usable
+        // // Oracle paths
+        // let mut oracle_addresses = HashMap::new();
+        // oracle_addresses.insert(
+        //   ssl_a_mint, *ORACLE_USD_ADDRESSES.get(label_front).unwrap(),
+        // );
+        // oracle_addresses.insert(
+        //     ssl_a_mint, *ORACLE_USD_ADDRESSES.get(label_back).unwrap(),
+        // );
 
         // Calculate PDAs of GFX accounts
-        let ssl_a_pubkey = SSL::get_address(
-            &[
-                CONTROLLER.as_ref(),
-                ssl_a_mint.as_ref(),
-            ]
-        );
-        let ssl_b_pubkey = SSL::get_address(
-            &[
-                CONTROLLER.as_ref(),
-                ssl_b_mint.as_ref(),
-            ]
-        );
-        let pair_pubkey = Pair::get_address(
-            &[
-                CONTROLLER.as_ref(),
-                skey::<_, true>(&ssl_a_mint, &ssl_b_mint).as_ref(),
-                skey::<_, false>(&ssl_a_mint, &ssl_b_mint).as_ref(),
-            ]
-        );
-        let ssl_a_vault_a = get_associated_token_address(
-            &ssl_a_pubkey,
-            &ssl_a_mint,
-        );
-        let ssl_a_vault_b = get_associated_token_address(
-            &ssl_a_pubkey,
-            &ssl_b_mint,
-        );
-        let ssl_b_vault_a = get_associated_token_address(
-            &ssl_b_pubkey,
-            &ssl_a_mint,
-        );
-        let ssl_b_vault_b = get_associated_token_address(
-            &ssl_b_pubkey,
-            &ssl_b_mint,
-        );
+        let ssl_a_pubkey = SSL::get_address(&[CONTROLLER.as_ref(), ssl_a_mint.as_ref()]);
+        let ssl_b_pubkey = SSL::get_address(&[CONTROLLER.as_ref(), ssl_b_mint.as_ref()]);
+        let pair_pubkey = Pair::get_address(&[
+            CONTROLLER.as_ref(),
+            skey::<_, true>(&ssl_a_mint, &ssl_b_mint).as_ref(),
+            skey::<_, false>(&ssl_a_mint, &ssl_b_mint).as_ref(),
+        ]);
+        let ssl_a_vault_a = get_associated_token_address(&ssl_a_pubkey, &ssl_a_mint);
+        let ssl_a_vault_b = get_associated_token_address(&ssl_a_pubkey, &ssl_b_mint);
+        let ssl_b_vault_a = get_associated_token_address(&ssl_b_pubkey, &ssl_a_mint);
+        let ssl_b_vault_b = get_associated_token_address(&ssl_b_pubkey, &ssl_b_mint);
 
         Ok(Self {
             label,
@@ -218,23 +285,29 @@ impl GfxAmm {
             ssl_b_vault_b,
             ssl_b_vault_b_balance: 0,
             oracles: Default::default(),
+            // oracle_addresses,
         })
     }
 }
 
 impl Amm for GfxAmm {
+    /// Human-readable name for the Amm pair.
     fn label(&self) -> String {
         self.label.clone()
     }
 
+    /// Get a pubkey to represent the Amm as a whole.
     fn key(&self) -> Pubkey {
         self.pair_pubkey
     }
 
+    /// Fetches mints offered by GFX for swap.
     fn get_reserve_mints(&self) -> Vec<Pubkey> {
         RESERVE_MINTS.clone()
     }
 
+    /// Fetch all accounts required for providing accurate quotes
+    /// and swap instructions.
     fn get_accounts_to_update(&self) -> Vec<Pubkey> {
         let mut accounts = vec![
             self.ssl_a_pubkey,
@@ -249,17 +322,15 @@ impl Amm for GfxAmm {
             accounts.extend::<Vec<_>>(
                 pair.oracles
                     .iter()
-                    .map(|o| o.path
-                            .iter()
-                            .map(|p| p.0)
-                    )
+                    .map(|o| o.path.iter().map(|p| p.0))
                     .flatten()
-                    .collect()
+                    .collect(),
             );
         }
         accounts
     }
 
+    /// Update account state
     fn update(&mut self, accounts_map: &HashMap<Pubkey, Vec<u8>>) -> anyhow::Result<()> {
         let update_token_account = |amount: &mut u64, data: &mut &[u8]| {
             let token_account = TokenAccount::try_deserialize(data)?;
@@ -268,17 +339,23 @@ impl Amm for GfxAmm {
         };
         for (pubkey, data) in accounts_map {
             if *pubkey == self.ssl_a_pubkey {
-                let data: [u8; mem::size_of::<SSL>() + DISCRIMINANT] = data.clone().try_into()
+                let data: [u8; mem::size_of::<SSL>() + DISCRIMINANT] = data
+                    .clone()
+                    .try_into()
                     .map_err(|_| anyhow!("Invalid data size for SSL"))?;
                 self.ssl_a_data = data;
                 self.ssl_a = Some(SSL::try_deserialize(&mut data.as_slice())?);
             } else if *pubkey == self.ssl_b_pubkey {
-                let data: [u8; mem::size_of::<SSL>() + DISCRIMINANT] = data.clone().try_into()
+                let data: [u8; mem::size_of::<SSL>() + DISCRIMINANT] = data
+                    .clone()
+                    .try_into()
                     .map_err(|_| anyhow!("Invalid data size for SSL"))?;
                 self.ssl_b_data = data;
                 self.ssl_b = Some(SSL::try_deserialize(&mut data.as_slice())?);
             } else if *pubkey == self.pair_pubkey {
-                let data: [u8; mem::size_of::<Pair>() + DISCRIMINANT] = data.clone().try_into()
+                let data: [u8; mem::size_of::<Pair>() + DISCRIMINANT] = data
+                    .clone()
+                    .try_into()
                     .map_err(|_| anyhow!("Invalid data size for Pair"))?;
                 self.pair_data = data;
                 self.pair = Some(Pair::try_deserialize(&mut data.as_slice())?);
@@ -293,7 +370,7 @@ impl Amm for GfxAmm {
             } else {
                 // Assume it's an oracle
                 let price_account = load_price_account(&mut data.as_slice())
-                     .map_err(|_| anyhow!("Invalid oracle data"))?;
+                    .map_err(|_| anyhow!("Invalid oracle data"))?;
                 self.oracles.insert(*pubkey, *price_account);
             }
         }
@@ -309,9 +386,10 @@ impl Amm for GfxAmm {
         Ok(())
     }
 
+    /// Get a swap quote
     fn quote(&self, quote_params: &QuoteParams) -> anyhow::Result<Quote> {
         match self.account_state {
-            AmmAccountState::Ok => {},
+            AmmAccountState::Ok => {}
             _ => {
                 return Err(anyhow!("Cannot quote until account state is populated"));
             }
@@ -320,10 +398,15 @@ impl Amm for GfxAmm {
         // Keep a boolean flag that helps keep track of whether to flip
         // other arguments later in this function
         let mut is_reversed = false;
-        if quote_params.input_mint == self.ssl_b_mint && quote_params.output_mint == self.ssl_a_mint {
+        if quote_params.input_mint == self.ssl_b_mint && quote_params.output_mint == self.ssl_a_mint
+        {
             is_reversed = true;
-        } else if quote_params.input_mint != self.ssl_a_mint || quote_params.output_mint != self.ssl_b_mint {
-            return Err(anyhow!("Invalid quote params, input and output mints do not match this Amm pair"));
+        } else if quote_params.input_mint != self.ssl_a_mint
+            || quote_params.output_mint != self.ssl_b_mint
+        {
+            return Err(anyhow!(
+                "Invalid quote params, input and output mints do not match this Amm pair"
+            ));
         }
 
         let (
@@ -353,7 +436,8 @@ impl Amm for GfxAmm {
             )
         };
 
-        let oracles: Vec<OracleEntry> = self.oracles
+        let mut oracles: Vec<OracleEntry> = self
+            .oracles
             .iter()
             .map(|(pubkey, act)| {
                 let mut pubkey_arr: [u8; 32] = Default::default();
@@ -361,6 +445,10 @@ impl Amm for GfxAmm {
                 OracleEntry(pubkey_arr, *act)
             })
             .collect();
+
+        if is_reversed {
+            oracles.reverse();
+        }
 
         match unsafe {
             quote(
@@ -405,20 +493,24 @@ impl Amm for GfxAmm {
                 };
                 Ok(quote)
             }
-            QuoteResult::Error(err) => {
-                unsafe {
-                    let c_str = CStr::from_ptr(err);
-                    let rust_str = c_str.to_str().expect("bad string encoding");
-                    Err(anyhow!("{}", rust_str))
-                }
-            }
+            QuoteResult::Error(err) => unsafe {
+                let c_str = CStr::from_ptr(err);
+                let rust_str = c_str.to_str().expect("bad string encoding");
+                Err(anyhow!("{}", rust_str))
+            },
         }
     }
 
-    fn get_swap_leg_and_account_metas(&self, swap_params: &SwapParams) -> anyhow::Result<SwapLegAndAccountMetas> {
+    /// Get account metas for a GFX swap instruction,
+    /// and additional metadata such as the variant of [SwapLeg],
+    /// and the platform facilitating the swap (GFX in this case).
+    fn get_swap_leg_and_account_metas(
+        &self,
+        swap_params: &SwapParams,
+    ) -> anyhow::Result<SwapLegAndAccountMetas> {
         Ok(SwapLegAndAccountMetas {
             swap_leg: SwapLeg::Swap {
-                swap: Swap::GooseFX
+                swap: Swap::GooseFX,
             },
             account_metas: swap_account_metas(
                 &SSLInstructionContext::new(
@@ -433,6 +525,7 @@ impl Amm for GfxAmm {
         })
     }
 
+    /// Clone this object in a [Box].
     fn clone_amm(&self) -> Box<dyn Amm + Send + Sync> {
         Box::new(self.clone())
     }
