@@ -88,7 +88,7 @@ fn all_pairs() {
         amm.update(&acts).unwrap();
 
         match amm.quote(&QuoteParams {
-            in_amount: 40000,
+            in_amount: *input_amounts.get(&m1).unwrap(),
             input_mint: m1,
             output_mint: m2,
         }) {

@@ -243,8 +243,7 @@ impl Amm for GfxAmm {
         self.pair_pubkey
     }
 
-    /// Returns mints offered by GFX for swap. Any pair of
-    /// distinct elements from this Vec makes a valid swap pair.
+    /// Returns mints offered by this Amm for swap.
     fn get_reserve_mints(&self) -> Vec<Pubkey> {
         vec![self.ssl_a_mint, self.ssl_b_mint]
     }
