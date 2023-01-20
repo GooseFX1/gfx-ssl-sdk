@@ -2,8 +2,7 @@ use crate::error::Result;
 use gfx_ssl_interface::{LiquidityAccount, Pair, SSL};
 use solana_program::pubkey::Pubkey;
 
-use solana_client::nonblocking::rpc_client::RpcClient;
-use solana_client::rpc_client;
+use solana_client::{nonblocking::rpc_client::RpcClient, rpc_client};
 
 use crate::utils::{get_state, get_state_blocking};
 

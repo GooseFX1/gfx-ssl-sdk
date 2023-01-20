@@ -4,9 +4,10 @@ use jupiter_core::amm::{Amm, QuoteParams};
 use solana_client::rpc_client::RpcClient;
 use solana_program::pubkey::Pubkey;
 use solana_sdk::pubkey;
-use std::collections::HashMap;
-use std::collections::HashSet;
-use std::env::var;
+use std::{
+    collections::{HashMap, HashSet},
+    env::var,
+};
 
 #[test]
 fn all_pairs() {

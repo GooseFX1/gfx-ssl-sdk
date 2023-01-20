@@ -1,11 +1,13 @@
-use crate::error::GfxSdkError::*;
-use crate::ssl::instructions::{swap_account_metas, SSLInstructionContext};
-use crate::ssl::FEE_COLLECTOR;
+use crate::{
+    error::GfxSdkError::*,
+    ssl::{
+        instructions::{swap_account_metas, SSLInstructionContext},
+        FEE_COLLECTOR,
+    },
+};
 use anchor_lang::AccountDeserialize;
-use anchor_spl::associated_token::get_associated_token_address;
-use anchor_spl::token::TokenAccount;
-use anyhow::anyhow;
-use anyhow::Error;
+use anchor_spl::{associated_token::get_associated_token_address, token::TokenAccount};
+use anyhow::{anyhow, Error};
 use fehler::{throw, throws};
 use gfx_ssl_interface::{skey, PDAIdentifier, Pair, SSL};
 use jupiter::jupiter_override::{Swap, SwapLeg};
@@ -15,10 +17,12 @@ use pyth_sdk_solana::state::{load_price_account, PriceAccount};
 use rust_decimal::Decimal;
 use solana_program::pubkey::Pubkey;
 use solana_sdk::pubkey;
-use std::collections::{HashMap, HashSet};
-use std::ffi::CStr;
-use std::fmt::Debug;
-use std::mem;
+use std::{
+    collections::{HashMap, HashSet},
+    ffi::CStr,
+    fmt::Debug,
+    mem,
+};
 
 const DISCRIMINANT: usize = 8;
 
@@ -267,7 +271,7 @@ impl Amm for GfxAmm {
         let update_token_account = |amount: &mut Option<u64>, data: &mut &[u8]| {
             let token_account = TokenAccount::try_deserialize(data)?;
             *amount = Some(token_account.amount);
-            Ok::<_, anyhow::Error>(())
+            Ok::<_, Error>(())
         };
         for (pubkey, data) in accounts_map {
             if *pubkey == self.ssl_a_pubkey {

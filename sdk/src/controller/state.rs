@@ -1,6 +1,6 @@
-use solana_program::pubkey::Pubkey;
-use gfx_controller_interface::{Controller, StakingAccount};
 use crate::error::Result;
+use gfx_controller_interface::{Controller, StakingAccount};
+use solana_program::pubkey::Pubkey;
 
 #[cfg(not(target_arch = "wasm32"))]
 use solana_client::nonblocking::rpc_client::RpcClient;
