@@ -99,7 +99,6 @@ lazy_static! {
     };
 }
 
-/// The tagged data for the "Ok" variant of [QuoteResult].
 #[repr(C)]
 pub struct SwapResult {
     pub amount_in: u64,
@@ -429,7 +428,7 @@ impl Amm for GfxAmm {
     }
 
     /// Get account metas for a GFX swap instruction,
-    /// and marker denoting a [SwapLeg::Swap], and a [Swap::GooseFx].
+    /// and marker denoting a [SwapLeg::Swap], and a [Swap::GooseFX].
     fn get_swap_leg_and_account_metas(
         &self,
         swap_params: &SwapParams,
