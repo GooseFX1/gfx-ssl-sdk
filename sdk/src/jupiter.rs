@@ -41,14 +41,6 @@ lazy_static! {
                 "MSOL",
             ),
             (
-                pubkey!("SRMuApVNdxXokk5GT7XD5cUUgXMBCoAz2LHeuAoKWRt"),
-                "SRM",
-            ),
-            (
-                pubkey!("7i5KKsX2weiTkry7jA4ZwSuXGhs5eJBEjY8vVxR4pfRx"),
-                "GMT",
-            ),
-            (
                 pubkey!("Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB"),
                 "USDT",
             ),
@@ -64,14 +56,10 @@ lazy_static! {
                 pubkey!("7dHbWXmci3dT8UFYWYZweBLXgycu7Y3iL6trKn1Y7ARj"),
                 "STSOL",
             ),
-            (
-                pubkey!("9n4nbM75f5Ui33ZbPYXn59EwSgE8CGsHtAeTH5YFeJ9E"),
-                "BTC",
-            ),
-            (
-                pubkey!("6LNeTYMqtNm1pBFN8PfhQaoLyegAH8GD32WmHU9erXKN"),
-                "APT",
-            ),
+            // (
+            //     pubkey!("9n4nbM75f5Ui33ZbPYXn59EwSgE8CGsHtAeTH5YFeJ9E"),
+            //     "BTC",
+            // ),
         ]
         .into_iter()
         .for_each(|(mint, name)| {
@@ -90,14 +78,11 @@ lazy_static! {
             ("WSOL", pubkey!("H6ARHf6YXhGYeQfUzQNGk6rDNnLBQKrenN712K4AQJEG")),
             ("ETH", pubkey!("JBu1AL4obBcCMqKBBxhpWCNUt136ijcuMZLFvTP7iWdB")),
             ("MSOL", pubkey!("E4v1BBgoso9s64TQvmyownAVJbhbEPGyzA3qn4n46qj9")),
-            ("SRM", pubkey!("3NBReDRTLKMQEKiLD5tGcx4kXbTf88b7f2xLS9UuGjym")),
-            ("GMT", pubkey!("DZYZkJcFJThN9nZy4nK3hrHra1LaWeiyoZ9SMdLFEFpY")),
             ("USDT", pubkey!("3vxLXJqLqF3JG5TCbYycbKWRBbCJQLxQmBGCkyqEEefL")),
             ("ORCA", pubkey!("4ivThkX8uRxBpHsdWSqyXYihzKF3zpRGAUCqyuagnLoV")),
             ("USDC", pubkey!("Gnt27xtC473ZT2Mw5u8wZ68Z3gULkSTb5DuxJy7eJotD")),
             ("STSOL", pubkey!("Bt1hEbY62aMriY1SyQqbeZbm8VmSbQVGBFzSzMuVNWzN")),
             ("BTC", pubkey!("GVXRSBjFk6e6J3NbVPXohDJetcTjaeeuykUpbQF8UoMU")),
-            ("APT", pubkey!("FNNvb1AFDnDVPkocEri8mWbJ1952HQZtFLuwPiUjSJQ")),
         ]
         .into_iter()
         .for_each(|(label, pubkey)| {
@@ -167,6 +152,8 @@ extern "C" {
 #[derive(Debug, Clone)]
 pub struct GfxAmm {
     label: String,
+    label_a: String,
+    label_b: String,
     /// This object's state must be cranked twice before you can pull quotes from it.
     /// This enum keeps track of whether that's occurred.
     ssl_a: Option<SSL>,
@@ -236,6 +223,8 @@ impl GfxAmm {
 
         Ok(Self {
             label,
+            label_a: label_front.to_string(),
+            label_b: label_back.to_string(),
             ssl_a: None,
             ssl_a_mint,
             ssl_a_data: [0; DISCRIMINANT + mem::size_of::<SSL>()],
@@ -368,6 +357,8 @@ impl Amm for GfxAmm {
             liability_out,
             swapped_liability_in,
             swapped_liability_out,
+            label_in,
+            label_out,
         ) = if is_reversed {
             (
                 self.ssl_a_data,
@@ -376,6 +367,8 @@ impl Amm for GfxAmm {
                 self.ssl_a_vault_b_balance,
                 self.ssl_b_vault_a_balance,
                 self.ssl_b_vault_b_balance,
+                &self.label_a,
+                &self.label_b,
             )
         } else {
             (
@@ -385,10 +378,16 @@ impl Amm for GfxAmm {
                 self.ssl_b_vault_a_balance,
                 self.ssl_a_vault_b_balance,
                 self.ssl_a_vault_a_balance,
+                &self.label_b,
+                &self.label_a,
             )
         };
 
-        let mut oracles: Vec<OracleEntry> = self
+        if liability_out == 0 {
+            println!("{} SSL has a zero {} vault balance", label_in, label_out);
+        }
+
+        let oracles: Vec<OracleEntry> = self
             .oracles
             .iter()
             .map(|(pubkey, act)| {
@@ -397,10 +396,6 @@ impl Amm for GfxAmm {
                 OracleEntry(pubkey_arr, *act)
             })
             .collect();
-
-        if is_reversed {
-            oracles.reverse();
-        }
 
         match unsafe {
             quote(
