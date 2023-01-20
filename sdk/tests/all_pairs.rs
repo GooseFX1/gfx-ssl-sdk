@@ -68,6 +68,7 @@ fn all_pairs() {
     println!("Iterating over all possible pairs, ordered both ways");
     for mints in RESERVE_MINTS.iter().permutations(2) {
         let (m1, m2) = (*mints[0], *mints[1]);
+        println!("testing {} -> {}", m1, m2);
 
         let mut amm = GfxAmm::new(m1, m2).unwrap();
 
@@ -86,11 +87,11 @@ fn all_pairs() {
         amm.update(&acts).unwrap();
 
         match amm.quote(&QuoteParams {
-            in_amount: input_amounts[&m1],
+            in_amount: 40000,
             input_mint: m1,
             output_mint: m2,
         }) {
-            Ok(quote) => {
+            Ok(_) => {
                 //println!("{}:", amm.label());
                 //println!("{:#?}\n", quote);
             }

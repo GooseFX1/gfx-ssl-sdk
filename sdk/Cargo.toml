@@ -19,6 +19,7 @@ jupiter_amm = ["jupiter", "jupiter-core"]
 anchor-lang = "0.26"
 anchor-spl = "0.26"
 anyhow = "1.0.68"
+fehler = "1"
 gfx-controller-interface = {path = "../programs/gfx-controller", features = ["no-entrypoint"]}
 gfx-ssl-interface = {path = "../programs/gfx-ssl", features = ["no-entrypoint"]}
 jupiter = {git = "https://github.com/jup-ag/rust-amm-implementation", optional = true}

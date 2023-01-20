@@ -1,9 +1,12 @@
+use crate::error::GfxSdkError::*;
 use crate::ssl::instructions::{swap_account_metas, SSLInstructionContext};
 use crate::ssl::FEE_COLLECTOR;
 use anchor_lang::AccountDeserialize;
 use anchor_spl::associated_token::get_associated_token_address;
 use anchor_spl::token::TokenAccount;
 use anyhow::anyhow;
+use anyhow::Error;
+use fehler::{throw, throws};
 use gfx_ssl_interface::{skey, PDAIdentifier, Pair, SSL};
 use jupiter::jupiter_override::{Swap, SwapLeg};
 use jupiter_core::amm::{Amm, Quote, QuoteParams, SwapLegAndAccountMetas, SwapParams};
@@ -12,7 +15,7 @@ use pyth_sdk_solana::state::{load_price_account, PriceAccount};
 use rust_decimal::Decimal;
 use solana_program::pubkey::Pubkey;
 use solana_sdk::pubkey;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::ffi::CStr;
 use std::fmt::Debug;
 use std::mem;
@@ -149,104 +152,79 @@ extern "C" {
 /// let gfx_amm = GfxAmm::new(base, quote);
 /// ```
 ///
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct GfxAmm {
     label: String,
-    label_a: String,
-    label_b: String,
-    /// This object's state must be cranked twice before you can pull quotes from it.
-    /// This enum keeps track of whether that's occurred.
-    ssl_a: Option<SSL>,
+
+    // Related keys
     ssl_a_mint: Pubkey,
-    ssl_a_data: [u8; mem::size_of::<SSL>() + DISCRIMINANT],
     ssl_a_pubkey: Pubkey,
-    ssl_b: Option<SSL>,
     ssl_b_mint: Pubkey,
-    ssl_b_data: [u8; mem::size_of::<SSL>() + DISCRIMINANT],
     ssl_b_pubkey: Pubkey,
-    pair: Option<Pair>,
-    pair_data: [u8; mem::size_of::<Pair>() + DISCRIMINANT],
     pair_pubkey: Pubkey,
     ssl_a_vault_a: Pubkey,
-    ssl_a_vault_a_balance: u64,
     ssl_a_vault_b: Pubkey,
-    ssl_a_vault_b_balance: u64,
     ssl_b_vault_a: Pubkey,
-    ssl_b_vault_a_balance: u64,
     ssl_b_vault_b: Pubkey,
-    ssl_b_vault_b_balance: u64,
+    oracle_addresses: HashSet<Pubkey>, // Fetched from a lookup table during construction.
+
+    // Accounts' data
+    ssl_a_data: Option<[u8; mem::size_of::<SSL>() + DISCRIMINANT]>,
+    ssl_b_data: Option<[u8; mem::size_of::<SSL>() + DISCRIMINANT]>,
+    pair_data: Option<[u8; mem::size_of::<Pair>() + DISCRIMINANT]>,
+    pair: Option<Pair>, // deserialzie this because we need the fee_rate
+    ssl_a_vault_a_balance: Option<u64>,
+    ssl_a_vault_b_balance: Option<u64>,
+    ssl_b_vault_a_balance: Option<u64>,
+    ssl_b_vault_b_balance: Option<u64>,
     // Indexed by Pubkey of the [PriceAccount].
     oracles: HashMap<Pubkey, PriceAccount>,
-    // Fetched from a lookup table during construction.
-    oracle_addresses: Vec<Pubkey>,
 }
 
 impl GfxAmm {
-    pub fn new(base_mint: Pubkey, quote_mint: Pubkey) -> anyhow::Result<Self> {
+    #[throws(Error)]
+    pub fn new(base_mint: Pubkey, quote_mint: Pubkey) -> Self {
         // Arrange them in order first
-        let (ssl_a_mint, ssl_b_mint) = if base_mint > quote_mint {
-            (quote_mint, base_mint)
-        } else {
-            (base_mint, quote_mint)
-        };
+        let ssl_a_mint = skey::<_, true>(&base_mint, &quote_mint);
+        let ssl_b_mint = skey::<_, false>(&base_mint, &quote_mint);
 
         // Get label, and ensure these pairs are offered.
-        let label_front = MINTS
-            .get(&ssl_a_mint)
-            .ok_or(anyhow!("This mint is not offered {}", ssl_a_mint))?;
-        let label_back = MINTS
-            .get(&ssl_b_mint)
-            .ok_or(anyhow!("This mint is not offered {}", ssl_b_mint))?;
+        let label_front = MINTS.get(&ssl_a_mint).ok_or(UnsupportedMint(ssl_a_mint))?;
+        let label_back = MINTS.get(&ssl_b_mint).ok_or(UnsupportedMint(ssl_b_mint))?;
         let label = format!("{}/{}", &label_front, &label_back);
 
         // Oracle addresses
-        let mut oracle_addresses = Vec::new();
-        oracle_addresses.push(
-          *ORACLE_USD_ADDRESSES.get(label_front).unwrap(),
-        );
-        oracle_addresses.push(
-            *ORACLE_USD_ADDRESSES.get(label_back).unwrap(),
-        );
+        let mut oracle_addresses = HashSet::new();
+        oracle_addresses.insert(*ORACLE_USD_ADDRESSES.get(label_front).unwrap());
+        oracle_addresses.insert(*ORACLE_USD_ADDRESSES.get(label_back).unwrap());
 
         // Calculate PDAs of GFX accounts
         let ssl_a_pubkey = SSL::get_address(&[CONTROLLER.as_ref(), ssl_a_mint.as_ref()]);
         let ssl_b_pubkey = SSL::get_address(&[CONTROLLER.as_ref(), ssl_b_mint.as_ref()]);
         let pair_pubkey = Pair::get_address(&[
             CONTROLLER.as_ref(),
-            skey::<_, true>(&ssl_a_mint, &ssl_b_mint).as_ref(),
-            skey::<_, false>(&ssl_a_mint, &ssl_b_mint).as_ref(),
+            ssl_a_mint.as_ref(),
+            ssl_b_mint.as_ref(),
         ]);
         let ssl_a_vault_a = get_associated_token_address(&ssl_a_pubkey, &ssl_a_mint);
         let ssl_a_vault_b = get_associated_token_address(&ssl_a_pubkey, &ssl_b_mint);
         let ssl_b_vault_a = get_associated_token_address(&ssl_b_pubkey, &ssl_a_mint);
         let ssl_b_vault_b = get_associated_token_address(&ssl_b_pubkey, &ssl_b_mint);
 
-        Ok(Self {
+        Self {
             label,
-            label_a: label_front.to_string(),
-            label_b: label_back.to_string(),
-            ssl_a: None,
             ssl_a_mint,
-            ssl_a_data: [0; DISCRIMINANT + mem::size_of::<SSL>()],
             ssl_a_pubkey,
-            ssl_b: None,
             ssl_b_mint,
-            ssl_b_data: [0; DISCRIMINANT + mem::size_of::<SSL>()],
             ssl_b_pubkey,
-            pair: None,
-            pair_data: [0; DISCRIMINANT + mem::size_of::<Pair>()],
             pair_pubkey,
             ssl_a_vault_a,
-            ssl_a_vault_a_balance: 0,
             ssl_a_vault_b,
-            ssl_a_vault_b_balance: 0,
             ssl_b_vault_a,
-            ssl_b_vault_a_balance: 0,
             ssl_b_vault_b,
-            ssl_b_vault_b_balance: 0,
-            oracles: Default::default(),
             oracle_addresses,
-        })
+            ..Default::default()
+        }
     }
 }
 
@@ -264,7 +242,7 @@ impl Amm for GfxAmm {
     /// Returns mints offered by GFX for swap. Any pair of
     /// distinct elements from this Vec makes a valid swap pair.
     fn get_reserve_mints(&self) -> Vec<Pubkey> {
-        RESERVE_MINTS.clone()
+        vec![self.ssl_a_mint, self.ssl_b_mint]
     }
 
     /// Returns pubkeys of all the accounts required
@@ -284,33 +262,41 @@ impl Amm for GfxAmm {
     }
 
     /// Update the account state contained in self.
-    fn update(&mut self, accounts_map: &HashMap<Pubkey, Vec<u8>>) -> anyhow::Result<()> {
-        let update_token_account = |amount: &mut u64, data: &mut &[u8]| {
+    #[throws(Error)]
+    fn update(&mut self, accounts_map: &HashMap<Pubkey, Vec<u8>>) {
+        let update_token_account = |amount: &mut Option<u64>, data: &mut &[u8]| {
             let token_account = TokenAccount::try_deserialize(data)?;
-            *amount = token_account.amount;
+            *amount = Some(token_account.amount);
             Ok::<_, anyhow::Error>(())
         };
         for (pubkey, data) in accounts_map {
             if *pubkey == self.ssl_a_pubkey {
-                let data: [u8; mem::size_of::<SSL>() + DISCRIMINANT] = data
-                    .clone()
-                    .try_into()
-                    .map_err(|_| anyhow!("Invalid data size for SSL"))?;
-                self.ssl_a_data = data;
-                self.ssl_a = Some(SSL::try_deserialize(&mut data.as_slice())?);
+                let data = data.clone().try_into().map_err(|_| {
+                    InvalidAccountSize(
+                        self.ssl_a_pubkey,
+                        mem::size_of::<SSL>() + DISCRIMINANT,
+                        data.len(),
+                    )
+                })?;
+                self.ssl_a_data = Some(data);
             } else if *pubkey == self.ssl_b_pubkey {
-                let data: [u8; mem::size_of::<SSL>() + DISCRIMINANT] = data
-                    .clone()
-                    .try_into()
-                    .map_err(|_| anyhow!("Invalid data size for SSL"))?;
-                self.ssl_b_data = data;
-                self.ssl_b = Some(SSL::try_deserialize(&mut data.as_slice())?);
+                let data = data.clone().try_into().map_err(|_| {
+                    InvalidAccountSize(
+                        self.ssl_b_pubkey,
+                        mem::size_of::<SSL>() + DISCRIMINANT,
+                        data.len(),
+                    )
+                })?;
+                self.ssl_b_data = Some(data);
             } else if *pubkey == self.pair_pubkey {
-                let data: [u8; mem::size_of::<Pair>() + DISCRIMINANT] = data
-                    .clone()
-                    .try_into()
-                    .map_err(|_| anyhow!("Invalid data size for Pair"))?;
-                self.pair_data = data;
+                let data = data.clone().try_into().map_err(|_| {
+                    InvalidAccountSize(
+                        self.pair_pubkey,
+                        mem::size_of::<Pair>() + DISCRIMINANT,
+                        data.len(),
+                    )
+                })?;
+                self.pair_data = Some(data);
                 self.pair = Some(Pair::try_deserialize(&mut data.as_slice())?);
             } else if *pubkey == self.ssl_a_vault_a {
                 update_token_account(&mut self.ssl_a_vault_a_balance, &mut data.as_slice())?;
@@ -322,19 +308,26 @@ impl Amm for GfxAmm {
                 update_token_account(&mut self.ssl_b_vault_b_balance, &mut data.as_slice())?;
             } else {
                 // Assume it's an oracle
-                let price_account = load_price_account(&mut data.as_slice())
-                    .map_err(|_| anyhow!("Invalid oracle data"))?;
+                let price_account = load_price_account(&mut data.as_slice())?;
                 self.oracles.insert(*pubkey, *price_account);
             }
         }
-        Ok(())
     }
 
     /// Get a GooseFX SSL swap quote
-    fn quote(&self, quote_params: &QuoteParams) -> anyhow::Result<Quote> {
-        if self.pair.is_none() {
-            return Err(anyhow!("Account state is not initialized"));
+    #[throws(Error)]
+    fn quote(&self, quote_params: &QuoteParams) -> Quote {
+        if self.ssl_a_data.is_none()
+            || self.ssl_b_data.is_none()
+            || self.pair_data.is_none()
+            || self.ssl_a_vault_a_balance.is_none()
+            || self.ssl_a_vault_b_balance.is_none()
+            || self.ssl_b_vault_a_balance.is_none()
+            || self.ssl_b_vault_b_balance.is_none()
+        {
+            throw!(RequiredAccountNoUpdate);
         }
+
         // Orient each side of the pair as "in" our "out".
         // Keep a boolean flag that helps keep track of whether to flip
         // other arguments later in this function
@@ -345,63 +338,47 @@ impl Amm for GfxAmm {
         } else if quote_params.input_mint != self.ssl_a_mint
             || quote_params.output_mint != self.ssl_b_mint
         {
-            return Err(anyhow!(
-                "Invalid quote params, input and output mints do not match this Amm pair"
-            ));
+            throw!(UnexpectedMints);
         }
 
         let (
             ssl_in,
             ssl_out,
             liability_in,
-            liability_out,
             swapped_liability_in,
             swapped_liability_out,
-            label_in,
-            label_out,
+            liability_out,
         ) = if is_reversed {
             (
-                self.ssl_a_data,
-                self.ssl_b_data,
-                self.ssl_a_vault_a_balance,
-                self.ssl_a_vault_b_balance,
-                self.ssl_b_vault_a_balance,
-                self.ssl_b_vault_b_balance,
-                &self.label_a,
-                &self.label_b,
+                self.ssl_a_data.unwrap(),
+                self.ssl_b_data.unwrap(),
+                self.ssl_a_vault_a_balance.unwrap(),
+                self.ssl_a_vault_b_balance.unwrap(),
+                self.ssl_b_vault_a_balance.unwrap(),
+                self.ssl_b_vault_b_balance.unwrap(),
             )
         } else {
             (
-                self.ssl_b_data,
-                self.ssl_a_data,
-                self.ssl_b_vault_b_balance,
-                self.ssl_b_vault_a_balance,
-                self.ssl_a_vault_b_balance,
-                self.ssl_a_vault_a_balance,
-                &self.label_b,
-                &self.label_a,
+                self.ssl_b_data.unwrap(),
+                self.ssl_a_data.unwrap(),
+                self.ssl_b_vault_b_balance.unwrap(),
+                self.ssl_b_vault_a_balance.unwrap(),
+                self.ssl_a_vault_b_balance.unwrap(),
+                self.ssl_a_vault_a_balance.unwrap(),
             )
         };
-
-        if liability_out == 0 {
-            println!("{} SSL has a zero {} vault balance", label_in, label_out);
-        }
 
         let oracles: Vec<OracleEntry> = self
             .oracles
             .iter()
-            .map(|(pubkey, act)| {
-                let mut pubkey_arr: [u8; 32] = Default::default();
-                pubkey_arr.copy_from_slice(pubkey.as_ref());
-                OracleEntry(pubkey_arr, *act)
-            })
+            .map(|(pubkey, act)| OracleEntry(pubkey.as_ref().try_into().unwrap(), *act))
             .collect();
 
         match unsafe {
             quote(
                 &ssl_in,
                 &ssl_out,
-                &self.pair_data,
+                &self.pair_data.unwrap(),
                 liability_in,
                 liability_out,
                 swapped_liability_in,
@@ -438,12 +415,12 @@ impl Amm for GfxAmm {
                     fee_pct,
                     price_impact_pct,
                 };
-                Ok(quote)
+                quote
             }
             QuoteResult::Error(err) => unsafe {
                 let c_str = CStr::from_ptr(err);
                 let rust_str = c_str.to_str().expect("bad string encoding");
-                Err(anyhow!("{}", rust_str))
+                throw!(anyhow!("{}", rust_str))
             },
         }
     }
