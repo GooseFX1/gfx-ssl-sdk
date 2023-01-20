@@ -93,8 +93,8 @@ fn all_pairs() {
             output_mint: m2,
         }) {
             Ok(_) => {
-                //println!("{}:", amm.label());
-                //println!("{:#?}\n", quote);
+                println!("{}:", amm.label());
+                println!("{:#?}\n", quote);
             }
             Err(e) => {
                 println!("{}:", amm.label());
