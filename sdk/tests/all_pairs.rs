@@ -92,7 +92,7 @@ fn all_pairs() {
             input_mint: m1,
             output_mint: m2,
         }) {
-            Ok(_) => {
+            Ok(quote) => {
                 println!("{}:", amm.label());
                 println!("{:#?}\n", quote);
             }
