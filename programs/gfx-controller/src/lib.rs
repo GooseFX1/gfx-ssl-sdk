@@ -1,11 +1,12 @@
 pub mod contexts;
 pub mod errors;
 pub mod states;
-mod utils;
+pub mod utils;
 
 pub use self::{contexts::*, errors::ErrorCode, states::*, utils::BP_DECIMAL};
 use anchor_lang::prelude::*;
 pub use program_id::*;
+pub use utils::PDAIdentifier;
 
 mod program_id {
     use anchor_lang::prelude::*;
@@ -16,15 +17,18 @@ mod program_id {
 pub mod contract {
     use super::*;
 
-    pub fn create_staking_account(_ctx: Context<CreateStakingAccount>) -> Result<()> {
+    #[allow(unused_variables)]
+    pub fn create_staking_account(ctx: Context<CreateStakingAccount>) -> Result<()> {
         Ok(())
     }
 
-    pub fn stake(_ctx: Context<Stake>, _amount: u64) -> Result<()> {
+    #[allow(unused_variables)]
+    pub fn stake(ctx: Context<Stake>, amount: u64) -> Result<()> {
         Ok(())
     }
 
-    pub fn unstake(_ctx: Context<Unstake>, _unstake_percent: u64) -> Result<()> {
+    #[allow(unused_variables)]
+    pub fn unstake(ctx: Context<Unstake>, unstake_percent: u64) -> Result<()> {
         Ok(())
     }
 }

@@ -17,11 +17,11 @@ pub trait PDAIdentifier {
     }
 }
 
-pub fn skey<'a, T, const FIRST: bool>(a: &'a T, b: &'a T) -> Pubkey
+pub fn sorted<'a, T, const N: usize>(a: &'a T, b: &'a T) -> Pubkey
 where
     T: Key,
 {
-    if FIRST == (a.key() < b.key()) {
+    if (N == 0) == (a.key() < b.key()) {
         a.key()
     } else {
         b.key()

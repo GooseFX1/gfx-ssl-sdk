@@ -1,17 +1,16 @@
 use std::ops::{Deref, Index, IndexMut};
-use std::{
-    fmt::{self, Debug},
-    mem::{forget, zeroed},
-};
+use std::mem::{forget, zeroed};
+#[cfg(feature = "no-entrypoint")]
+use std::fmt::{self, Debug};
 
 #[derive(Copy, Clone)]
-#[cfg_attr(feature = "no-entrypoint", derive(Debug))]
 #[repr(C)]
 pub struct StackVec<T, const N: usize> {
     val: [T; N],
     n: u64,
 }
 
+#[cfg(feature = "no-entrypoint")]
 impl<T, const N: usize> Debug for StackVec<T, N>
 where
     T: Debug,

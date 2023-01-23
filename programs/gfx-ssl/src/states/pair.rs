@@ -11,7 +11,8 @@ impl PDAIdentifier for Pair {
     }
 }
 
-#[derive(Copy, Clone, Default, Debug)]
+#[derive(Copy, Clone, Default)]
+#[cfg_attr(feature = "no-entrypoint", derive(Debug))]
 #[repr(C, align(8))]
 pub struct Oracle {
     pub path: StackVec<(Pubkey, bool), 4>,
@@ -20,7 +21,8 @@ pub struct Oracle {
 
 #[allow(non_snake_case)]
 #[account(zero_copy)]
-#[derive(Default, Debug)]
+#[cfg_attr(feature = "no-entrypoint", derive(Debug))]
+#[derive(Default)]
 pub struct Pair {
     pub controller: Pubkey, // for indexing purpose
     pub mints: (Pubkey, Pubkey),
