@@ -78,6 +78,7 @@ fn all_pairs() {
     }
 
     println!("Iterating over all possible pairs, ordered both ways");
+    let mut failures = vec![];
     for mints in RESERVE_MINTS.iter().combinations(2) {
         for (m1, m2) in [(*mints[0], *mints[1]), (*mints[1], *mints[0])] {
             println!("testing {} -> {}", m1, m2);
@@ -105,20 +106,27 @@ fn all_pairs() {
             }) {
                 Ok(quote) => {
                     println!("{}:", amm.label());
-                    println!("{:#?}\n", quote);
+                    println!("{:#?}", quote);
                     let mut price = (quote.in_amount as f64 / decimals[&m1])
                         / (quote.out_amount as f64 / decimals[&m2]);
                     // if it is usd pair, always show X/USD price.
                     if m2 == USDT || m2 == USDC {
                         price = 1. / price
                     }
-                    println!("price: {}", price);
+                    println!("price: {}\n", price);
                 }
                 Err(e) => {
                     println!("{}:", amm.label());
                     println!("{e}\n");
+                    failures.push((amm.label(), m1, m2));
                 }
             }
         }
+    }
+    if failures.len() > 0 {
+        println!("Failed to get quotes for {} pairs", failures.len());
+        failures.iter().for_each(|failure| {
+            println!("{}: {} -> {}", failure.0, failure.1, failure.2);
+        });
     }
 }

@@ -59,10 +59,10 @@ lazy_static! {
                 pubkey!("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"),
                 "USDC",
             ),
-            (
-                pubkey!("7dHbWXmci3dT8UFYWYZweBLXgycu7Y3iL6trKn1Y7ARj"),
-                "STSOL",
-            ),
+            // (
+            //     pubkey!("7dHbWXmci3dT8UFYWYZweBLXgycu7Y3iL6trKn1Y7ARj"),
+            //     "STSOL",
+            // ),
             // (
             //     pubkey!("9n4nbM75f5Ui33ZbPYXn59EwSgE8CGsHtAeTH5YFeJ9E"),
             //     "BTC",
@@ -88,8 +88,8 @@ lazy_static! {
             ("USDT", pubkey!("3vxLXJqLqF3JG5TCbYycbKWRBbCJQLxQmBGCkyqEEefL")),
             ("ORCA", pubkey!("4ivThkX8uRxBpHsdWSqyXYihzKF3zpRGAUCqyuagnLoV")),
             ("USDC", pubkey!("Gnt27xtC473ZT2Mw5u8wZ68Z3gULkSTb5DuxJy7eJotD")),
-            ("STSOL", pubkey!("Bt1hEbY62aMriY1SyQqbeZbm8VmSbQVGBFzSzMuVNWzN")),
-            ("BTC", pubkey!("GVXRSBjFk6e6J3NbVPXohDJetcTjaeeuykUpbQF8UoMU")),
+            // ("STSOL", pubkey!("Bt1hEbY62aMriY1SyQqbeZbm8VmSbQVGBFzSzMuVNWzN")),
+            // ("BTC", pubkey!("GVXRSBjFk6e6J3NbVPXohDJetcTjaeeuykUpbQF8UoMU")),
         ]
         .into_iter()
         .for_each(|(label, pubkey)| {
