@@ -1676,6 +1676,7 @@ dependencies = [
  "anchor-lang",
  "anchor-spl",
  "anyhow",
+ "bincode",
  "criterion",
  "fehler",
  "gfx-controller-interface",

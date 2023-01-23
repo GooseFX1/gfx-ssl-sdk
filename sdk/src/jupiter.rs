@@ -23,6 +23,8 @@ use std::{
     fmt::Debug,
     mem,
 };
+use solana_program::clock::Clock;
+use solana_program::sysvar::SysvarId;
 
 const DISCRIMINANT: usize = 8;
 
@@ -139,6 +141,7 @@ extern "C" {
         swapped_liability_out: u64,
         oracles: *const OracleEntry,
         num_oracles: usize,
+        slot: u64,
         amount_in: u64,
     ) -> QuoteResult;
 }
@@ -175,13 +178,14 @@ pub struct GfxAmm {
     ssl_a_data: Option<[u8; mem::size_of::<SSL>() + DISCRIMINANT]>,
     ssl_b_data: Option<[u8; mem::size_of::<SSL>() + DISCRIMINANT]>,
     pair_data: Option<[u8; mem::size_of::<Pair>() + DISCRIMINANT]>,
-    pair: Option<Pair>, // deserialzie this because we need the fee_rate
+    pair: Option<Pair>, // deserialized for the fee_rate
     ssl_a_vault_a_balance: Option<u64>,
     ssl_a_vault_b_balance: Option<u64>,
     ssl_b_vault_a_balance: Option<u64>,
     ssl_b_vault_b_balance: Option<u64>,
     // Indexed by Pubkey of the [PriceAccount].
     oracles: HashMap<Pubkey, PriceAccount>,
+    slot: u64,
 }
 
 impl GfxAmm {
@@ -258,6 +262,7 @@ impl Amm for GfxAmm {
             self.ssl_a_vault_b,
             self.ssl_b_vault_a,
             self.ssl_b_vault_b,
+            Clock::id(),
         ];
         accounts.extend(&self.oracle_addresses);
         accounts
@@ -308,6 +313,9 @@ impl Amm for GfxAmm {
                 update_token_account(&mut self.ssl_b_vault_a_balance, &mut data.as_slice())?;
             } else if *pubkey == self.ssl_b_vault_b {
                 update_token_account(&mut self.ssl_b_vault_b_balance, &mut data.as_slice())?;
+            } else if *pubkey == Clock::id() {
+                let clock: Clock = bincode::deserialize(&mut data.as_slice())?;
+                self.slot = clock.slot;
             } else {
                 // Assume it's an oracle
                 let price_account = load_price_account(&mut data.as_slice())?;
@@ -387,6 +395,7 @@ impl Amm for GfxAmm {
                 swapped_liability_out,
                 oracles.as_ptr(),
                 self.oracles.len(),
+                self.slot,
                 quote_params.in_amount,
             )
         } {
