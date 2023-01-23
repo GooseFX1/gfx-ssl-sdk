@@ -7,7 +7,7 @@ mod utils;
 use anchor_lang::prelude::*;
 use contexts::*;
 pub use states::*;
-pub use utils::{PDAIdentifier, skey};
+pub use utils::{sorted, PDAIdentifier};
 
 declare_id!("7WduLbRfYhTJktjLw5FDEyrqoEv61aTTCuGAetgLjzN5");
 

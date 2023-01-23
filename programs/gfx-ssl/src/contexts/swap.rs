@@ -2,7 +2,7 @@ use crate::utils::PDAIdentifier;
 use crate::{
     errors::ErrorCode::*,
     states::{Pair, SSL},
-    utils::skey,
+    utils::sorted,
 };
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
@@ -17,8 +17,8 @@ pub struct Swap<'info> {
         seeds = [
             Pair::IDENT,
             controller.key().as_ref(),
-            skey::<_, true>(&ssl_in.load()?.mint, &ssl_out.load()?.mint).as_ref(),
-            skey::<_, false>(&ssl_in.load()?.mint, &ssl_out.load()?.mint).as_ref()
+            sorted::<_, 0>(&ssl_in.load()?.mint, &ssl_out.load()?.mint).as_ref(),
+            sorted::<_, 1>(&ssl_in.load()?.mint, &ssl_out.load()?.mint).as_ref()
         ],
         bump = pair.load()?.bump,
         has_one = fee_collector @ FeeCollectorIncorrect,

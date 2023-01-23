@@ -45,6 +45,17 @@ fn all_pairs() {
         (1. / 20. * 1e9) as u64,
     );
 
+    let mut decimals = HashMap::new();
+    decimals.insert(pubkey!("So11111111111111111111111111111111111111112"), 1e9);
+    decimals.insert(pubkey!("7vfCXTUXx5WJV5JADk17DUJ4ksgau7utNKj4b963voxs"), 1e8);
+    decimals.insert(pubkey!("mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So"), 1e9);
+    decimals.insert(pubkey!("Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB"), 1e6);
+    decimals.insert(pubkey!("orcaEKTdK7LKz57vaAYr9QeNsVEPfiu6QeMU1kektZE"), 1e6);
+    decimals.insert(pubkey!("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"), 1e6);
+    decimals.insert(pubkey!("7dHbWXmci3dT8UFYWYZweBLXgycu7Y3iL6trKn1Y7ARj"), 1e9);
+    const USDT: Pubkey = pubkey!("Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB");
+    const USDC: Pubkey = pubkey!("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
+
     let mut accounts_to_update = HashSet::new();
     for mints in RESERVE_MINTS.iter().permutations(2) {
         let (m1, m2) = (mints[0], mints[1]);
@@ -67,38 +78,46 @@ fn all_pairs() {
     }
 
     println!("Iterating over all possible pairs, ordered both ways");
-    for mints in RESERVE_MINTS.iter().permutations(2) {
-        let (m1, m2) = (*mints[0], *mints[1]);
-        println!("testing {} -> {}", m1, m2);
+    for mints in RESERVE_MINTS.iter().combinations(2) {
+        for (m1, m2) in [(*mints[0], *mints[1]), (*mints[1], *mints[0])] {
+            println!("testing {} -> {}", m1, m2);
 
-        let mut amm = GfxAmm::new(m1, m2).unwrap();
+            let mut amm = GfxAmm::new(m1, m2).unwrap();
 
-        // Initialize the account state
-        let acts_to_update = amm.get_accounts_to_update();
-        let acts: HashMap<Pubkey, Vec<u8>> = acts_to_update
-            .iter()
-            .map(|key| {
-                (
-                    *key,
-                    acts_data.get(key).expect("Missing account data").clone(),
-                )
-            })
-            .collect();
+            // Initialize the account state
+            let acts_to_update = amm.get_accounts_to_update();
+            let acts: HashMap<Pubkey, Vec<u8>> = acts_to_update
+                .iter()
+                .map(|key| {
+                    (
+                        *key,
+                        acts_data.get(key).expect("Missing account data").clone(),
+                    )
+                })
+                .collect();
 
-        amm.update(&acts).unwrap();
+            amm.update(&acts).unwrap();
 
-        match amm.quote(&QuoteParams {
-            in_amount: *input_amounts.get(&m1).unwrap(),
-            input_mint: m1,
-            output_mint: m2,
-        }) {
-            Ok(quote) => {
-                println!("{}:", amm.label());
-                println!("{:#?}\n", quote);
-            }
-            Err(e) => {
-                println!("{}:", amm.label());
-                println!("{e}\n");
+            match amm.quote(&QuoteParams {
+                in_amount: *input_amounts.get(&m1).unwrap(),
+                input_mint: m1,
+                output_mint: m2,
+            }) {
+                Ok(quote) => {
+                    println!("{}:", amm.label());
+                    println!("{:#?}\n", quote);
+                    let mut price = (quote.in_amount as f64 / decimals[&m1])
+                        / (quote.out_amount as f64 / decimals[&m2]);
+                    // if it is usd pair, always show X/USD price.
+                    if m2 == USDT || m2 == USDC {
+                        price = 1. / price
+                    }
+                    println!("price: {}", price);
+                }
+                Err(e) => {
+                    println!("{}:", amm.label());
+                    println!("{e}\n");
+                }
             }
         }
     }

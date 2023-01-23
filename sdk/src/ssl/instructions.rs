@@ -1,6 +1,6 @@
 use anchor_lang::{prelude::*, InstructionData, ToAccountMetas};
 use anchor_spl::{associated_token::get_associated_token_address, token::Token};
-use gfx_ssl_interface::{skey, LiquidityAccount, PDAIdentifier, Pair, SSL};
+use gfx_ssl_interface::{sorted, LiquidityAccount, PDAIdentifier, Pair, SSL};
 use solana_program::{instruction::Instruction, sysvar::SysvarId};
 
 /// The instructions all contain nearly the same required arguments.
@@ -103,8 +103,8 @@ pub(crate) fn swap_account_metas(
     let ssl_in = SSL::get_address(&[ctx.controller.as_ref(), ssl_in_mint.as_ref()]);
     let ssl_out = SSL::get_address(&[ctx.controller.as_ref(), ssl_out_mint.as_ref()]);
     let pair = Pair::get_address(&[
-        skey::<_, true>(ssl_in_mint, ssl_out_mint).as_ref(),
-        skey::<_, false>(ssl_in_mint, ssl_out_mint).as_ref(),
+        sorted::<_, 0>(ssl_in_mint, ssl_out_mint).as_ref(),
+        sorted::<_, 1>(ssl_in_mint, ssl_out_mint).as_ref(),
     ]);
     let liability_vault_in = get_associated_token_address(&ssl_in, ssl_in_mint);
     let swapped_liability_vault_in = get_associated_token_address(&ssl_in, ssl_out_mint);

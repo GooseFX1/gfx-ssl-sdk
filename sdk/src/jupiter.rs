@@ -9,7 +9,7 @@ use anchor_lang::AccountDeserialize;
 use anchor_spl::{associated_token::get_associated_token_address, token::TokenAccount};
 use anyhow::{anyhow, Error};
 use fehler::{throw, throws};
-use gfx_ssl_interface::{skey, PDAIdentifier, Pair, SSL};
+use gfx_ssl_interface::{sorted, PDAIdentifier, Pair, SSL};
 use jupiter::jupiter_override::{Swap, SwapLeg};
 use jupiter_core::amm::{Amm, Quote, QuoteParams, SwapLegAndAccountMetas, SwapParams};
 use lazy_static::lazy_static;
@@ -186,10 +186,10 @@ pub struct GfxAmm {
 
 impl GfxAmm {
     #[throws(Error)]
-    pub fn new(base_mint: Pubkey, quote_mint: Pubkey) -> Self {
+    pub fn new(mint_1: Pubkey, mint_2: Pubkey) -> Self {
         // Arrange them in order first
-        let ssl_a_mint = skey::<_, true>(&base_mint, &quote_mint);
-        let ssl_b_mint = skey::<_, false>(&base_mint, &quote_mint);
+        let ssl_a_mint = sorted::<_, 0>(&mint_1, &mint_2);
+        let ssl_b_mint = sorted::<_, 1>(&mint_1, &mint_2);
 
         // Get label, and ensure these pairs are offered.
         let label_front = MINTS.get(&ssl_a_mint).ok_or(UnsupportedMint(ssl_a_mint))?;
@@ -350,7 +350,7 @@ impl Amm for GfxAmm {
             swapped_liability_in,
             swapped_liability_out,
             liability_out,
-        ) = if is_reversed {
+        ) = if !is_reversed {
             (
                 self.ssl_a_data.unwrap(),
                 self.ssl_b_data.unwrap(),
