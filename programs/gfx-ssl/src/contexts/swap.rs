@@ -10,66 +10,66 @@ use gfx_controller::Controller;
 
 #[derive(Accounts)]
 pub struct Swap<'info> {
-    pub controller: AccountLoader<'info, Controller>,
+    pub controller: Account<'info, Controller>,
 
     #[account(
         mut,
         seeds = [
             Pair::IDENT,
             controller.key().as_ref(),
-            sorted::<_, 0>(&ssl_in.load()?.mint, &ssl_out.load()?.mint).as_ref(),
-            sorted::<_, 1>(&ssl_in.load()?.mint, &ssl_out.load()?.mint).as_ref()
+            sorted::<_, 0>(&ssl_in.mint, &ssl_out.mint).as_ref(),
+            sorted::<_, 1>(&ssl_in.mint, &ssl_out.mint).as_ref()
         ],
-        bump = pair.load()?.bump,
+        bump = pair.bump,
         has_one = fee_collector @ FeeCollectorIncorrect,
     )]
-    pub pair: AccountLoader<'info, Pair>,
+    pub pair: Account<'info, Pair>,
 
     #[account(
         mut,
-        seeds = [SSL::IDENT, controller.key().as_ref(), ssl_in.load()?.mint.as_ref()],
-        bump = ssl_in.load()?.bump,
+        seeds = [SSL::IDENT, controller.key().as_ref(), ssl_in.mint.as_ref()],
+        bump = ssl_in.bump,
     )]
-    pub ssl_in: AccountLoader<'info, SSL>,
+    pub ssl_in: Account<'info, SSL>,
 
     #[account(
         mut,
-        seeds = [SSL::IDENT, controller.key().as_ref(), ssl_out.load()?.mint.as_ref()],
-        bump = ssl_out.load()?.bump,
+        seeds = [SSL::IDENT, controller.key().as_ref(), ssl_out.mint.as_ref()],
+        bump = ssl_out.bump,
     )]
-    pub ssl_out: AccountLoader<'info, SSL>,
+    pub ssl_out: Account<'info, SSL>,
 
     #[account(
         mut,
-        associated_token::mint = ssl_in.load()?.mint,
+        associated_token::mint = ssl_in.mint,
         associated_token::authority = ssl_in,
     )]
     pub liability_vault_in: Box<Account<'info, TokenAccount>>,
 
     #[account(
         mut,
-        associated_token::mint = ssl_out.load()?.mint,
+        associated_token::mint = ssl_out.mint,
         associated_token::authority = ssl_in,
     )]
     pub swapped_liability_vault_in: Box<Account<'info, TokenAccount>>,
 
     #[account(
         mut,
-        associated_token::mint = ssl_out.load()?.mint,
+        associated_token::mint = ssl_out.mint,
         associated_token::authority = ssl_out,
     )]
     pub liability_vault_out: Box<Account<'info, TokenAccount>>,
 
     #[account(
         mut,
-        associated_token::mint = ssl_in.load()?.mint,
+        associated_token::mint = ssl_in.mint,
         associated_token::authority = ssl_out,
     )]
     pub swapped_liability_vault_out: Box<Account<'info, TokenAccount>>,
 
     #[account(
         mut,
-        associated_token::mint = ssl_in.load()?.mint,
+        associated_token::mint = ssl_in.mint,
         associated_token::authority = user_wallet,
     )]
     pub user_in_ata: Box<Account<'info, TokenAccount>>,
@@ -79,7 +79,7 @@ pub struct Swap<'info> {
 
     #[account(
         mut,
-        associated_token::mint = ssl_in.load()?.mint,
+        associated_token::mint = ssl_in.mint,
         associated_token::authority = fee_collector,
     )]
     pub fee_collector_ata: Box<Account<'info, TokenAccount>>,

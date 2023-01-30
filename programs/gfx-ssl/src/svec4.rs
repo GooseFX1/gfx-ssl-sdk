@@ -1,17 +1,20 @@
 use std::ops::{Deref, Index, IndexMut};
+use anchor_lang::prelude::*;
 use std::mem::{forget, zeroed};
 #[cfg(feature = "no-entrypoint")]
 use std::fmt::{self, Debug};
+use anchor_lang::prelude::borsh::{BorshDeserialize, BorshSerialize};
 
-#[derive(Copy, Clone)]
+#[account]
+#[derive(Copy)]
 #[repr(C)]
-pub struct StackVec<T, const N: usize> {
-    val: [T; N],
+pub struct StackVec4<T: BorshSerialize + BorshDeserialize + Default + Copy> {
+    val: [T; 4],
     n: u64,
 }
 
 #[cfg(feature = "no-entrypoint")]
-impl<T, const N: usize> Debug for StackVec<T, N>
+impl<T: BorshSerialize + BorshDeserialize + Default + Copy> Debug for StackVec4<T>
 where
     T: Debug,
 {
@@ -28,7 +31,7 @@ where
     }
 }
 
-impl<T, const N: usize> Default for StackVec<T, N>
+impl<T: BorshSerialize + BorshDeserialize + Default + Copy> Default for StackVec4<T>
 where
     T: Default,
 {
@@ -38,7 +41,7 @@ where
             n: 0,
         };
 
-        for i in 0..N {
+        for i in 0..4 {
             ret.val[i as usize] = T::default();
         }
 
@@ -46,19 +49,19 @@ where
     }
 }
 
-impl<T, const N: usize> StackVec<T, N>
+impl<T: BorshSerialize + BorshDeserialize + Default + Copy> StackVec4<T>
 where
     T: Copy,
 {
     pub fn new() -> Self {
-        StackVec {
-            val: [unsafe { zeroed() }; N],
+        Self {
+            val: [unsafe { zeroed() }; 4],
             n: 0,
         }
     }
 
     pub fn push(&mut self, elem: T) -> Option<T> {
-        if (self.n as usize) >= N {
+        if (self.n as usize) >= 4 {
             Some(elem)
         } else {
             self.val[self.n as usize] = elem;
@@ -76,7 +79,7 @@ where
             panic!("index out of bound")
         }
 
-        let mut v = unsafe { Vec::from_raw_parts(&mut self.val[0], self.n as usize, N) };
+        let mut v = unsafe { Vec::from_raw_parts(&mut self.val[0], self.n as usize, 4) };
         let ret = v.remove(idx);
         self.n -= 1;
         forget(v);
@@ -85,7 +88,7 @@ where
     }
 }
 
-impl<T, const N: usize> Index<usize> for StackVec<T, N> {
+impl<T: BorshSerialize + BorshDeserialize + Default + Copy> Index<usize> for StackVec4<T> {
     type Output = T;
     fn index(&self, index: usize) -> &Self::Output {
         if index >= (self.n as usize) {
@@ -96,7 +99,7 @@ impl<T, const N: usize> Index<usize> for StackVec<T, N> {
     }
 }
 
-impl<T, const N: usize> IndexMut<usize> for StackVec<T, N> {
+impl<T: BorshSerialize + BorshDeserialize + Default + Copy> IndexMut<usize> for StackVec4<T> {
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
         if index >= (self.n as usize) {
             panic!("index out of bound")
@@ -106,7 +109,7 @@ impl<T, const N: usize> IndexMut<usize> for StackVec<T, N> {
     }
 }
 
-impl<T, const N: usize> Deref for StackVec<T, N> {
+impl<T: BorshSerialize + BorshDeserialize + Default + Copy> Deref for StackVec4<T> {
     type Target = [T];
     fn deref(&self) -> &Self::Target {
         &self.val[..self.n as usize]

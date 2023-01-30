@@ -6,26 +6,26 @@ use gfx_controller::Controller;
 
 #[derive(Accounts)]
 pub struct BurnPT<'info> {
-    pub controller: AccountLoader<'info, Controller>,
+    pub controller: Account<'info, Controller>,
 
     #[account(
         mut,
-        seeds = [SSL::IDENT, controller.key().as_ref(), ssl.load()?.mint.as_ref()],
-        bump = ssl.load()?.bump,
+        seeds = [SSL::IDENT, controller.key().as_ref(), ssl.mint.as_ref()],
+        bump = ssl.bump,
     )]
-    pub ssl: AccountLoader<'info, SSL>,
+    pub ssl: Account<'info, SSL>,
 
     #[account(
         mut,
-        seeds = [LiquidityAccount::IDENT, controller.key().as_ref(), ssl.load()?.mint.as_ref(), user_wallet.key().as_ref()],
-        bump = liquidity_account.load()?.bump,
+        seeds = [LiquidityAccount::IDENT, controller.key().as_ref(), ssl.mint.as_ref(), user_wallet.key().as_ref()],
+        bump = liquidity_account.bump,
     )]
-    pub liquidity_account: AccountLoader<'info, LiquidityAccount>,
+    pub liquidity_account: Account<'info, LiquidityAccount>,
 
     #[account(
         mut,
-        seeds = [PTMint::IDENT, controller.key().as_ref(), ssl.load()?.mint.as_ref()],
-        bump = ssl.load()?.pt_bump,
+        seeds = [PTMint::IDENT, controller.key().as_ref(), ssl.mint.as_ref()],
+        bump = ssl.pt_bump,
     )]
     pub pt_mint: Account<'info, Mint>,
 

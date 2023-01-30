@@ -7,9 +7,12 @@ version = "0.1.0"
 anchor-localnet = { git = "https://github.com/ebrightfield/anchor/", branch = "localnet_tooling" }
 anchor-lang = { git = "https://github.com/ebrightfield/anchor/", branch = "localnet_tooling" }
 anchor-spl = { git = "https://github.com/ebrightfield/anchor/", branch = "localnet_tooling" }
+anchor-lang-26 = { version = "0.26.0", package = "anchor-lang" }
 clap = "4.0.32"
 solana-sdk = "1.14.13"
 solana-client = "1.14.13"
 anyhow = "1.0.68"
 spl-token = "3.5.0"
+gfx-controller-interface = {path = "../programs/gfx-controller", features = ["no-entrypoint"]}
+gfx-ssl-interface = {path = "../programs/gfx-ssl", features = ["no-entrypoint"]}
 

@@ -1,6 +1,7 @@
-use crate::svec::StackVec;
+use crate::svec4::StackVec4;
 use crate::utils::PDAIdentifier;
 use anchor_lang::prelude::*;
+use crate::svec5::StackVec5;
 
 impl PDAIdentifier for Pair {
     const IDENT: &'static [u8] = b"GFX-SSL-Pair";
@@ -11,16 +12,17 @@ impl PDAIdentifier for Pair {
     }
 }
 
-#[derive(Copy, Clone, Default)]
+#[account]
+#[derive(Copy, Default)]
 #[cfg_attr(feature = "no-entrypoint", derive(Debug))]
 #[repr(C, align(8))]
 pub struct Oracle {
-    pub path: StackVec<(Pubkey, bool), 4>,
+    pub path: StackVec4<(Pubkey, bool)>,
     pub padding: [u64; 8],
 }
 
 #[allow(non_snake_case)]
-#[account(zero_copy)]
+#[account]
 #[cfg_attr(feature = "no-entrypoint", derive(Debug))]
 #[derive(Default)]
 pub struct Pair {
@@ -28,7 +30,7 @@ pub struct Pair {
     pub mints: (Pubkey, Pubkey),
     pub bump: u8,
     _pad0: [u8; 7],
-    pub oracles: StackVec<Oracle, 5>,
+    pub oracles: StackVec5<Oracle>,
     // configs
     pub A: u8,              // parameter A for poorman's curve
     pub fee_rate: (u8, u8), // in BP

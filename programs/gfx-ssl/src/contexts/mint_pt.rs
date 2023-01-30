@@ -6,33 +6,33 @@ use gfx_controller::Controller;
 
 #[derive(Accounts)]
 pub struct MintPT<'info> {
-    pub controller: AccountLoader<'info, Controller>,
+    pub controller: Account<'info, Controller>,
 
     #[account(
         mut,
-        seeds = [SSL::IDENT, controller.key().as_ref(), ssl.load()?.mint.as_ref()],
-        bump = ssl.load()?.bump,
+        seeds = [SSL::IDENT, controller.key().as_ref(), ssl.mint.as_ref()],
+        bump = ssl.bump,
     )]
-    pub ssl: AccountLoader<'info, SSL>,
+    pub ssl: Account<'info, SSL>,
 
     #[account(
         mut,
-        associated_token::mint = ssl.load()?.mint,
+        associated_token::mint = ssl.mint,
         associated_token::authority = ssl,
     )]
     pub rt_vault: Account<'info, TokenAccount>,
 
     #[account(
         mut,
-        seeds = [LiquidityAccount::IDENT, controller.key().as_ref(), ssl.load()?.mint.as_ref(), user_wallet.key().as_ref()],
-        bump = liquidity_account.load()?.bump,
+        seeds = [LiquidityAccount::IDENT, controller.key().as_ref(), ssl.mint.as_ref(), user_wallet.key().as_ref()],
+        bump = liquidity_account.bump,
     )]
-    pub liquidity_account: AccountLoader<'info, LiquidityAccount>,
+    pub liquidity_account: Account<'info, LiquidityAccount>,
 
     #[account(
         mut,
-        seeds = [PTMint::IDENT, controller.key().as_ref(), ssl.load()?.mint.as_ref()],
-        bump = ssl.load()?.pt_bump,
+        seeds = [PTMint::IDENT, controller.key().as_ref(), ssl.mint.as_ref()],
+        bump = ssl.pt_bump,
     )]
     pub pt_mint: Account<'info, Mint>,
 

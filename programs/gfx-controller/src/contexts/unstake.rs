@@ -7,33 +7,33 @@ use anchor_spl::token::{Token, TokenAccount};
 #[derive(Accounts)]
 pub struct Unstake<'info> {
     #[account(mut)]
-    pub controller: AccountLoader<'info, Controller>,
+    pub controller: Account<'info, Controller>,
 
     #[account(
         mut,
         seeds = [StakingAccount::IDENT, controller.key().as_ref(), user_wallet.key().as_ref()],
-        bump = staking_account.load()?.bump,
+        bump = staking_account.bump,
     )]
-    pub staking_account: AccountLoader<'info, StakingAccount>,
+    pub staking_account: Account<'info, StakingAccount>,
 
     #[account(
         mut,
-        associated_token::mint = controller.load()?.mint,
+        associated_token::mint = controller.mint,
         associated_token::authority = controller,
     )]
     pub vault: Account<'info, TokenAccount>,
 
     #[account(
         mut,
-        associated_token::mint = controller.load()?.mint,
+        associated_token::mint = controller.mint,
         associated_token::authority = user_wallet,
     )]
     pub user_ata: Account<'info, TokenAccount>,
 
     #[account(
         mut,
-        associated_token::mint = controller.load()?.mint,
-        associated_token::authority = controller.load()?.admin,
+        associated_token::mint = controller.mint,
+        associated_token::authority = controller.admin,
     )]
     pub fee_collector_ata: Account<'info, TokenAccount>,
 

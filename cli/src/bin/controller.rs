@@ -20,6 +20,6 @@ fn main() -> anyhow::Result<()> {
     entry(
         &opts,
         signer,
-        client
+        client,
     )
 }

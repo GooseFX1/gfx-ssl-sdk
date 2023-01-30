@@ -5,7 +5,7 @@ use std::mem::size_of;
 
 #[derive(Accounts)]
 pub struct CreateStakingAccount<'info> {
-    pub controller: AccountLoader<'info, Controller>,
+    pub controller: Account<'info, Controller>,
 
     #[account(
         init,
@@ -14,7 +14,7 @@ pub struct CreateStakingAccount<'info> {
         space = size_of::<StakingAccount>() + 8,
         payer = user_wallet
     )]
-    pub staking_account: AccountLoader<'info, StakingAccount>,
+    pub staking_account: Account<'info, StakingAccount>,
 
     #[account(mut)]
     pub user_wallet: Signer<'info>,

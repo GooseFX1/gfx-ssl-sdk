@@ -11,7 +11,7 @@ impl PDAIdentifier for SSL {
     }
 }
 
-#[account(zero_copy)]
+#[account]
 #[cfg_attr(feature = "no-entrypoint", derive(Debug))]
 pub struct SSL {
     pub controller: Pubkey,

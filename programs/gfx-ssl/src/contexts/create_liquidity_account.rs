@@ -6,23 +6,23 @@ use std::mem::size_of;
 
 #[derive(Accounts)]
 pub struct CreateLiquidityAccount<'info> {
-    pub controller: AccountLoader<'info, Controller>,
+    pub controller: Account<'info, Controller>,
 
     #[account(
         mut,
-        seeds = [SSL::IDENT, controller.key().as_ref(), ssl.load()?.mint.as_ref()],
-        bump = ssl.load()?.bump,
+        seeds = [SSL::IDENT, controller.key().as_ref(), ssl.mint.as_ref()],
+        bump = ssl.bump,
     )]
-    pub ssl: AccountLoader<'info, SSL>,
+    pub ssl: Account<'info, SSL>,
 
     #[account(
         init,
-        seeds = [LiquidityAccount::IDENT, controller.key().as_ref(), ssl.load()?.mint.as_ref(), user_wallet.key().as_ref()],
+        seeds = [LiquidityAccount::IDENT, controller.key().as_ref(), ssl.mint.as_ref(), user_wallet.key().as_ref()],
         bump,
         space = size_of::<LiquidityAccount>() + 8,
         payer = user_wallet
     )]
-    pub liquidity_account: AccountLoader<'info, LiquidityAccount>,
+    pub liquidity_account: Account<'info, LiquidityAccount>,
 
     #[account(mut)]
     pub user_wallet: Signer<'info>,

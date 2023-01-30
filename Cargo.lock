@@ -2017,11 +2017,14 @@ dependencies = [
 name = "gfx-localnet"
 version = "0.1.0"
 dependencies = [
+ "anchor-lang 0.26.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "anchor-lang 0.26.0 (git+https://github.com/ebrightfield/anchor/?branch=localnet_tooling)",
  "anchor-localnet",
  "anchor-spl 0.26.0 (git+https://github.com/ebrightfield/anchor/?branch=localnet_tooling)",
  "anyhow",
  "clap 4.1.4",
+ "gfx-controller-interface",
+ "gfx-ssl-interface",
  "solana-client",
  "solana-sdk",
  "spl-token",

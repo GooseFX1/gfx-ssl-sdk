@@ -3,7 +3,7 @@ use crate::PDAIdentifier;
 use anchor_lang::prelude::*;
 use anchor_spl::{
     associated_token::AssociatedToken,
-    token::{self, Mint, Token, TokenAccount},
+    token::{Mint, Token, TokenAccount},
 };
 use std::mem::size_of;
 
@@ -17,7 +17,7 @@ pub struct CreateController<'info> {
         space = size_of::<Controller>() + 8,
         payer = admin
     )]
-    pub controller: AccountLoader<'info, Controller>,
+    pub controller: Account<'info, Controller>,
 
     pub mint: Account<'info, Mint>,
 

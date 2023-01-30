@@ -10,7 +10,7 @@ impl PDAIdentifier for StakingAccount {
     }
 }
 
-#[account(zero_copy)]
+#[account]
 #[derive(Default)]
 #[cfg_attr(feature = "no-entrypoint", derive(Debug))]
 pub struct StakingAccount {

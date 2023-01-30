@@ -10,7 +10,7 @@ impl PDAIdentifier for LiquidityAccount {
     }
 }
 
-#[account(zero_copy)]
+#[account]
 #[derive(Default)]
 #[cfg_attr(feature = "no-entrypoint", derive(Debug))]
 #[cfg_attr(feature = "type-layout", derive(TypeLayout))]

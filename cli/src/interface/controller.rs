@@ -4,6 +4,7 @@ use solana_client::rpc_client::RpcClient;
 use solana_sdk::pubkey::Pubkey;
 use solana_sdk::signature::Keypair;
 use solana_sdk::signer::Signer;
+use solana_sdk::transaction::Transaction;
 use gfx_controller_interface::{Controller, PDAIdentifier};
 use crate::config::{KeypairArg, UrlArg};
 
@@ -57,36 +58,18 @@ pub fn create_controller(
         mint,
         payer.pubkey(),
     );
+    let tx = Transaction::new_signed_with_payer(
+        &[ix],
+        Some(&payer.pubkey()),
+        &vec![payer],
+        client.get_latest_blockhash()?
+    );
+    let signature = client.send_transaction(&tx)?;
+    println!("Create Controller success: {}", &signature);
+    println!(
+        "https://explorer.solana.com/tx/{}?cluster=custom&customUrl=http%3A%2F%2Flocalhost%3A8899",
+        signature
+    );
+
     Ok(())
 }
-
-// pub fn new_multisig(
-//     threshold: u16,
-//     members: &Vec<String>,
-//     include_signer: bool,
-//     client: RpcClient,
-//     payer: &dyn Signer,
-//     matches: &ArgMatches,
-// ) -> Result<()> {
-//     let mut members: Vec<Pubkey> = members
-//         .iter()
-//         .map(|path| pubkey_or_signer_path(path, matches))
-//         .flatten()
-//         .collect();
-//     if include_signer {
-//         members.push(payer.pubkey());
-//     }
-//     let base = Keypair::new();
-//     let multisig_address = find_multisig_wallet_address(&base.pubkey());
-//     println!("Creating multisig wallet: {}", multisig_address.to_string());
-//     let signature = new_multisig_rpc(
-//         threshold,
-//         members.clone(),
-//         &client,
-//         payer,
-//         Some(&base),
-//     )?;
-//     println!("New multisig successfully created. \
-//     signature: {}", signature.to_string());
-//     Ok(())
-// }
