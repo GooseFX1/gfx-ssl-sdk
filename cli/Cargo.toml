@@ -1,0 +1,17 @@
+[package]
+name = "gfx-cli"
+edition = "2021"
+version = "0.1.0"
+
+[dependencies]
+clap = { version = "3.2.23", features = ["derive"], package = "clap" }
+anchor-lang = "0.26.0"
+anchor-spl = "0.26.0"
+solana-sdk = "1.14.13"
+solana-client = "1.14.13"
+solana-clap-v3-utils = "1.14.13"
+solana-cli-config = "1.14.13"
+anyhow = "1.0.68"
+gfx-controller-interface = { path = "../programs/gfx-controller" }
+gfx-ssl-sdk = { path = "../sdk", default-features = false }
+#jungle-fi-localnet-tools = { git = "https://github.com/Jungle-Finance/jungle-fi-cli-utils" }

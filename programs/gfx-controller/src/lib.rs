@@ -18,6 +18,11 @@ pub mod contract {
     use super::*;
 
     #[allow(unused_variables)]
+    pub fn create_controller(ctx: Context<CreateController>, seed: [u8; 32]) -> Result<()> {
+        Ok(())
+    }
+
+    #[allow(unused_variables)]
     pub fn create_staking_account(ctx: Context<CreateStakingAccount>) -> Result<()> {
         Ok(())
     }

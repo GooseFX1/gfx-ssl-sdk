@@ -1,7 +1,8 @@
 use anchor_lang::{prelude::*, InstructionData, ToAccountMetas};
-use anchor_spl::{associated_token::get_associated_token_address, token::Token};
+use anchor_spl::{associated_token, associated_token::get_associated_token_address, token::Token};
+use anchor_spl::token::spl_token;
 use gfx_controller_interface::{PDAIdentifier, StakingAccount};
-use solana_program::{instruction::Instruction, pubkey::Pubkey, sysvar::SysvarId};
+use solana_program::{instruction::Instruction, pubkey::Pubkey, system_program, sysvar, sysvar::SysvarId};
 
 /// The instructions all contain nearly the same required arguments.
 /// This struct provides a more succinct, reusable input to
@@ -22,6 +23,31 @@ impl ControllerInstructionContext {
             user_wallet,
             staking_account,
         }
+    }
+}
+
+pub fn create_controller(
+    controller: Pubkey,
+    mint: Pubkey,
+    user_wallet: Pubkey,
+) -> Instruction {
+    let seed = user_wallet.to_bytes();
+    let data = gfx_controller_interface::instruction::CreateController { seed }.data();
+    let accounts = gfx_controller_interface::accounts::CreateController {
+            controller,
+            mint,
+            vault: get_associated_token_address(&controller, &mint),
+            admin: user_wallet,
+            admin_ata: get_associated_token_address(&user_wallet, &mint),
+            token_program: spl_token::id(),
+            associated_token_program: associated_token::AssociatedToken::id(),
+            system_program: system_program::id(),
+            rent: sysvar::rent::id(),
+        }.to_account_metas(None);
+    Instruction {
+        data,
+        accounts,
+        program_id: gfx_controller_interface::id(),
     }
 }
 
