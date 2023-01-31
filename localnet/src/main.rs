@@ -1,75 +1,97 @@
 use anchor_lang_26::AccountSerialize;
-use anchor_localnet::cli::SolanaLocalnetCli;
-use anchor_localnet::{LocalnetAccount, SystemAccount, TestTomlGenerator};
+use anchor_localnet::{cli::SolanaLocalnetCli, LocalnetAccount, SystemAccount, TestTomlGenerator};
 use anyhow::anyhow;
 use clap::Parser;
-use solana_sdk::program_option::COption;
-use solana_sdk::pubkey;
-use solana_sdk::pubkey::Pubkey;
-use solana_sdk::signature::read_keypair_file;
-use solana_sdk::signer::Signer;
 use gfx_controller_interface::{Controller, PDAIdentifier};
+use gfx_ssl_interface::{PDAIdentifier as OtherPDAIdentifier, Pair, SSL};
+use solana_client::rpc_client::RpcClient;
+use solana_sdk::{
+    program_option::COption, pubkey, pubkey::Pubkey, signature::read_keypair_file, signer::Signer,
+};
 
 /// Mainnet pubkey
 pub const SSL_PROGRAM_ID: Pubkey = pubkey!("7WduLbRfYhTJktjLw5FDEyrqoEv61aTTCuGAetgLjzN5");
 /// Mainnet pubkey
 pub const CONTROLLER_PROGRAM_ID: Pubkey = pubkey!("8KJx48PYGHVC9fxzRRtYp4x4CM2HyYCm2EjVuAP4vvrx");
 
-pub const CONTROLLER_MINT_DECIMALS: u8 = 9;
+pub const MINT_DECIMALS: u8 = 3;
 
-fn main() -> anyhow::Result<()> {
-    // As a one-time setup, this filesystem key needs to be generated manually with:
-    // solana-keygen new -o localnet_wallet.json
-    let localnet_wallet = read_keypair_file("localnet_wallet.json")
-        .map_err(|e| anyhow!("Failed to read keypair file: {e}
-you may need to run solana-keygen new -o localnet_wallet.json"))?;
-
-    // This will function as an admin account, as well as a user account
-    let controller_admin = LocalnetAccount::new(
-        localnet_wallet.pubkey(),
-        "localnet_wallet.json".to_string(),
-        SystemAccount,
-    );
-    // We need a mint for the controller
-    let controller_mint = LocalnetAccount::new(
+pub fn new_mint_and_ata(authority: Pubkey) -> (LocalnetAccount, LocalnetAccount) {
+    let mint = LocalnetAccount::new(
         Pubkey::new_unique(),
         "mint.json".to_string(),
         anchor_spl::token::Mint::from(spl_token::state::Mint {
-            mint_authority: COption::Some(controller_admin.address),
-            supply: 0,
-            decimals: CONTROLLER_MINT_DECIMALS,
+            mint_authority: COption::Some(authority),
+            supply: 1000_000,
+            decimals: MINT_DECIMALS,
             is_initialized: true,
-            freeze_authority: COption::Some(controller_admin.address),
-        })
+            freeze_authority: COption::Some(authority),
+        }),
     );
-    let controller_admin_ata = LocalnetAccount::new(
+    let ata = LocalnetAccount::new(
         Pubkey::new_unique(),
         "test_user_token_act.json".to_string(),
         anchor_spl::token::TokenAccount::from(spl_token::state::Account {
-            mint: controller_mint.address,
-            owner: controller_admin.address,
-            amount: 0,
+            mint: mint.address,
+            owner: authority,
+            amount: 1000_000,
             delegate: COption::None,
             state: spl_token::state::AccountState::Initialized,
             is_native: COption::None,
             delegated_amount: 0,
-            close_authority: COption::Some(controller_admin.address)
-        })
+            close_authority: COption::Some(authority),
+        }),
+    );
+    (mint, ata)
+}
+
+fn new_ssl(
+    controller: Pubkey,
+    mint: Pubkey,
+) -> SSL {
+    SSL {
+        controller,
+        mint,
+        decimals: MINT_DECIMALS,
+        bump: 0,
+        pt_bump: 0,
+        suspended: false,
+        cranker: Default::default(),
+        weight: 0,
+        liability: 0,
+        swapped_liability: 0,
+        total_share: 0,
+        _pad: [0; 32]
+    }
+}
+
+fn main() -> anyhow::Result<()> {
+    // As a one-time setup, this filesystem key needs to be generated manually with:
+    // solana-keygen new -o localnet_wallet.json
+    let localnet_wallet = read_keypair_file("localnet_wallet.json").map_err(|e| {
+        anyhow!(
+            "Failed to read keypair file: {e}
+you may need to run solana-keygen new -o localnet_wallet.json"
+        )
+    })?;
+
+    // This will function as an admin account, as well as a user account
+    let admin = LocalnetAccount::new(
+        localnet_wallet.pubkey(),
+        "localnet_wallet.json".to_string(),
+        SystemAccount,
     );
 
+    // Controller
+    let (controller_mint, controller_admin_ata) = new_mint_and_ata(admin.address);
     let seed = Pubkey::new_unique().to_bytes();
-    let (controller_address, bump) = Controller::get_address_with_bump(
-        &vec![
-            seed.as_slice(),
-        ]
-    );
-
+    let (controller_address, bump) = Controller::get_address_with_bump(&vec![seed.as_slice()]);
     let controller_account = Controller {
         seed: Pubkey::new_unique().to_bytes(),
         bump,
-        admin: controller_admin.address,
+        admin: admin.address,
         suspended: false,
-        decimals: CONTROLLER_MINT_DECIMALS,
+        decimals: MINT_DECIMALS,
         mint: controller_mint.address,
         daily_reward: 1,
         total_staking_share: 0,
@@ -77,24 +99,71 @@ you may need to run solana-keygen new -o localnet_wallet.json"))?;
         last_distribution_time: 0,
         withdraw_fee: 0,
         _pad0: [0; 6],
-        _pad1: [0; 31]
+        _pad1: [0; 31],
     };
+    // Need to use LocalnetAccount::new_raw instead of LocalnetAccount::new
+    // because the Anchor localnet crate currently resides on a fork on Anchor,
+    // which causes conflicting versions of the AccountSerialize trait.
     let mut serialized = Vec::new();
     controller_account.try_serialize(&mut serialized).unwrap();
-    let controller_account = LocalnetAccount::new_raw(
-        controller_address,
-        "controller".to_string(),
-        serialized,
+    let controller_account =
+        LocalnetAccount::new_raw(controller_address, "controller".to_string(), serialized);
+
+    // SSL 1
+    let (ssl_1_mint, ssl_1_ata) = new_mint_and_ata(admin.address);
+    let ssl_address = SSL::get_address(&vec![
+        controller_address.as_ref(),
+        ssl_1_mint.address.as_ref(),
+    ]);
+    let ssl = new_ssl(controller_address, ssl_1_mint.address);
+    let mut serialized = Vec::new();
+    ssl.try_serialize(&mut serialized).unwrap();
+    let ssl_1 = LocalnetAccount::new_raw(
+        ssl_address,
+        "ssl_account_1".to_string(),
+        serialized
     );
 
+    // SSL 2
+    let (ssl_2_mint, ssl_2_ata) = new_mint_and_ata(admin.address);
+    let ssl_address = SSL::get_address(&vec![
+        controller_address.as_ref(),
+        ssl_2_mint.address.as_ref(),
+    ]);
+    let ssl = new_ssl(controller_address, ssl_2_mint.address);
+    let mut serialized = Vec::new();
+    ssl.try_serialize(&mut serialized).unwrap();
+    let ssl_2 = LocalnetAccount::new_raw(
+        ssl_address,
+        "ssl_account_2".to_string(),
+        serialized
+    );
+
+    let client = RpcClient::new("https://api.mainnet-beta.solana.com");
+
+    // Cloned accounts
+    let sol_usd_oracle = LocalnetAccount::new_from_clone_unchecked(
+        &pubkey!("H6ARHf6YXhGYeQfUzQNGk6rDNnLBQKrenN712K4AQJEG"),
+        &client,
+        "sol_usd_oracle".to_string(),
+    )?;
+
+    // Putting it all together
     let toml = TestTomlGenerator {
         save_directory: "./tests".to_string(),
         test_file_glob: Some("tests/test.ts".to_string()),
         accounts: vec![
-            controller_admin,
+            admin,
             controller_mint,
             controller_admin_ata,
-            controller_account
+            controller_account,
+            sol_usd_oracle,
+            ssl_1_mint,
+            ssl_1_ata,
+            ssl_1,
+            ssl_2_mint,
+            ssl_2_ata,
+            ssl_2,
         ],
         programs: vec![
             (
@@ -110,8 +179,6 @@ you may need to run solana-keygen new -o localnet_wallet.json"))?;
     };
 
     let opts = SolanaLocalnetCli::parse();
-    opts.process(vec![
-        toml,
-    ])?;
+    opts.process(vec![toml])?;
     Ok(())
 }

@@ -29,12 +29,12 @@ pub struct Pair {
     pub controller: Pubkey, // for indexing purpose
     pub mints: (Pubkey, Pubkey),
     pub bump: u8,
-    _pad0: [u8; 7],
+    pub _pad0: [u8; 7],
     pub oracles: StackVec5<Oracle>,
     // configs
     pub A: u8,              // parameter A for poorman's curve
     pub fee_rate: (u8, u8), // in BP
-    _pad1: [u8; 5],
+    pub _pad1: [u8; 5],
     pub max_delay: u64,
     pub confidence: u64,
     pub _unused4: [u8; 32],
@@ -47,10 +47,10 @@ pub struct Pair {
     pub surpluses: (u64, u64), // surpluses.0 is the surplus of mints.0, which is owned by the ssl of mints.1
     pub volumes: (u128, u128),
 
-    _unused0: [u64; 10],
+    pub _unused0: [u64; 10],
     pub enable_rebalance_swap: bool,
-    _pad3: [u8; 7],
-    _pad4: [u64; 18],
+    pub _pad3: [u8; 7],
+    pub _pad4: [u64; 18],
 }
 
 const _: [u8; 1528] = [0; std::mem::size_of::<Pair>()];
