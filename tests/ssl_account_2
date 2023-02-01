@@ -1,0 +1,13 @@
+{
+  "account": {
+    "data": [
+      "DyF5DSjejCJbcCKbMet5zYjzqbJkPXG6ihP5L88c2bEJpTPqi2Wd7DLUfoXJS1ra1h2eqzVKm5tcdvCFhfSjRJoLzHE5UXkhRQ3tinSt8zmL2s8Wn6wYb9jK6fJXz2Qw2egdd2msmmaWhx23pe1piAs2TxSTHWFRJThWgVuDrDtfVVMrseMo1NzzcsW8scm83JyZtYJjgYLCi7MGSwhY2Sh2yFELMVEd9PrH3zQc2cH37y2HbamkEZGHKAPgFXnJTXDAbVaRS2D4dSihwKfBPn5xrpoxeyD1HoubKEYHeGYz6NKreeBj4B4i3iEAKYXHK6yYbeeHY7YpMXaxAH8vMRYXpKQWmS2hcm3MdWqdM888BoDWXVL9LqzsVjVKA1K4HpSzkjr46bfbqEj3pAcoSgy7MjLjdgMYG4ZLew8NMrvivtAzoS2dg517LnXafE6SgJAFCdpUABtaTNhyuYMFDM8am29QyZkTmphMrsuzVGJEMSyrfKCc865oQb4wzNAbz1KZJUPjr42Z1BTR6va5g6vTjErVV",
+      "base58"
+    ],
+    "executable": false,
+    "lamports": 1000000000000,
+    "owner": "11111111111111111111111111111111",
+    "rentEpoch": 0
+  },
+  "pubkey": "HkGhrC3oMiJ5MiQ4qZmnJJXcop2qhFgVhgQcPKYJ1RB4"
+}

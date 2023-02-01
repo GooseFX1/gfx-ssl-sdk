@@ -23,6 +23,27 @@ pub struct Oracle {
     pub padding: [u64; 8],
 }
 
+impl Oracle {
+    pub fn new() -> Oracle {
+        Oracle {
+            path: StackVec4::new(),
+            padding: [0; 8],
+        }
+    }
+
+    pub fn with_path(path: &[(Pubkey, bool)]) -> Self {
+        assert!(path.len() <= 4);
+        let mut oracle = Self::new();
+
+        for e in path {
+            assert!(oracle.path.push(*e).is_none());
+        }
+
+        oracle
+    }
+}
+
+
 #[allow(non_snake_case)]
 #[account]
 #[cfg_attr(feature = "no-entrypoint", derive(Debug))]

@@ -177,9 +177,11 @@ you may need to run solana-keygen new -o localnet_wallet.json"
     pair.max_delay = 1;
     pair.confidence = 1;
     pair.A = 1;  // TODO Review this
-    let mut svec = StackVec5::<Oracle>::default();
-    svec[0].path[0] = (sol_usd_oracle.address, false);
-    svec[0].path[1] = (usdc_usd_oracle.address, false);
+    let mut svec = StackVec5::<Oracle>::new();
+    println!("{:?}", svec);
+    svec.push(Oracle::new());
+    svec[0].path.push((sol_usd_oracle.address, false));
+    svec[0].path.push((usdc_usd_oracle.address, false));
     pair.oracles = if is_reversed {
         svec[0].path[0] = (svec[0].path[1].0, true);
         svec

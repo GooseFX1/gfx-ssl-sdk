@@ -106,7 +106,7 @@ dependencies = [
 [[package]]
 name = "anchor-attribute-access-control"
 version = "0.26.0"
-source = "git+https://github.com/ebrightfield/anchor/?branch=localnet_tooling#1b1be30ced0ab6f07e0da64ac26f4c03c1c728e6"
+source = "git+https://github.com/ebrightfield/anchor/?branch=localnet_tooling#af04f9d221b4e63375b746c0da1ad7491b7c854c"
 dependencies = [
  "anchor-syn 0.26.0 (git+https://github.com/ebrightfield/anchor/?branch=localnet_tooling)",
  "anyhow",
@@ -134,7 +134,7 @@ dependencies = [
 [[package]]
 name = "anchor-attribute-account"
 version = "0.26.0"
-source = "git+https://github.com/ebrightfield/anchor/?branch=localnet_tooling#1b1be30ced0ab6f07e0da64ac26f4c03c1c728e6"
+source = "git+https://github.com/ebrightfield/anchor/?branch=localnet_tooling#af04f9d221b4e63375b746c0da1ad7491b7c854c"
 dependencies = [
  "anchor-syn 0.26.0 (git+https://github.com/ebrightfield/anchor/?branch=localnet_tooling)",
  "anyhow",
@@ -159,7 +159,7 @@ dependencies = [
 [[package]]
 name = "anchor-attribute-constant"
 version = "0.26.0"
-source = "git+https://github.com/ebrightfield/anchor/?branch=localnet_tooling#1b1be30ced0ab6f07e0da64ac26f4c03c1c728e6"
+source = "git+https://github.com/ebrightfield/anchor/?branch=localnet_tooling#af04f9d221b4e63375b746c0da1ad7491b7c854c"
 dependencies = [
  "anchor-syn 0.26.0 (git+https://github.com/ebrightfield/anchor/?branch=localnet_tooling)",
  "proc-macro2 1.0.50",
@@ -181,7 +181,7 @@ dependencies = [
 [[package]]
 name = "anchor-attribute-error"
 version = "0.26.0"
-source = "git+https://github.com/ebrightfield/anchor/?branch=localnet_tooling#1b1be30ced0ab6f07e0da64ac26f4c03c1c728e6"
+source = "git+https://github.com/ebrightfield/anchor/?branch=localnet_tooling#af04f9d221b4e63375b746c0da1ad7491b7c854c"
 dependencies = [
  "anchor-syn 0.26.0 (git+https://github.com/ebrightfield/anchor/?branch=localnet_tooling)",
  "proc-macro2 1.0.50",
@@ -205,7 +205,7 @@ dependencies = [
 [[package]]
 name = "anchor-attribute-event"
 version = "0.26.0"
-source = "git+https://github.com/ebrightfield/anchor/?branch=localnet_tooling#1b1be30ced0ab6f07e0da64ac26f4c03c1c728e6"
+source = "git+https://github.com/ebrightfield/anchor/?branch=localnet_tooling#af04f9d221b4e63375b746c0da1ad7491b7c854c"
 dependencies = [
  "anchor-syn 0.26.0 (git+https://github.com/ebrightfield/anchor/?branch=localnet_tooling)",
  "anyhow",
@@ -244,7 +244,7 @@ dependencies = [
 [[package]]
 name = "anchor-attribute-program"
 version = "0.26.0"
-source = "git+https://github.com/ebrightfield/anchor/?branch=localnet_tooling#1b1be30ced0ab6f07e0da64ac26f4c03c1c728e6"
+source = "git+https://github.com/ebrightfield/anchor/?branch=localnet_tooling#af04f9d221b4e63375b746c0da1ad7491b7c854c"
 dependencies = [
  "anchor-syn 0.26.0 (git+https://github.com/ebrightfield/anchor/?branch=localnet_tooling)",
  "anyhow",
@@ -269,7 +269,7 @@ dependencies = [
 [[package]]
 name = "anchor-cli"
 version = "0.26.0"
-source = "git+https://github.com/ebrightfield/anchor/?branch=localnet_tooling#1b1be30ced0ab6f07e0da64ac26f4c03c1c728e6"
+source = "git+https://github.com/ebrightfield/anchor/?branch=localnet_tooling#af04f9d221b4e63375b746c0da1ad7491b7c854c"
 dependencies = [
  "anchor-client",
  "anchor-lang 0.26.0 (git+https://github.com/ebrightfield/anchor/?branch=localnet_tooling)",
@@ -303,7 +303,7 @@ dependencies = [
 [[package]]
 name = "anchor-client"
 version = "0.26.0"
-source = "git+https://github.com/ebrightfield/anchor/?branch=localnet_tooling#1b1be30ced0ab6f07e0da64ac26f4c03c1c728e6"
+source = "git+https://github.com/ebrightfield/anchor/?branch=localnet_tooling#af04f9d221b4e63375b746c0da1ad7491b7c854c"
 dependencies = [
  "anchor-lang 0.26.0 (git+https://github.com/ebrightfield/anchor/?branch=localnet_tooling)",
  "anyhow",
@@ -332,7 +332,7 @@ dependencies = [
 [[package]]
 name = "anchor-derive-accounts"
 version = "0.26.0"
-source = "git+https://github.com/ebrightfield/anchor/?branch=localnet_tooling#1b1be30ced0ab6f07e0da64ac26f4c03c1c728e6"
+source = "git+https://github.com/ebrightfield/anchor/?branch=localnet_tooling#af04f9d221b4e63375b746c0da1ad7491b7c854c"
 dependencies = [
  "anchor-syn 0.26.0 (git+https://github.com/ebrightfield/anchor/?branch=localnet_tooling)",
  "anyhow",
@@ -414,7 +414,7 @@ dependencies = [
 [[package]]
 name = "anchor-lang"
 version = "0.26.0"
-source = "git+https://github.com/ebrightfield/anchor/?branch=localnet_tooling#1b1be30ced0ab6f07e0da64ac26f4c03c1c728e6"
+source = "git+https://github.com/ebrightfield/anchor/?branch=localnet_tooling#af04f9d221b4e63375b746c0da1ad7491b7c854c"
 dependencies = [
  "anchor-attribute-access-control 0.26.0 (git+https://github.com/ebrightfield/anchor/?branch=localnet_tooling)",
  "anchor-attribute-account 0.26.0 (git+https://github.com/ebrightfield/anchor/?branch=localnet_tooling)",
@@ -435,7 +435,7 @@ dependencies = [
 [[package]]
 name = "anchor-localnet"
 version = "0.26.0"
-source = "git+https://github.com/ebrightfield/anchor/?branch=localnet_tooling#1b1be30ced0ab6f07e0da64ac26f4c03c1c728e6"
+source = "git+https://github.com/ebrightfield/anchor/?branch=localnet_tooling#af04f9d221b4e63375b746c0da1ad7491b7c854c"
 dependencies = [
  "Inflector",
  "anchor-cli",
@@ -472,7 +472,7 @@ dependencies = [
 [[package]]
 name = "anchor-spl"
 version = "0.26.0"
-source = "git+https://github.com/ebrightfield/anchor/?branch=localnet_tooling#1b1be30ced0ab6f07e0da64ac26f4c03c1c728e6"
+source = "git+https://github.com/ebrightfield/anchor/?branch=localnet_tooling#af04f9d221b4e63375b746c0da1ad7491b7c854c"
 dependencies = [
  "anchor-lang 0.26.0 (git+https://github.com/ebrightfield/anchor/?branch=localnet_tooling)",
  "solana-program",
@@ -521,7 +521,7 @@ dependencies = [
 [[package]]
 name = "anchor-syn"
 version = "0.26.0"
-source = "git+https://github.com/ebrightfield/anchor/?branch=localnet_tooling#1b1be30ced0ab6f07e0da64ac26f4c03c1c728e6"
+source = "git+https://github.com/ebrightfield/anchor/?branch=localnet_tooling#af04f9d221b4e63375b746c0da1ad7491b7c854c"
 dependencies = [
  "anyhow",
  "bs58 0.3.1",

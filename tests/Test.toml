@@ -17,5 +17,45 @@ filename = "mint.json"
 address = "1111111ogCyDbaRMvkdsHB3qfdyFYaG1WtRUAfdh"
 filename = "test_user_token_act.json"
 
+[[test.validator.account]]
+address = "7rc75JwnRZFUqWHfFxhKMsTaHDH5baJBFcAT91JFp8ep"
+filename = "controller"
+
+[[test.validator.account]]
+address = "111111131h1vYVSYuKP6AhS86fbRdMw9XHiZAvAaj"
+filename = "mint.json"
+
+[[test.validator.account]]
+address = "11111113R2cuenjG5nFubqX9Wzuukdin2YfGQVzu5"
+filename = "test_user_token_act.json"
+
+[[test.validator.account]]
+address = "21CLbmrojDEeHaWrL5tqqU6Naq7Fka1URoH4mDQmpFBr"
+filename = "ssl_account_1"
+
+[[test.validator.account]]
+address = "11111113pNDtm61yGF8j2ycAwLEPsuWQXobye5qDR"
+filename = "mint.json"
+
+[[test.validator.account]]
+address = "11111114DhpssPJgSi1YU7hCMfYt1BJ334YgsffXm"
+filename = "test_user_token_act.json"
+
+[[test.validator.account]]
+address = "HkGhrC3oMiJ5MiQ4qZmnJJXcop2qhFgVhgQcPKYJ1RB4"
+filename = "ssl_account_2"
+
+[[test.validator.account]]
+address = "7xgrop9GufyfkyssT6PTYMQZ4vi4VCYzDWemS2js2ygf"
+filename = "pair"
+
+[[test.validator.account]]
+address = "H6ARHf6YXhGYeQfUzQNGk6rDNnLBQKrenN712K4AQJEG"
+filename = "sol_usd_oracle"
+
+[[test.validator.account]]
+address = "Gnt27xtC473ZT2Mw5u8wZ68Z3gULkSTb5DuxJy7eJotD"
+filename = "usdc_usd_oracle"
+
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/test.ts"
