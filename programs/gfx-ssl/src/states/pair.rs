@@ -12,6 +12,8 @@ impl PDAIdentifier for Pair {
     }
 }
 
+/// Contains a list of oracle addresses, ordered to match
+/// the input/output mints of a swap
 #[account]
 #[derive(Copy, Default)]
 #[cfg_attr(feature = "no-entrypoint", derive(Debug))]
@@ -52,5 +54,6 @@ pub struct Pair {
     pub _pad3: [u8; 7],
     pub _pad4: [u64; 18],
 }
+
 
 const _: [u8; 1528] = [0; std::mem::size_of::<Pair>()];

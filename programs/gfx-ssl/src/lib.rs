@@ -2,8 +2,8 @@ mod contexts;
 mod errors;
 mod states;
 mod utils;
-mod svec5;
-mod svec4;
+pub mod svec5;
+pub mod svec4;
 
 use anchor_lang::prelude::*;
 use contexts::*;

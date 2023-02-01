@@ -3,19 +3,24 @@ use anchor_localnet::{cli::SolanaLocalnetCli, LocalnetAccount, SystemAccount, Te
 use anyhow::anyhow;
 use clap::Parser;
 use gfx_controller_interface::{Controller, PDAIdentifier};
-use gfx_ssl_interface::{PDAIdentifier as OtherPDAIdentifier, Pair, SSL};
+use gfx_ssl_interface::{PDAIdentifier as OtherPDAIdentifier, Pair, SSL, Oracle};
 use solana_client::rpc_client::RpcClient;
 use solana_sdk::{
     program_option::COption, pubkey, pubkey::Pubkey, signature::read_keypair_file, signer::Signer,
 };
+use gfx_ssl_interface::svec5::StackVec5;
 
 /// Mainnet pubkey
 pub const SSL_PROGRAM_ID: Pubkey = pubkey!("7WduLbRfYhTJktjLw5FDEyrqoEv61aTTCuGAetgLjzN5");
 /// Mainnet pubkey
 pub const CONTROLLER_PROGRAM_ID: Pubkey = pubkey!("8KJx48PYGHVC9fxzRRtYp4x4CM2HyYCm2EjVuAP4vvrx");
 
+/// Arbitrary readable choice
 pub const MINT_DECIMALS: u8 = 3;
 
+/// Produce a new mint and ATA, both of which are owned by the `authority`.
+/// The ATA balance and mint supply are both populated with a million "satoshis"
+/// of the new mint.
 pub fn new_mint_and_ata(authority: Pubkey) -> (LocalnetAccount, LocalnetAccount) {
     let mint = LocalnetAccount::new(
         Pubkey::new_unique(),
@@ -45,6 +50,7 @@ pub fn new_mint_and_ata(authority: Pubkey) -> (LocalnetAccount, LocalnetAccount)
     (mint, ata)
 }
 
+/// Create a new SSL using the input mint and controller.
 fn new_ssl(
     controller: Pubkey,
     mint: Pubkey,
@@ -139,16 +145,63 @@ you may need to run solana-keygen new -o localnet_wallet.json"
         serialized
     );
 
+    // To clone accounts from mainnet
     let client = RpcClient::new("https://api.mainnet-beta.solana.com");
 
-    // Cloned accounts
+    // Cloned oracle accounts
+    // On localnet testing, these do not need to actually match
+    // any given mint that they're associated with.
     let sol_usd_oracle = LocalnetAccount::new_from_clone_unchecked(
         &pubkey!("H6ARHf6YXhGYeQfUzQNGk6rDNnLBQKrenN712K4AQJEG"),
         &client,
         "sol_usd_oracle".to_string(),
     )?;
+    let usdc_usd_oracle = LocalnetAccount::new_from_clone_unchecked(
+        &pubkey!("Gnt27xtC473ZT2Mw5u8wZ68Z3gULkSTb5DuxJy7eJotD"),
+        &client,
+        "usdc_usd_oracle".to_string(),
+    )?;
 
-    // Putting it all together
+    // TODO Review the svec initialization and other fields
+    // Pair
+    let mut pair = Pair::default();
+    let mut is_reversed = false;
+    pair.mints = if ssl_1_mint.address < ssl_2_mint.address {
+        (ssl_1_mint.address, ssl_2_mint.address)
+    } else {
+        is_reversed = true;
+        (ssl_2_mint.address, ssl_1_mint.address)
+    };
+    pair.controller = controller_address;
+    // Localnet starts at slot 1, so max_delay should never be an issue.
+    pair.max_delay = 1;
+    pair.confidence = 1;
+    pair.A = 1;  // TODO Review this
+    let mut svec = StackVec5::<Oracle>::default();
+    svec[0].path[0] = (sol_usd_oracle.address, false);
+    svec[0].path[1] = (usdc_usd_oracle.address, false);
+    pair.oracles = if is_reversed {
+        svec[0].path[0] = (svec[0].path[1].0, true);
+        svec
+    } else {
+        svec
+    };
+    let (pair_address, bump) = Pair::get_address_with_bump(&vec![
+        pair.controller.as_ref(),
+        pair.mints.0.as_ref(),
+        pair.mints.1.as_ref(),
+    ]);
+    let mut serialized = Vec::new();
+    pair.try_serialize(&mut serialized).unwrap();
+    let pair = LocalnetAccount::new_raw(
+        Default::default(),
+        "pair".to_string(),
+        serialized,
+    );
+
+    // Putting all accounts together, with the dumped SSL / Controller programs.
+    // All JSON files will build in `<project-root>/tests`.
+    // We put a dummy file `tests/test.ts` because it is required for localnet to start.
     let toml = TestTomlGenerator {
         save_directory: "./tests".to_string(),
         test_file_glob: Some("tests/test.ts".to_string()),
@@ -157,13 +210,15 @@ you may need to run solana-keygen new -o localnet_wallet.json"
             controller_mint,
             controller_admin_ata,
             controller_account,
-            sol_usd_oracle,
             ssl_1_mint,
             ssl_1_ata,
             ssl_1,
             ssl_2_mint,
             ssl_2_ata,
             ssl_2,
+            pair,
+            sol_usd_oracle,
+            usdc_usd_oracle,
         ],
         programs: vec![
             (
@@ -178,6 +233,7 @@ you may need to run solana-keygen new -o localnet_wallet.json"
         ..Default::default()
     };
 
+    // Parse CLI arguments, process the parsed command.
     let opts = SolanaLocalnetCli::parse();
     opts.process(vec![toml])?;
     Ok(())
