@@ -174,11 +174,11 @@ you may need to run solana-keygen new -o localnet_wallet.json"
     };
     pair.controller = controller_address;
     // Localnet starts at slot 1, so max_delay should never be an issue.
+    // TODO Review these values
     pair.max_delay = 1;
     pair.confidence = 1;
-    pair.A = 1;  // TODO Review this
+    pair.A = 1;
     let mut svec = StackVec5::<Oracle>::new();
-    println!("{:?}", svec);
     svec.push(Oracle::new());
     svec[0].path.push((sol_usd_oracle.address, false));
     svec[0].path.push((usdc_usd_oracle.address, false));
