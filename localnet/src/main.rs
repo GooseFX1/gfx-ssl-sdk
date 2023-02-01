@@ -191,10 +191,11 @@ you may need to run solana-keygen new -o localnet_wallet.json"
         pair.mints.0.as_ref(),
         pair.mints.1.as_ref(),
     ]);
+    pair.bump = bump;
     let mut serialized = Vec::new();
     pair.try_serialize(&mut serialized).unwrap();
     let pair = LocalnetAccount::new_raw(
-        Default::default(),
+        pair_address,
         "pair".to_string(),
         serialized,
     );
