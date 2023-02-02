@@ -10,10 +10,6 @@ use solana_sdk::{
 };
 use gfx_ssl_interface::svec5::StackVec5;
 
-/// Mainnet pubkey
-pub const SSL_PROGRAM_ID: Pubkey = pubkey!("7WduLbRfYhTJktjLw5FDEyrqoEv61aTTCuGAetgLjzN5");
-/// Mainnet pubkey
-pub const CONTROLLER_PROGRAM_ID: Pubkey = pubkey!("8KJx48PYGHVC9fxzRRtYp4x4CM2HyYCm2EjVuAP4vvrx");
 
 /// Arbitrary readable choice
 pub const MINT_DECIMALS: u8 = 3;
@@ -225,11 +221,11 @@ you may need to run solana-keygen new -o localnet_wallet.json"
         ],
         programs: vec![
             (
-                SSL_PROGRAM_ID.to_string(),
+                gfx_ssl_interface::ID.to_string(),
                 "../dump/ssl.so".to_string(),
             ),
             (
-                CONTROLLER_PROGRAM_ID.to_string(),
+                gfx_controller_interface::ID.to_string(),
                 "../dump/controller.so".to_string(),
             ),
         ],

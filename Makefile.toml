@@ -17,3 +17,13 @@ output = exec anchor idl parse --file programs/gfx-controller/src/lib.rs
 writefile target/deploy/gfx-controller.json ${output.stdout}
 """
 script_runner = "@duckscript"
+
+[tasks.build_localnet]
+script = """
+cargo run -p gfx-localnet
+"""
+
+[tasks.localnet]
+script = """
+cargo run -p gfx-localnet -- from-test-config --skip-project-programs tests/Test.toml
+"""

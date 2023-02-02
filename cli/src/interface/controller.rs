@@ -5,8 +5,8 @@ use solana_sdk::pubkey::Pubkey;
 use solana_sdk::signature::Keypair;
 use solana_sdk::signer::Signer;
 use solana_sdk::transaction::Transaction;
-use gfx_controller_interface::{Controller, PDAIdentifier};
 use crate::config::{KeypairArg, UrlArg};
+use crate::maybe_print_preflight_simulation_logs;
 
 
 /// Gfx Controller CLI
@@ -52,9 +52,8 @@ pub fn create_controller(
 ) -> Result<()> {
     let seed = Keypair::new().pubkey().to_bytes();
 
-    let controller = Controller::get_address(&[&seed]);
     let ix = gfx_ssl_sdk::controller::instructions::create_controller(
-        controller,
+        seed,
         mint,
         payer.pubkey(),
     );
@@ -64,7 +63,8 @@ pub fn create_controller(
         &vec![payer],
         client.get_latest_blockhash()?
     );
-    let signature = client.send_transaction(&tx)?;
+    let signature = client.send_transaction(&tx)
+        .map_err(maybe_print_preflight_simulation_logs)?;
     println!("Create Controller success: {}", &signature);
     println!(
         "https://explorer.solana.com/tx/{}?cluster=custom&customUrl=http%3A%2F%2Flocalhost%3A8899",

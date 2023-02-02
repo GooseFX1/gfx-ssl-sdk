@@ -1,7 +1,7 @@
 use anchor_lang::{prelude::*, InstructionData, ToAccountMetas};
 use anchor_spl::{associated_token, associated_token::get_associated_token_address, token::Token};
 use anchor_spl::token::spl_token;
-use gfx_controller_interface::{PDAIdentifier, StakingAccount};
+use gfx_controller_interface::{Controller, PDAIdentifier, StakingAccount};
 use solana_program::{instruction::Instruction, pubkey::Pubkey, system_program, sysvar, sysvar::SysvarId};
 
 /// The instructions all contain nearly the same required arguments.
@@ -27,11 +27,11 @@ impl ControllerInstructionContext {
 }
 
 pub fn create_controller(
-    controller: Pubkey,
+    seed: [u8; 32],
     mint: Pubkey,
     user_wallet: Pubkey,
 ) -> Instruction {
-    let seed = user_wallet.to_bytes();
+    let controller = Controller::get_address(&[&seed]);
     let data = gfx_controller_interface::instruction::CreateController { seed }.data();
     let accounts = gfx_controller_interface::accounts::CreateController {
             controller,
@@ -43,7 +43,7 @@ pub fn create_controller(
             associated_token_program: associated_token::AssociatedToken::id(),
             system_program: system_program::id(),
             rent: sysvar::rent::id(),
-        }.to_account_metas(None);
+    }.to_account_metas(None);
     Instruction {
         data,
         accounts,

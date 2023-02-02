@@ -19,7 +19,7 @@
 
 ### Contents
 
-- `/programs` : contains `gfx_ssl_sdk` lib and `gfx_controller_sdk` lib
+- `/programs` : contains "interface-only" versions of the on-chain `gfx_ssl` and `gfx_controller` programs
 - `/ts` : contains typescript `goosefx-ssl-sdk` which creates npm package - [npmjs.com/package/goosefx-ssl-sdk](https://www.npmjs.com/package/goosefx-ssl-sdk)
 
 ### Trading GooseFX Liquidity Pools

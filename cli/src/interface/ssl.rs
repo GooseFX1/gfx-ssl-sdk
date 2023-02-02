@@ -2,9 +2,7 @@ use anyhow::Result;
 use clap::Parser;
 use solana_client::rpc_client::RpcClient;
 use solana_sdk::pubkey::Pubkey;
-use solana_sdk::signature::Keypair;
 use solana_sdk::signer::Signer;
-use solana_sdk::transaction::Transaction;
 use crate::config::{KeypairArg, UrlArg};
 
 
@@ -29,7 +27,7 @@ pub enum Command {
 
 pub fn entry(
     opts: &Opts,
-    signer: Box<dyn Signer>,
+    _signer: Box<dyn Signer>,
     client: RpcClient,
 ) -> Result<()> {
     match &opts.command {

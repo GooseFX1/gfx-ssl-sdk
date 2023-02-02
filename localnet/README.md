@@ -17,6 +17,11 @@ Then it dumps the GFX programs from mainnet.
 Finally, it executes `gfx-localnet` with its default subcommand of `build`,
 which builds all the necessary test files.
 
+To rebuild localnet run the last command above, or its `Makefile.toml` equivalent:
+```
+cargo make build_localnet
+```
+
 ### Usage
 From the root of the repo:
 ```commandline
@@ -33,3 +38,8 @@ of which there is only one, located at `tests/Test.toml`.
 We need this flag because we're already loading the real SSL and Controller programs at the
 same addresses as the programs in this repo which are "interface-only" versions 
 of the SSL and Controller programs.
+
+You can also use the `Makefile.toml` task:
+```
+cargo run -p gfx-localnet
+```
