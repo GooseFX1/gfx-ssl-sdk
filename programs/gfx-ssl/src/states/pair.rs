@@ -1,7 +1,6 @@
 use std::io::Write;
 use std::ops::Deref;
 use crate::utils::PDAIdentifier;
-use type_layout::TypeLayout;
 use anchor_lang::prelude::*;
 use crate::svec::StackVec;
 
@@ -14,74 +13,7 @@ impl PDAIdentifier for Pair {
     }
 }
 
-// /// Contains a list of oracle addresses, ordered to match
-// /// the input/output mints of a swap
-// #[account]
-// #[derive(Copy, Default, TypeLayout)]
-// #[cfg_attr(feature = "no-entrypoint", derive(Debug))]
-// #[repr(C, align(8))]
-// pub struct Oracle {
-//     pub path: StackVec4<(Pubkey, bool)>,
-//     pub padding: [u64; 8],
-// }
-//
-// impl Oracle {
-//     pub fn new() -> Oracle {
-//         Oracle {
-//             path: StackVec4::new(),
-//             padding: [0; 8],
-//         }
-//     }
-//
-//     pub fn with_path(path: &[(Pubkey, bool)]) -> Self {
-//         assert!(path.len() <= 4);
-//         let mut oracle = Self::new();
-//
-//         for e in path {
-//             assert!(oracle.path.push(*e).is_none());
-//         }
-//
-//         oracle
-//     }
-// }
-//
-//
-// #[allow(non_snake_case)]
-// #[account]
-// #[cfg_attr(feature = "no-entrypoint", derive(Debug))]
-// #[derive(Default, Copy, TypeLayout)]
-// #[repr(packed)]
-// pub struct Pair {
-//     pub controller: Pubkey, // for indexing purpose
-//     pub mints: (Pubkey, Pubkey),
-//     pub bump: u8,
-//     pub _pad0: [u8; 7],
-//     pub oracles: StackVec5<Oracle>,
-//     // configs
-//     pub A: u8,              // parameter A for poorman's curve
-//     pub fee_rate: (u8, u8), // in BP
-//     pub _pad1: [u8; 5],
-//     pub max_delay: u64,
-//     pub confidence: u64,
-//     pub _unused4: [u8; 32],
-//     pub excessive_confiscate_rate: u16, // the percentage to confiscate if a trade gets better price than the oracle price
-//
-//     pub fee_collector: Pubkey, // the pubkey for the platform fee collector
-//     pub platform_fee_rate: (u16, u16),
-//
-//     pub _unused3: [u8; 18],
-//     pub _unused5: [u8; 4],
-//     pub surpluses: (u64, u64), // surpluses.0 is the surplus of mints.0, which is owned by the ssl of mints.1
-//     pub volumes: (u128, u128),
-//
-//     pub _unused0: [u64; 10],
-//     pub enable_rebalance_swap: bool,
-//     pub _pad3: [u8; 7],
-//     pub _pad5: [u64; 11],
-//     pub _pad6: [u64; 4],
-// }
-
-#[derive(Copy, Clone, Default, Debug, TypeLayout)]
+#[derive(Copy, Clone, Default, Debug)]
 #[repr(C, align(8))]
 pub struct Oracle {
     pub path: StackVec<(Pubkey, bool), 4>,
@@ -115,7 +47,7 @@ impl Deref for Oracle {
     }
 }
 
-#[derive(AnchorDeserialize, AnchorSerialize, Copy, Clone, Default, Debug, TypeLayout)]
+#[derive(AnchorDeserialize, AnchorSerialize, Copy, Clone, Default, Debug)]
 #[repr(C)]
 pub struct Referrer {
     pub key: Pubkey,
@@ -127,7 +59,7 @@ pub struct Referrer {
 // where base and quote should be sorted based on their pubkey
 #[allow(non_snake_case)]
 #[account(zero_copy)]
-#[derive(Default, Debug, TypeLayout)]
+#[derive(Default, Debug)]
 pub struct Pair {
     pub controller: Pubkey, // for indexing purpose
     pub mints: (Pubkey, Pubkey),
