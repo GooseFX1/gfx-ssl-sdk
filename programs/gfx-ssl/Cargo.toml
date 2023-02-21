@@ -21,3 +21,4 @@ anchor-spl = "0.26"
 type-layout = "0.2.0"
 gfx_controller = {path = "../gfx-controller", package = "gfx-controller-interface", features = ["cpi"]}
 solana-program = "1.14.11"
+bytemuck = "1.13.0"
