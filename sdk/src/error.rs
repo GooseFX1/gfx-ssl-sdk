@@ -15,8 +15,11 @@ pub enum GfxSdkError {
     #[error("Invalid account size for {0}, expect: {1}, got: {2}")]
     InvalidAccountSize(Pubkey, usize, usize),
 
-    #[error("Some required accounts has not updated")]
+    #[error("Some required accounts are not updated")]
     RequiredAccountNoUpdate,
+
+    #[error("Oracle accounts are not updated")]
+    OraclesNeedUpdate,
 
     #[error("The AMM does not support provided mints")]
     UnexpectedMints,

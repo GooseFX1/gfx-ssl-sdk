@@ -57,10 +57,12 @@ fn all_pairs() {
     const USDC: Pubkey = pubkey!("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
 
     let mut accounts_to_update = HashSet::new();
+    let mut amms = HashMap::new();
     for mints in RESERVE_MINTS.iter().permutations(2) {
         let (m1, m2) = (mints[0], mints[1]);
         let amm = GfxAmm::new(*m1, *m2).unwrap();
         accounts_to_update.extend(amm.get_accounts_to_update());
+        amms.insert((m1, m2), amm);
     }
 
     let mut acts_data = HashMap::new();
@@ -76,50 +78,53 @@ fn all_pairs() {
                 .map(|(act, key)| (key, act.unwrap().data)),
         );
     }
+    // Update the AMM objects
+    for (_, amm) in amms.iter_mut() {
+        amm.update(&acts_data).unwrap();
+        accounts_to_update.extend(amm.get_accounts_to_update());
+    }
 
-    println!("Iterating over all possible pairs, ordered both ways");
-    let mut failures = vec![];
-    for mints in RESERVE_MINTS.iter().combinations(2) {
-        for (m1, m2) in [(*mints[0], *mints[1]), (*mints[1], *mints[0])] {
-            println!("testing {} -> {}", m1, m2);
+    // Repeat the data fetching
+    for chunk in &accounts_to_update.iter().chunks(5) {
+        let accs: Vec<_> = Vec::from_iter(chunk.copied());
+        acts_data.extend(
+            client
+                .get_multiple_accounts(&accs)
+                .unwrap()
+                .into_iter()
+                .zip(accs)
+                .map(|(act, key)| (key, act.unwrap().data)),
+        );
+    }
 
-            let mut amm = GfxAmm::new(m1, m2).unwrap();
+    let mut failures = Vec::new();
+    // Update the AMM objects again, and get quotes
+    for ((m1, m2), amm) in amms.iter_mut() {
+        amm.update(&acts_data).unwrap();
+        accounts_to_update.extend(amm.get_accounts_to_update());
 
-            // Initialize the account state
-            let acts_to_update = amm.get_accounts_to_update();
-            let acts: HashMap<Pubkey, Vec<u8>> = acts_to_update
-                .iter()
-                .map(|key| {
-                    (
-                        *key,
-                        acts_data.get(key).expect("Missing account data").clone(),
-                    )
-                })
-                .collect();
+        println!("Testing mints {} -> {}", m1, m2);
 
-            amm.update(&acts).unwrap();
+        println!("Pair: {:?}", amm.pair_pubkey);
 
-            match amm.quote(&QuoteParams {
-                in_amount: *input_amounts.get(&m1).unwrap(),
-                input_mint: m1,
-                output_mint: m2,
-            }) {
-                Ok(quote) => {
-                    println!("{}:", amm.label());
-                    println!("{:#?}", quote);
-                    let mut price = (quote.in_amount as f64 / decimals[&m1])
-                        / (quote.out_amount as f64 / decimals[&m2]);
-                    // if it is usd pair, always show X/USD price.
-                    if m2 == USDT || m2 == USDC {
-                        price = 1. / price
-                    }
-                    println!("price: {}\n", price);
+        match amm.quote(&QuoteParams {
+            in_amount: *input_amounts.get(&m1).unwrap(),
+            input_mint: **m1,
+            output_mint: **m2,
+        }) {
+            Ok(quote) => {
+                println!("Quote: {:#?}", quote);
+                let mut price = (quote.in_amount as f64 / decimals[&m1])
+                    / (quote.out_amount as f64 / decimals[&m2]);
+                // if it is usd pair, always show X/USD price.
+                if **m2 == USDT || **m2 == USDC {
+                    price = 1. / price
                 }
-                Err(e) => {
-                    println!("{}:", amm.label());
-                    println!("{e}\n");
-                    failures.push((amm.label(), m1, m2));
-                }
+                println!("Price: {}\n", price);
+            }
+            Err(e) => {
+                println!("Error: {e}\n");
+                failures.push((amm.label(), m1, m2));
             }
         }
     }
