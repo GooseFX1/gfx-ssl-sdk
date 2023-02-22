@@ -25,7 +25,7 @@ gfx-ssl-interface = {path = "../programs/gfx-ssl", features = ["no-entrypoint"]}
 jupiter = {git = "https://github.com/jup-ag/rust-amm-implementation", optional = true}
 jupiter-core = {git = "https://github.com/jup-ag/rust-amm-implementation", optional = true}
 lazy_static = "1.4.0"
-pyth-sdk-solana = "0.7.0"
+pyth-sdk-solana = "0.7.1"
 rust_decimal = "1.27.0"
 solana-client = "1.14.12"
 solana-program = "1.14.11"
