@@ -2,7 +2,7 @@
 description = "High-level API for interacting with the `gfx-ssl` and `gfx-controller` programs"
 edition = "2021"
 name = "gfx-ssl-sdk"
-version = "0.1.0"
+version = "0.1.1"
 
 [[bench]]
 harness = false
