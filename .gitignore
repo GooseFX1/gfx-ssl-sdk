@@ -1,5 +1,9 @@
+.anchor
+localnet_wallet.json
+dump/*.so
 .idea
 /target
 node_modules
 .local-pack
 /ts/dist
+tests

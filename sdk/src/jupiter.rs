@@ -11,7 +11,7 @@ use anyhow::{anyhow, Error};
 use fehler::{throw, throws};
 use gfx_ssl_interface::{sorted, PDAIdentifier, Pair, SSL};
 use jupiter::jupiter_override::{Swap, SwapLeg};
-use jupiter_core::amm::{Amm, Quote, QuoteParams, SwapLegAndAccountMetas, SwapParams};
+use jupiter_core::amm::{Amm, KeyedAccount, Quote, QuoteParams, SwapLegAndAccountMetas, SwapParams};
 use lazy_static::lazy_static;
 use pyth_sdk_solana::state::{load_price_account, PriceAccount};
 use rust_decimal::Decimal;
@@ -160,14 +160,12 @@ extern "C" {
 ///
 #[derive(Debug, Clone, Default)]
 pub struct GfxAmm {
-    label: String,
-
     // Related keys
     ssl_a_mint: Pubkey,
     ssl_a_pubkey: Pubkey,
     ssl_b_mint: Pubkey,
     ssl_b_pubkey: Pubkey,
-    pair_pubkey: Pubkey,
+    pub pair_pubkey: Pubkey,
     ssl_a_vault_a: Pubkey,
     ssl_a_vault_b: Pubkey,
     ssl_b_vault_a: Pubkey,
@@ -190,20 +188,27 @@ pub struct GfxAmm {
 
 impl GfxAmm {
     #[throws(Error)]
-    pub fn new(mint_1: Pubkey, mint_2: Pubkey) -> Self {
-        // Arrange them in order first
-        let ssl_a_mint = sorted::<_, 0>(&mint_1, &mint_2);
-        let ssl_b_mint = sorted::<_, 1>(&mint_1, &mint_2);
-
-        // Get label, and ensure these pairs are offered.
-        let label_front = MINTS.get(&ssl_a_mint).ok_or(UnsupportedMint(ssl_a_mint))?;
-        let label_back = MINTS.get(&ssl_b_mint).ok_or(UnsupportedMint(ssl_b_mint))?;
-        let label = format!("{}/{}", &label_front, &label_back);
-
-        // Oracle addresses
+    pub fn from_keyed_account(act: KeyedAccount) -> Self {
+        let data = act.account.data;
+        let data: [u8; mem::size_of::<Pair>() + DISCRIMINANT] = data.clone().try_into().map_err(|_| {
+            InvalidAccountSize(
+                act.key,
+                mem::size_of::<Pair>() + DISCRIMINANT,
+                data.len(),
+            )
+        })?;
+        let pair_data = Some(data);
+        let pair: Pair = Pair::try_deserialize(&mut data.as_slice())?;
+        let (ssl_a_mint, ssl_b_mint) = pair.mints;
         let mut oracle_addresses = HashSet::new();
-        oracle_addresses.insert(*ORACLE_USD_ADDRESSES.get(label_front).unwrap());
-        oracle_addresses.insert(*ORACLE_USD_ADDRESSES.get(label_back).unwrap());
+        for oracle in pair.oracles.iter() {
+            for (key, _) in oracle.path.iter() {
+                if *key != Pubkey::default() {
+                    oracle_addresses.insert(*key);
+                }
+            }
+        }
+        let pair = Some(pair);
 
         // Calculate PDAs of GFX accounts
         let ssl_a_pubkey = SSL::get_address(&[CONTROLLER.as_ref(), ssl_a_mint.as_ref()]);
@@ -219,7 +224,6 @@ impl GfxAmm {
         let ssl_b_vault_b = get_associated_token_address(&ssl_b_pubkey, &ssl_b_mint);
 
         Self {
-            label,
             ssl_a_mint,
             ssl_a_pubkey,
             ssl_b_mint,
@@ -230,6 +234,41 @@ impl GfxAmm {
             ssl_b_vault_a,
             ssl_b_vault_b,
             oracle_addresses,
+            pair,
+            pair_data,
+            ..Default::default()
+        }
+    }
+
+    #[throws(Error)]
+    pub fn new(mint_1: Pubkey, mint_2: Pubkey) -> Self {
+        // Arrange them in order first
+        let ssl_a_mint = sorted::<_, 0>(&mint_1, &mint_2);
+        let ssl_b_mint = sorted::<_, 1>(&mint_1, &mint_2);
+
+        // Calculate PDAs of GFX accounts
+        let ssl_a_pubkey = SSL::get_address(&[CONTROLLER.as_ref(), ssl_a_mint.as_ref()]);
+        let ssl_b_pubkey = SSL::get_address(&[CONTROLLER.as_ref(), ssl_b_mint.as_ref()]);
+        let pair_pubkey = Pair::get_address(&[
+            CONTROLLER.as_ref(),
+            ssl_a_mint.as_ref(),
+            ssl_b_mint.as_ref(),
+        ]);
+        let ssl_a_vault_a = get_associated_token_address(&ssl_a_pubkey, &ssl_a_mint);
+        let ssl_a_vault_b = get_associated_token_address(&ssl_a_pubkey, &ssl_b_mint);
+        let ssl_b_vault_a = get_associated_token_address(&ssl_b_pubkey, &ssl_a_mint);
+        let ssl_b_vault_b = get_associated_token_address(&ssl_b_pubkey, &ssl_b_mint);
+
+        Self {
+            ssl_a_mint,
+            ssl_a_pubkey,
+            ssl_b_mint,
+            ssl_b_pubkey,
+            pair_pubkey,
+            ssl_a_vault_a,
+            ssl_a_vault_b,
+            ssl_b_vault_a,
+            ssl_b_vault_b,
             ..Default::default()
         }
     }
@@ -238,7 +277,7 @@ impl GfxAmm {
 impl Amm for GfxAmm {
     /// Human-readable name for the Amm pair.
     fn label(&self) -> String {
-        self.label.clone()
+        "GooseFX".to_string()
     }
 
     /// Get a pubkey to represent the Amm as a whole.
@@ -276,8 +315,10 @@ impl Amm for GfxAmm {
             *amount = Some(token_account.amount);
             Ok::<_, Error>(())
         };
-        for (pubkey, data) in accounts_map {
-            if *pubkey == self.ssl_a_pubkey {
+        for pubkey in self.get_accounts_to_update() {
+            let data = accounts_map.get(&pubkey)
+                .ok_or(AccountNotFound(pubkey))?;
+            if pubkey == self.ssl_a_pubkey {
                 let data = data.clone().try_into().map_err(|_| {
                     InvalidAccountSize(
                         self.ssl_a_pubkey,
@@ -286,7 +327,7 @@ impl Amm for GfxAmm {
                     )
                 })?;
                 self.ssl_a_data = Some(data);
-            } else if *pubkey == self.ssl_b_pubkey {
+            } else if pubkey == self.ssl_b_pubkey {
                 let data = data.clone().try_into().map_err(|_| {
                     InvalidAccountSize(
                         self.ssl_b_pubkey,
@@ -295,7 +336,7 @@ impl Amm for GfxAmm {
                     )
                 })?;
                 self.ssl_b_data = Some(data);
-            } else if *pubkey == self.pair_pubkey {
+            } else if pubkey == self.pair_pubkey {
                 let data = data.clone().try_into().map_err(|_| {
                     InvalidAccountSize(
                         self.pair_pubkey,
@@ -304,22 +345,30 @@ impl Amm for GfxAmm {
                     )
                 })?;
                 self.pair_data = Some(data);
-                self.pair = Some(Pair::try_deserialize(&mut data.as_slice())?);
-            } else if *pubkey == self.ssl_a_vault_a {
+                let pair: Pair = Pair::try_deserialize(&mut data.as_slice())?;
+                for oracle in pair.oracles.iter() {
+                    for (key, _) in oracle.path.iter() {
+                        if *key != Pubkey::default() {
+                            self.oracle_addresses.insert(*key);
+                        }
+                    }
+                }
+                self.pair = Some(pair);
+            } else if pubkey == self.ssl_a_vault_a {
                 update_token_account(&mut self.ssl_a_vault_a_balance, &mut data.as_slice())?;
-            } else if *pubkey == self.ssl_a_vault_b {
+            } else if pubkey == self.ssl_a_vault_b {
                 update_token_account(&mut self.ssl_a_vault_b_balance, &mut data.as_slice())?;
-            } else if *pubkey == self.ssl_b_vault_a {
+            } else if pubkey == self.ssl_b_vault_a {
                 update_token_account(&mut self.ssl_b_vault_a_balance, &mut data.as_slice())?;
-            } else if *pubkey == self.ssl_b_vault_b {
+            } else if pubkey == self.ssl_b_vault_b {
                 update_token_account(&mut self.ssl_b_vault_b_balance, &mut data.as_slice())?;
-            } else if *pubkey == Clock::id() {
+            } else if pubkey == Clock::id() {
                 let clock: Clock = bincode::deserialize(&mut data.as_slice())?;
                 self.slot = clock.slot;
             } else {
                 // Assume it's an oracle
                 let price_account = load_price_account(&mut data.as_slice())?;
-                self.oracles.insert(*pubkey, *price_account);
+                self.oracles.insert(pubkey, *price_account);
             }
         }
     }
@@ -336,6 +385,9 @@ impl Amm for GfxAmm {
             || self.ssl_b_vault_b_balance.is_none()
         {
             throw!(RequiredAccountNoUpdate);
+        }
+        if self.oracles.is_empty() {
+            throw!(OraclesNeedUpdate);
         }
 
         // Orient each side of the pair as "in" our "out".
@@ -401,9 +453,9 @@ impl Amm for GfxAmm {
         } {
             QuoteResult::Ok(swap_result) => {
                 let fee_pct = if !is_reversed {
-                    self.pair.unwrap().fee_rate.0
+                    self.pair.as_ref().unwrap().fee_rate.0
                 } else {
-                    self.pair.unwrap().fee_rate.1
+                    self.pair.as_ref().unwrap().fee_rate.1
                 };
                 let fee_pct = Decimal::new(fee_pct.into(), 4);
                 let price_impact_pct = Decimal::from_f64_retain(swap_result.price_impact)

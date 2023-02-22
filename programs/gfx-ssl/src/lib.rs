@@ -1,7 +1,7 @@
 mod contexts;
 mod errors;
 mod states;
-mod svec;
+pub mod svec;
 mod utils;
 
 use anchor_lang::prelude::*;
