@@ -134,7 +134,10 @@ extern "C" {
     fn quote(
         ssl_in: &[u8; mem::size_of::<SSL>() + DISCRIMINANT],
         ssl_out: &[u8; mem::size_of::<SSL>() + DISCRIMINANT],
+        #[cfg(not(feature="m1"))]
         pair: &[u8; mem::size_of::<Pair>() + DISCRIMINANT],
+        #[cfg(feature="m1")]
+        pair: &[u8; mem::size_of::<Pair>() + DISCRIMINANT - 8],
         liability_in: u64,
         liability_out: u64,
         swapped_liability_in: u64,
@@ -486,7 +489,7 @@ impl Amm for GfxAmm {
             .collect();
 
         #[cfg(feature="m1")]
-        let pair_data: [u8; mem::size_of::<Pair>() + DISCRIMINANT] = {
+        let pair_data: [u8; mem::size_of::<Pair>() + DISCRIMINANT - 8] = {
             let pair_data = self.pair_data.unwrap();
             let pair_data = &pair_data.as_slice()[..self.pair_data.unwrap().len()-8];
             pair_data.try_into().unwrap()
