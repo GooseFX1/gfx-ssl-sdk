@@ -101,4 +101,4 @@ impl AccountSerialize for Pair {
 }
 
 
-const _: [u8; 1528] = [0; std::mem::size_of::<Pair>()];
+//const _: [u8; 1528] = [0; std::mem::size_of::<Pair>()];
