@@ -190,6 +190,7 @@ impl GfxAmm {
     #[throws(Error)]
     pub fn from_keyed_account(act: KeyedAccount) -> Self {
         let data = act.account.data;
+        #[cfg(not(feature="m1"))]
         let data: [u8; mem::size_of::<Pair>() + DISCRIMINANT] = data.clone().try_into().map_err(|_| {
             InvalidAccountSize(
                 act.key,
@@ -197,8 +198,29 @@ impl GfxAmm {
                 data.len(),
             )
         })?;
+        #[cfg(feature="m1")]
+        let data: [u8; mem::size_of::<Pair>() + DISCRIMINANT + 8] = data.clone().try_into().map_err(|_| {
+            InvalidAccountSize(
+                act.key,
+                mem::size_of::<Pair>() + DISCRIMINANT + 8,
+                data.len(),
+            )
+        })?;
+        #[cfg(feature="m1")]
+        let m1_data: [u8; mem::size_of::<Pair>() + DISCRIMINANT] = data[..(mem::size_of::<Pair>() + DISCRIMINANT)].try_into().map_err(|_| {
+            InvalidAccountSize(
+                act.key,
+                mem::size_of::<Pair>() + DISCRIMINANT,
+                data.len(),
+            )
+        })?;
+        // #[cfg(feature="m1")]
+        // let pair_data: Option<[u8; mem::size_of::<Pair>() + DISCRIMINANT - 8]> = {
+        //     Some(data[..(mem::size_of::<Pair>() + DISCRIMINANT - 8)].try_into().unwrap())
+        // };
+        // #[cfg(not(feature="m1"))]
         let pair_data = Some(data);
-        let pair: Pair = Pair::try_deserialize(&mut data.as_slice())?;
+        let pair: Pair = Pair::try_deserialize(&mut data.as_slice()).expect("Could not deserialize pair");
         let (ssl_a_mint, ssl_b_mint) = pair.mints;
         let mut oracle_addresses = HashSet::new();
         for oracle in pair.oracles.iter() {
@@ -222,6 +244,9 @@ impl GfxAmm {
         let ssl_a_vault_b = get_associated_token_address(&ssl_a_pubkey, &ssl_b_mint);
         let ssl_b_vault_a = get_associated_token_address(&ssl_b_pubkey, &ssl_a_mint);
         let ssl_b_vault_b = get_associated_token_address(&ssl_b_pubkey, &ssl_b_mint);
+
+        #[cfg(feature="m1")]
+        let pair_data = Some(m1_data);
 
         Self {
             ssl_a_mint,
