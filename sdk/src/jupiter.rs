@@ -391,13 +391,10 @@ impl Amm for GfxAmm {
                     })?);
                     self.pair_data = Some(data);
                 }
-                println!("Deserializing pair data");
-                println!("data_len: {}\tdata_size: {}", self.pair_data.unwrap().len(), mem::size_of::<Pair>());
                 #[cfg(feature="m1")]
                 let pair: Pair = Pair::try_deserialize(&mut &self.pair_data.unwrap().as_slice()[..self.pair_data.unwrap().len()-8])?;
                 #[cfg(not(feature="m1"))]
                 let pair: Pair = Pair::try_deserialize(&mut self.pair_data.unwrap().as_slice())?;
-                println!("Deserialized pair data");
                 for oracle in pair.oracles.iter() {
                     for (key, _) in oracle.path.iter() {
                         if *key != Pubkey::default() {
@@ -488,11 +485,17 @@ impl Amm for GfxAmm {
             .map(|(pubkey, act)| OracleEntry(pubkey.as_ref().try_into().unwrap(), *act))
             .collect();
 
+        #[cfg(feature="m1")]
+        let pair_data: [u8; mem::size_of::<Pair>() + DISCRIMINANT] =
+            [self.pair_data.unwrap().as_slice(), [0u8; 8].as_slice()].concat().try_into().unwrap();
+        #[cfg(not(feature="m1"))]
+        let pair_data = self.pair_data.unwrap().clone();
+
         match unsafe {
             quote(
                 &ssl_in,
                 &ssl_out,
-                &self.pair_data.unwrap(),
+                &pair_data,
                 liability_in,
                 liability_out,
                 swapped_liability_in,
