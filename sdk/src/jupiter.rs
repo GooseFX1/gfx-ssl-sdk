@@ -199,15 +199,15 @@ impl GfxAmm {
             )
         })?;
         #[cfg(feature="m1")]
-        let data: [u8; mem::size_of::<Pair>() + DISCRIMINANT + 8] = data.clone().try_into().map_err(|_| {
+        let data: [u8; mem::size_of::<Pair>() + DISCRIMINANT - 8] = data.clone().try_into().map_err(|_| {
             InvalidAccountSize(
                 act.key,
-                mem::size_of::<Pair>() + DISCRIMINANT + 8,
+                mem::size_of::<Pair>() + DISCRIMINANT - 8,
                 data.len(),
             )
         })?;
         #[cfg(feature="m1")]
-        let m1_data: [u8; mem::size_of::<Pair>() + DISCRIMINANT] = data[..(mem::size_of::<Pair>() + DISCRIMINANT)].try_into().map_err(|_| {
+        let m1_data: [u8; mem::size_of::<Pair>() + DISCRIMINANT] = [data.clone().as_slice(), [0u8; 8].as_slice()].concat().try_into().map_err(|_| {
             InvalidAccountSize(
                 act.key,
                 mem::size_of::<Pair>() + DISCRIMINANT,
