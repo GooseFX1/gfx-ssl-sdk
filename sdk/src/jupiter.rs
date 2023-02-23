@@ -218,7 +218,7 @@ impl GfxAmm {
         // let pair_data: Option<[u8; mem::size_of::<Pair>() + DISCRIMINANT - 8]> = {
         //     Some(data[..(mem::size_of::<Pair>() + DISCRIMINANT - 8)].try_into().unwrap())
         // };
-        // #[cfg(not(feature="m1"))]
+        #[cfg(not(feature="m1"))]
         let pair_data = Some(data);
         let pair: Pair = Pair::try_deserialize(&mut data.as_slice()).expect("Could not deserialize pair");
         let (ssl_a_mint, ssl_b_mint) = pair.mints;
@@ -362,14 +362,35 @@ impl Amm for GfxAmm {
                 })?;
                 self.ssl_b_data = Some(data);
             } else if pubkey == self.pair_pubkey {
-                let data = data.clone().try_into().map_err(|_| {
+                #[cfg(feature="m1")]
+                    let data: [u8; mem::size_of::<Pair>() + DISCRIMINANT - 8] = data.clone().try_into().map_err(|_| {
                     InvalidAccountSize(
                         self.pair_pubkey,
-                        mem::size_of::<Pair>() + DISCRIMINANT,
+                        mem::size_of::<Pair>() + DISCRIMINANT - 8,
                         data.len(),
                     )
                 })?;
-                self.pair_data = Some(data);
+                #[cfg(feature="m1")]
+                {
+                    self.pair_data = Some([data.clone().as_slice(), [0u8; 8].as_slice()].concat().try_into().map_err(|_| {
+                        InvalidAccountSize(
+                            self.pair_pubkey,
+                            mem::size_of::<Pair>() + DISCRIMINANT,
+                            data.len(),
+                        )
+                    })?);
+                }
+                #[cfg(not(feature="m1"))]
+                {
+                    let data: [u8; mem::size_of::<Pair>() + DISCRIMINANT] = data.clone().try_into().map_err(|_| {
+                        InvalidAccountSize(
+                            self.pair_pubkey,
+                            mem::size_of::<Pair>() + DISCRIMINANT,
+                            data.len(),
+                        )
+                    })?;
+                    self.pair_data = Some(data);
+                }
                 let pair: Pair = Pair::try_deserialize(&mut data.as_slice())?;
                 for oracle in pair.oracles.iter() {
                     for (key, _) in oracle.path.iter() {
