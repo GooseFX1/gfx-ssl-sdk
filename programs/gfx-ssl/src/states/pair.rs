@@ -107,11 +107,11 @@ impl AccountDeserialize for Pair {
                     error_name: ErrorCode::AccountDiscriminatorMismatch
                         .name(),
                     error_code_number:
-                        anchor_lang::error::ErrorCode::AccountDiscriminatorMismatch.into(),
-                    error_msg: anchor_lang::error::ErrorCode::AccountDiscriminatorMismatch
+                        ErrorCode::AccountDiscriminatorMismatch.into(),
+                    error_msg: ErrorCode::AccountDiscriminatorMismatch
                         .to_string(),
-                    error_origin: Some(anchor_lang::error::ErrorOrigin::Source(
-                        anchor_lang::error::Source {
+                    error_origin: Some(ErrorOrigin::Source(
+                        Source {
                             filename: "programs/gfx-ssl/src/states/pair.rs",
                             line: 64u32,
                         },
@@ -124,8 +124,11 @@ impl AccountDeserialize for Pair {
         Self::try_deserialize_unchecked(buf)
     }
     fn try_deserialize_unchecked(buf: &mut &[u8]) -> Result<Self> {
-        let data: &[u8] = &buf[8..];
-        let account = bytemuck::from_bytes(data);
+        #[cfg(feature = "m1")]
+        let data = [&buf[8..], &[0; 8].as_slice()].concat();
+        #[cfg(not(feature = "m1"))]
+        let data = buf[8..].to_vec();
+        let account = bytemuck::from_bytes(&data);
         Ok(*account)
     }
 }
