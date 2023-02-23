@@ -392,7 +392,7 @@ impl Amm for GfxAmm {
                     self.pair_data = Some(data);
                 }
                 println!("Deserializing pair data");
-                let pair: Pair = Pair::try_deserialize(&mut data.as_slice())?;
+                let pair: Pair = Pair::try_deserialize(&mut self.pair_data.unwrap().as_slice())?;
                 println!("Deserialized pair data");
                 for oracle in pair.oracles.iter() {
                     for (key, _) in oracle.path.iter() {
