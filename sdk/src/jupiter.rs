@@ -363,7 +363,7 @@ impl Amm for GfxAmm {
                 self.ssl_b_data = Some(data);
             } else if pubkey == self.pair_pubkey {
                 #[cfg(feature="m1")]
-                    let data: [u8; mem::size_of::<Pair>() + DISCRIMINANT - 8] = data.clone().try_into().map_err(|_| {
+                let data: [u8; mem::size_of::<Pair>() + DISCRIMINANT - 8] = data.clone().try_into().map_err(|_| {
                     InvalidAccountSize(
                         self.pair_pubkey,
                         mem::size_of::<Pair>() + DISCRIMINANT - 8,
@@ -382,17 +382,20 @@ impl Amm for GfxAmm {
                 }
                 #[cfg(not(feature="m1"))]
                 {
-                    let data: [u8; mem::size_of::<Pair>() + DISCRIMINANT] = data.clone().try_into().map_err(|_| {
+                    self.pair_data = Some(data.clone().try_into().map_err(|_| {
                         InvalidAccountSize(
                             self.pair_pubkey,
                             mem::size_of::<Pair>() + DISCRIMINANT,
                             data.len(),
                         )
-                    })?;
+                    })?);
                     self.pair_data = Some(data);
                 }
                 println!("Deserializing pair data");
                 println!("data_len: {}\tdata_size: {}", self.pair_data.unwrap().len(), mem::size_of::<Pair>());
+                #[cfg(feature="m1")]
+                let pair: Pair = Pair::try_deserialize(&mut &self.pair_data.unwrap().as_slice()[..self.pair_data.unwrap().len()-8])?;
+                #[cfg(not(feature="m1"))]
                 let pair: Pair = Pair::try_deserialize(&mut self.pair_data.unwrap().as_slice())?;
                 println!("Deserialized pair data");
                 for oracle in pair.oracles.iter() {
