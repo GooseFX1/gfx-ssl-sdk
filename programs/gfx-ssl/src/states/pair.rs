@@ -3,6 +3,8 @@ use std::ops::Deref;
 use crate::utils::PDAIdentifier;
 use anchor_lang::prelude::*;
 use crate::svec::StackVec;
+#[cfg(feature = "type-layout")]
+use type_layout::TypeLayout;
 
 impl PDAIdentifier for Pair {
     const IDENT: &'static [u8] = b"GFX-SSL-Pair";
@@ -14,6 +16,7 @@ impl PDAIdentifier for Pair {
 }
 
 #[derive(Copy, Clone, Default, Debug)]
+#[cfg_attr(feature = "type-layout", derive(TypeLayout))]
 #[repr(C, align(8))]
 pub struct Oracle {
     pub path: StackVec<(Pubkey, bool), 4>,
@@ -48,6 +51,7 @@ impl Deref for Oracle {
 }
 
 #[derive(AnchorDeserialize, AnchorSerialize, Copy, Clone, Default, Debug)]
+#[cfg_attr(feature = "type-layout", derive(TypeLayout))]
 #[repr(C)]
 pub struct Referrer {
     pub key: Pubkey,
@@ -59,6 +63,7 @@ pub struct Referrer {
 // where base and quote should be sorted based on their pubkey
 #[allow(non_snake_case)]
 #[account(zero_copy)]
+#[cfg_attr(feature = "type-layout", derive(TypeLayout))]
 #[derive(Default, Debug)]
 pub struct Pair {
     pub controller: Pubkey, // for indexing purpose

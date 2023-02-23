@@ -1,5 +1,7 @@
 use crate::utils::PDAIdentifier;
 use anchor_lang::prelude::*;
+#[cfg(feature = "type-layout")]
+use type_layout::TypeLayout;
 
 impl PDAIdentifier for LiquidityAccount {
     const IDENT: &'static [u8] = b"GFX-LIQUIDITYACCOUNT";

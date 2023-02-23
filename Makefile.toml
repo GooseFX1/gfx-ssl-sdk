@@ -17,3 +17,8 @@ output = exec anchor idl parse --file programs/gfx-controller/src/lib.rs
 writefile target/deploy/gfx-controller.json ${output.stdout}
 """
 script_runner = "@duckscript"
+
+[tasks.pair_layout]
+script = """
+cargo test --features "type-layout" --test pair_layout -- --nocapture
+"""
