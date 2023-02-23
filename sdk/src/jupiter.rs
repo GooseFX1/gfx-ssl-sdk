@@ -486,10 +486,14 @@ impl Amm for GfxAmm {
             .collect();
 
         #[cfg(feature="m1")]
-        let pair_data: [u8; mem::size_of::<Pair>() + DISCRIMINANT] =
-            [self.pair_data.unwrap().as_slice(), [0u8; 8].as_slice()].concat().try_into().unwrap();
+        let pair_data: [u8; mem::size_of::<Pair>() + DISCRIMINANT] = {
+            let pair_data = self.pair_data.unwrap();
+            let pair_data = &pair_data.as_slice()[..self.pair_data.unwrap().len()-8];
+            pair_data.try_into().unwrap()
+        };
         #[cfg(not(feature="m1"))]
         let pair_data = self.pair_data.unwrap().clone();
+
 
         match unsafe {
             quote(
