@@ -20,10 +20,10 @@ pub struct Swap<'info> {
             sorted::<_, 0>(&ssl_in.load()?.mint, &ssl_out.load()?.mint).as_ref(),
             sorted::<_, 1>(&ssl_in.load()?.mint, &ssl_out.load()?.mint).as_ref()
         ],
-        bump = pair.load()?.bump,
+        bump = pair.bump,
         has_one = fee_collector @ FeeCollectorIncorrect,
     )]
-    pub pair: AccountLoader<'info, Pair>,
+    pub pair: Account<'info, Pair>,
 
     #[account(
         mut,

@@ -1,10 +1,12 @@
 use std::collections::HashMap;
 use itertools::Itertools;
 use std::env::var;
+use anchor_lang::AccountDeserialize;
 use jupiter_core::amm::{Amm, KeyedAccount, QuoteParams};
 use solana_client::rpc_client::RpcClient;
 use solana_program::pubkey::Pubkey;
 use solana_sdk::pubkey;
+use gfx_ssl_interface::Pair;
 use gfx_ssl_sdk::jupiter::GfxAmm;
 
 pub const SOL_USDC: Pubkey = pubkey!("CpfpL9PXt88u3kPQ6fuD6WqQpQ8c5UEftxsop9rm1ATM");
@@ -15,6 +17,8 @@ fn sol_usdc_pair() {
         var("SOLANA_RPC_URL").unwrap_or_else(|_| "https://api.mainnet-beta.solana.com".to_string());
     let client = RpcClient::new(url);
     let account = client.get_account(&SOL_USDC).unwrap();
+    let pair = Pair::try_deserialize(&mut account.data.as_slice()).expect("Could not deserialize pair");
+    println!("{:#?}", pair);
     let keyed_account = KeyedAccount {
         key: SOL_USDC,
         account,
@@ -32,7 +36,7 @@ fn sol_usdc_pair() {
                 .unwrap()
                 .into_iter()
                 .zip(accs)
-                .map(|(act, key)| (key, act.unwrap().data)),
+                .map(|(act, key)| (key, act.expect(&format!("account not found: {}", key.to_string())).data)),
         );
     }
     amm.update(&acts_data).unwrap();

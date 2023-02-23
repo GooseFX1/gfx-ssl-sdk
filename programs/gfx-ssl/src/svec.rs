@@ -4,12 +4,23 @@ use std::{
     ops::{Deref, Index, IndexMut},
 };
 
-#[derive(Copy, Clone)]
 #[repr(C)]
 pub struct StackVec<T, const N: usize> {
     val: [T; N],
     n: u64,
 }
+
+impl<T: Copy, const N: usize> Copy for StackVec<T, N> {}
+
+
+impl<T: Copy, const N: usize> Clone for StackVec<T, N> {
+    fn clone(&self) -> StackVec<T, N> {
+        *self
+    }
+}
+
+unsafe impl<T: Copy, const N: usize> bytemuck::Zeroable for StackVec<T, N> {}
+
 
 impl<T, const N: usize> Debug for StackVec<T, N>
 where

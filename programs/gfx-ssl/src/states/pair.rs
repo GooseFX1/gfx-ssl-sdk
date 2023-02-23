@@ -61,9 +61,9 @@ pub struct Referrer {
 // [Pair::IDENT, controller.key().as_ref(), base.key().as_ref(), quote.key().as_ref()]
 // where base and quote should be sorted based on their pubkey
 #[allow(non_snake_case)]
-#[account(zero_copy)]
 #[cfg_attr(feature = "type-layout", derive(TypeLayout))]
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Clone, Copy)]
+#[repr(C)]
 pub struct Pair {
     pub controller: Pubkey, // for indexing purpose
     pub mints: (Pubkey, Pubkey),
@@ -92,6 +92,53 @@ pub struct Pair {
     _pad6: [u64; 4],
 }
 
+impl anchor_lang::Discriminator for Pair {
+    const DISCRIMINATOR: [u8; 8] = [85, 72, 49, 176, 182, 228, 141, 82];
+}
+impl AccountDeserialize for Pair {
+    fn try_deserialize(buf: &mut &[u8]) -> Result<Self> {
+        if buf.len() < [85, 72, 49, 176, 182, 228, 141, 82].len() {
+            return Err(ErrorCode::AccountDiscriminatorNotFound.into());
+        }
+        let given_disc = &buf[..8];
+        if &[85, 72, 49, 176, 182, 228, 141, 82] != given_disc {
+            return Err(
+                anchor_lang::error::Error::from(AnchorError {
+                    error_name: ErrorCode::AccountDiscriminatorMismatch
+                        .name(),
+                    error_code_number:
+                        anchor_lang::error::ErrorCode::AccountDiscriminatorMismatch.into(),
+                    error_msg: anchor_lang::error::ErrorCode::AccountDiscriminatorMismatch
+                        .to_string(),
+                    error_origin: Some(anchor_lang::error::ErrorOrigin::Source(
+                        anchor_lang::error::Source {
+                            filename: "programs/gfx-ssl/src/states/pair.rs",
+                            line: 64u32,
+                        },
+                    )),
+                    compared_values: None,
+                })
+                .with_account_name("Pair"),
+            );
+        }
+        Self::try_deserialize_unchecked(buf)
+    }
+    fn try_deserialize_unchecked(buf: &mut &[u8]) -> Result<Self> {
+        let data: &[u8] = &buf[8..];
+        let account = bytemuck::from_bytes(data);
+        Ok(*account)
+    }
+}
+impl Owner for Pair {
+    fn owner() -> Pubkey {
+        crate::ID
+    }
+}
+
+unsafe impl bytemuck::Pod for Pair {}
+unsafe impl bytemuck::Zeroable for Pair {}
+
+
 impl AccountSerialize for Pair {
     fn try_serialize<W: Write>(&self, writer: &mut W) -> Result<()> {
         writer.write_all(bytemuck::bytes_of(self))?;
@@ -100,4 +147,4 @@ impl AccountSerialize for Pair {
 }
 
 
-//const _: [u8; 1528] = [0; std::mem::size_of::<Pair>()];
+const _: [u8; 1528] = [0; std::mem::size_of::<Pair>()];
