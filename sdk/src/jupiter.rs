@@ -498,6 +498,7 @@ impl Amm for GfxAmm {
         let pair_data = self.pair_data.unwrap().clone();
 
 
+        println!("Getting quote");
         match unsafe {
             quote(
                 &ssl_in,
