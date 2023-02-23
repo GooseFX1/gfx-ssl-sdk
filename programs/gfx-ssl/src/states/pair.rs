@@ -38,7 +38,6 @@ impl Oracle {
         for e in path {
             assert!(oracle.path.push(*e).is_none());
         }
-
         oracle
     }
 }
