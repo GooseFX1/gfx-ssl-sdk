@@ -1,4 +1,5 @@
 use std::io::Write;
+use std::mem;
 use std::ops::Deref;
 use crate::utils::PDAIdentifier;
 use anchor_lang::prelude::*;
@@ -128,6 +129,7 @@ impl AccountDeserialize for Pair {
         let data = [&buf[8..], &[0; 8].as_slice()].concat();
         #[cfg(not(feature = "m1"))]
         let data = buf[8..].to_vec();
+        println!("data_len: {}\tdata_size: {}", data.len(), mem::size_of::<Pair>());
         let account = bytemuck::from_bytes(&data);
         Ok(*account)
     }

@@ -26,5 +26,5 @@ cargo test --features "type-layout" --test pair_layout -- --nocapture
 [tasks.sol_usdc_test]
 script = """
 cd sdk
-LD_LIBRARY_PATH="./lib" cargo test --features "m1" --test sol_usdc_pair -- --nocapture
+LD_LIBRARY_PATH="./lib" cargo test --test sol_usdc_pair -- --nocapture
 """
