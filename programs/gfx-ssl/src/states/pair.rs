@@ -69,12 +69,12 @@ pub struct Pair {
     pub controller: Pubkey, // for indexing purpose
     pub mints: (Pubkey, Pubkey),
     pub bump: u8,
-    _pad0: [u8; 7],
+    pub _pad0: [u8; 7],
     pub oracles: StackVec<Oracle, 5>,
     // configs
     pub A: u8,              // parameter A for poorman's curve
     pub fee_rate: (u8, u8), // in BP
-    _pad1: [u8; 5],
+    pub _pad1: [u8; 5],
     pub max_delay: u64,
     pub confidence: u64,
     pub _unused4: [u8; 32],
@@ -86,11 +86,11 @@ pub struct Pair {
     pub _unused3: [u8; 18],
     pub volumes: (u128, u128),
 
-    _unused0: [u64; 10],
+    pub _unused0: [u64; 10],
     pub enable_rebalance_swap: bool,
-    _pad3: [u8; 7],
+    pub _pad3: [u8; 7],
     pub referral_info: StackVec<Referrer, 3>,
-    _pad6: [u64; 4],
+    pub _pad6: [u64; 4],
 }
 
 impl anchor_lang::Discriminator for Pair {

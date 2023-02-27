@@ -392,7 +392,6 @@ impl Amm for GfxAmm {
                             data.len(),
                         )
                     })?);
-                    self.pair_data = Some(data);
                 }
                 #[cfg(feature="m1")]
                 let pair: Pair = Pair::try_deserialize(&mut &self.pair_data.unwrap().as_slice()[..self.pair_data.unwrap().len()-8])?;
