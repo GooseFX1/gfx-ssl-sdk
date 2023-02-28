@@ -60,6 +60,7 @@ pub struct Referrer {
 #[allow(non_snake_case)]
 #[account(zero_copy)]
 #[derive(Default, Debug)]
+#[repr(C, packed)]
 pub struct Pair {
     pub controller: Pubkey, // for indexing purpose
     pub mints: (Pubkey, Pubkey),

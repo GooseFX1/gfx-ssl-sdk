@@ -201,7 +201,8 @@ impl GfxAmm {
         let pair: Pair = Pair::try_deserialize(&mut data.as_slice())?;
         let (ssl_a_mint, ssl_b_mint) = pair.mints;
         let mut oracle_addresses = HashSet::new();
-        for oracle in pair.oracles.iter() {
+        let oracles = pair.oracles;
+        for oracle in oracles.iter() {
             for (key, _) in oracle.path.iter() {
                 if *key != Pubkey::default() {
                     oracle_addresses.insert(*key);
@@ -346,7 +347,8 @@ impl Amm for GfxAmm {
                 })?;
                 self.pair_data = Some(data);
                 let pair: Pair = Pair::try_deserialize(&mut data.as_slice())?;
-                for oracle in pair.oracles.iter() {
+                let oracles = pair.oracles;
+                for oracle in oracles.iter() {
                     for (key, _) in oracle.path.iter() {
                         if *key != Pubkey::default() {
                             self.oracle_addresses.insert(*key);
