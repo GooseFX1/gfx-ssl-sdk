@@ -5,5 +5,12 @@ fn main() {
 
     println!("cargo:rustc-link-lib=dylib=gfx_black_box");
 
-    println!("cargo:rustc-link-search={}/lib", manifest_dir);
+    #[cfg(all(target_os = "macos", target_arch = "aarch64"))]
+    println!("cargo:rustc-link-search={}/lib/darwin/arm64", manifest_dir);
+
+    #[cfg(all(target_os = "macos", target_arch = "x86_64"))]
+    println!("cargo:rustc-link-search={}/lib/darwin/x86_64", manifest_dir);
+
+    #[cfg(all(target_os = "linux", target_arch = "x86_64"))]
+    println!("cargo:rustc-link-search={}/lib/linux/x86_64", manifest_dir);
 }
