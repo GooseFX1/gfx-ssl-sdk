@@ -1,4 +1,5 @@
 use crate::{
+    avec::A8Bytes,
     error::GfxSdkError::*,
     ssl::{
         instructions::{swap_account_metas, SSLInstructionContext},
@@ -11,11 +12,15 @@ use anyhow::{anyhow, Error};
 use fehler::{throw, throws};
 use gfx_ssl_interface::{sorted, PDAIdentifier, Pair, SSL};
 use jupiter::jupiter_override::{Swap, SwapLeg};
-use jupiter_core::amm::{Amm, KeyedAccount, Quote, QuoteParams, SwapLegAndAccountMetas, SwapParams};
+use jupiter_core::amm::{
+    Amm, KeyedAccount, Quote, QuoteParams, SwapLegAndAccountMetas, SwapParams,
+};
 use lazy_static::lazy_static;
 use pyth_sdk_solana::state::{load_price_account, PriceAccount};
 use rust_decimal::Decimal;
+use solana_program::clock::Clock;
 use solana_program::pubkey::Pubkey;
+use solana_program::sysvar::SysvarId;
 use solana_sdk::pubkey;
 use std::{
     collections::{HashMap, HashSet},
@@ -23,8 +28,6 @@ use std::{
     fmt::Debug,
     mem,
 };
-use solana_program::clock::Clock;
-use solana_program::sysvar::SysvarId;
 
 const DISCRIMINANT: usize = 8;
 
@@ -173,9 +176,9 @@ pub struct GfxAmm {
     oracle_addresses: HashSet<Pubkey>, // Fetched from a lookup table during construction.
 
     // Accounts' data
-    ssl_a_data: Option<[u8; mem::size_of::<SSL>() + DISCRIMINANT]>,
-    ssl_b_data: Option<[u8; mem::size_of::<SSL>() + DISCRIMINANT]>,
-    pair_data: Option<[u8; mem::size_of::<Pair>() + DISCRIMINANT]>,
+    ssl_a_data: Option<A8Bytes<{ mem::size_of::<SSL>() + DISCRIMINANT }>>,
+    ssl_b_data: Option<A8Bytes<{ mem::size_of::<SSL>() + DISCRIMINANT }>>,
+    pair_data: Option<A8Bytes<{ mem::size_of::<Pair>() + DISCRIMINANT }>>,
     pair: Option<Pair>, // deserialized for the fee_rate
     ssl_a_vault_a_balance: Option<u64>,
     ssl_a_vault_b_balance: Option<u64>,
@@ -190,13 +193,10 @@ impl GfxAmm {
     #[throws(Error)]
     pub fn from_keyed_account(act: KeyedAccount) -> Self {
         let data = act.account.data;
-        let data: [u8; mem::size_of::<Pair>() + DISCRIMINANT] = data.clone().try_into().map_err(|_| {
-            InvalidAccountSize(
-                act.key,
-                mem::size_of::<Pair>() + DISCRIMINANT,
-                data.len(),
-            )
-        })?;
+        let data: A8Bytes<{ mem::size_of::<Pair>() + DISCRIMINANT }> =
+            data.clone().try_into().map_err(|_| {
+                InvalidAccountSize(act.key, mem::size_of::<Pair>() + DISCRIMINANT, data.len())
+            })?;
         let pair_data = Some(data);
         let pair: Pair = Pair::try_deserialize(&mut data.as_slice())?;
         let (ssl_a_mint, ssl_b_mint) = pair.mints;
@@ -316,8 +316,7 @@ impl Amm for GfxAmm {
             Ok::<_, Error>(())
         };
         for pubkey in self.get_accounts_to_update() {
-            let data = accounts_map.get(&pubkey)
-                .ok_or(AccountNotFound(pubkey))?;
+            let data = accounts_map.get(&pubkey).ok_or(AccountNotFound(pubkey))?;
             if pubkey == self.ssl_a_pubkey {
                 let data = data.clone().try_into().map_err(|_| {
                     InvalidAccountSize(

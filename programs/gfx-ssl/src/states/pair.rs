@@ -79,7 +79,8 @@ pub struct Pair {
     pub platform_fee_rate: (u16, u16),
 
     pub _unused3: [u8; 18],
-    pub volumes: (u128, u128),
+    // volumes below is a (u128, u128)
+    pub volumes: [u64; 4],
 
     _unused0: [u64; 10],
     pub enable_rebalance_swap: bool,

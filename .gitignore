@@ -6,4 +6,4 @@ dump/*.so
 node_modules
 .local-pack
 /ts/dist
-tests
+./tests
