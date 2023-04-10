@@ -24,7 +24,6 @@ use solana_program::sysvar::SysvarId;
 use solana_sdk::pubkey;
 use std::{
     collections::{HashMap, HashSet},
-    ffi::CStr,
     fmt::Debug,
     mem,
 };

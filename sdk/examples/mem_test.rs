@@ -62,9 +62,9 @@ fn main() {
             input_mint: mints[0],
             output_mint: mints[1],
         }) {
-            Ok(quote) => {
+            Ok(_) => {
             }
-            Err(e) => {
+            Err(_) => {
             }
         }
         if i % 1000 == 0 {
