@@ -1,3 +1,6 @@
+/// Since there are unsafe blocks of code in the Jupiter Amm trait implementation,
+/// this test is designed to be executed with valgrind in order to detect possible
+/// memory leaks.
 use std::collections::HashMap;
 use std::env::var;
 use jupiter_core::amm::{Amm, KeyedAccount, QuoteParams};
