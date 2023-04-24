@@ -2,7 +2,7 @@
 description = "Created with Anchor"
 edition = "2021"
 name = "gfx-controller-interface"
-version = "0.1.0"
+version = "0.1.1"
 
 [lib]
 crate-type = ["lib"]
@@ -16,5 +16,6 @@ no-entrypoint = []
 no-idl = []
 
 [dependencies]
-anchor-lang = "0.26"
-anchor-spl = "0.26"
+anchor-lang = "0.27"
+anchor-spl = "0.27"
+bytemuck = "1.13.1"

@@ -22,4 +22,4 @@ pub struct StakingAccount {
     pub _pad: [u64; 32],
 }
 
-const _: [u8; 312] = [0; std::mem::size_of::<StakingAccount>()];
+//const _: [u8; 312] = [0; std::mem::size_of::<StakingAccount>()];

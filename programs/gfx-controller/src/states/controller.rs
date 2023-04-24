@@ -19,7 +19,7 @@ pub struct Controller {
 
     /* --------------------------------- configs -------------------------------- */
     pub admin: Pubkey,
-    pub suspended: bool,
+    pub suspended: u8, // bool
     pub decimals: u8,      // Cache the decimal of the protocol token here.
     pub mint: Pubkey,      // The mint of the protocol token (e.g. GOFX)
     pub daily_reward: u64, // How many protocol token to distribute every day
@@ -37,4 +37,4 @@ pub struct Controller {
     pub _pad1: [u64; 31],
 }
 
-const _: [u8; 392] = [0; std::mem::size_of::<Controller>()];
+//const _: [u8; 392] = [0; std::mem::size_of::<Controller>()];

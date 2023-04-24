@@ -2,7 +2,7 @@
 description = "High-level API for interacting with the `gfx-ssl` and `gfx-controller` programs"
 edition = "2021"
 name = "gfx-ssl-sdk"
-version = "0.1.5"
+version = "0.1.6"
 
 [[bench]]
 harness = false
@@ -16,8 +16,8 @@ default = ["jupiter_amm"]
 jupiter_amm = ["jupiter", "jupiter-core"]
 
 [dependencies]
-anchor-lang = "0.26"
-anchor-spl = "0.26"
+anchor-lang = "0.27"
+anchor-spl = "0.27"
 anyhow = "1.0.68"
 fehler = "1"
 gfx-controller-interface = {path = "../programs/gfx-controller", features = ["no-entrypoint"]}
