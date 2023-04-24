@@ -20,8 +20,9 @@ pub struct Controller {
     /* --------------------------------- configs -------------------------------- */
     pub admin: Pubkey,
     pub suspended: u8, // bool
-    pub decimals: u8,      // Cache the decimal of the protocol token here.
-    pub mint: Pubkey,      // The mint of the protocol token (e.g. GOFX)
+    pub decimals: u8,  // Cache the decimal of the protocol token here.
+    pub mint: Pubkey,  // The mint of the protocol token (e.g. GOFX)
+    pub _pad0: [u8; 5],
     pub daily_reward: u64, // How many protocol token to distribute every day
 
     /* ---------------------------- controller states --------------------------- */
@@ -32,9 +33,9 @@ pub struct Controller {
     pub last_distribution_time: i64, // When is the last time we distribute reward
 
     pub withdraw_fee: u16, // in BP
+    pub _pad1: [u8; 6],
 
-    pub _pad0: [u8; 6],
-    pub _pad1: [u64; 31],
+    pub _pad2: [u64; 31],
 }
 
-//const _: [u8; 392] = [0; std::mem::size_of::<Controller>()];
+const _: [u8; 392] = [0; std::mem::size_of::<Controller>()];

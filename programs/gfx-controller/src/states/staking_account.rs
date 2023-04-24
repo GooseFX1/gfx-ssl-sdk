@@ -16,10 +16,11 @@ impl PDAIdentifier for StakingAccount {
 pub struct StakingAccount {
     pub controller: Pubkey, // for indexing purpose
     pub bump: u8,
+    pub _pad0: [u8; 7],
     pub share: u64,
     pub amount_staked: u64,
 
-    pub _pad: [u64; 32],
+    pub _pad1: [u64; 32],
 }
 
-//const _: [u8; 312] = [0; std::mem::size_of::<StakingAccount>()];
+const _: [u8; 312] = [0; std::mem::size_of::<StakingAccount>()];

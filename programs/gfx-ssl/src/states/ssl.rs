@@ -21,8 +21,9 @@ pub struct SSL {
     pub pt_bump: u8,
 
     // configurable settings
-    pub suspended: bool,
+    pub suspended: u8,
     pub cranker: Pubkey, // the pubkey for the cranker
+    pub _pad0: [u8; 4],
 
     // pool states
     pub weight: u64, // the connector token amount. This does not need to be an SPL token because this is internal
@@ -30,7 +31,7 @@ pub struct SSL {
     pub swapped_liability: u64, // liability that in the form of other tokens due to swapped away, updated by the cranker
     pub total_share: u64,
 
-    pub _pad: [u64; 32],
+    pub _pad1: [u64; 32],
 }
 
 const _: [u8; 392] = [0; std::mem::size_of::<SSL>()];

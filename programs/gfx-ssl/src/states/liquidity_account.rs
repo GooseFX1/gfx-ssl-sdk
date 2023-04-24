@@ -17,11 +17,13 @@ impl PDAIdentifier for LiquidityAccount {
 pub struct LiquidityAccount {
     pub mint: Pubkey,
     pub bump: u8,
+    pub _pad0: [u8; 7],
+
     pub share: u64,
     pub pt_minted: u64,
     pub amount_deposited: u64,
 
-    pub _pad: [u64; 31],
+    pub _pad1: [u64; 31],
 }
 
 const _: [u8; 312] = [0; std::mem::size_of::<LiquidityAccount>()];

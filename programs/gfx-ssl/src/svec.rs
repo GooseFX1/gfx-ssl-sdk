@@ -1,3 +1,4 @@
+use bytemuck::{Pod, Zeroable};
 use std::{
     fmt::{self, Debug},
     mem::{forget, zeroed},
@@ -112,3 +113,6 @@ impl<T, const N: usize> Deref for StackVec<T, N> {
         &self.val[..self.n as usize]
     }
 }
+
+unsafe impl<T, const N: usize> Pod for StackVec<T, N> where T: Pod {}
+unsafe impl<T, const N: usize> Zeroable for StackVec<T, N> where T: Zeroable {}
