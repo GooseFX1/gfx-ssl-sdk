@@ -17,8 +17,8 @@ impl PDAIdentifier for Pair {
 #[zero_copy]
 #[derive(Default, Debug)]
 pub struct OracleComponent {
-    key: Pubkey,
-    inversed: u8,
+    pub key: Pubkey,
+    pub inversed: u8,
 }
 
 impl OracleComponent {

@@ -1,3 +1,4 @@
+use std::io::Write;
 use crate::utils::PDAIdentifier;
 use anchor_lang::prelude::*;
 
@@ -39,3 +40,10 @@ pub struct Controller {
 }
 
 const _: [u8; 392] = [0; std::mem::size_of::<Controller>()];
+
+impl AccountSerialize for Controller {
+    fn try_serialize<W: Write>(&self, writer: &mut W) -> Result<()> {
+        writer.write_all(bytemuck::bytes_of(self))?;
+        Ok(())
+    }
+}

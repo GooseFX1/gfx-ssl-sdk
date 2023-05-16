@@ -1,3 +1,4 @@
+use std::io::Write;
 use crate::utils::PDAIdentifier;
 use anchor_lang::prelude::*;
 use std::mem;
@@ -39,5 +40,12 @@ const _: [u8; 392] = [0; std::mem::size_of::<SSL>()];
 impl Default for SSL {
     fn default() -> Self {
         unsafe { mem::zeroed() }
+    }
+}
+
+impl AccountSerialize for SSL {
+    fn try_serialize<W: Write>(&self, writer: &mut W) -> Result<()> {
+        writer.write_all(bytemuck::bytes_of(self))?;
+        Ok(())
     }
 }

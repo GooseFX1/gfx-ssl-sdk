@@ -10,7 +10,7 @@ use anchor_lang::AccountDeserialize;
 use anchor_spl::{associated_token::get_associated_token_address, token::TokenAccount};
 use anyhow::{anyhow, Error};
 use fehler::{throw, throws};
-use gfx_ssl_interface::{sorted, PDAIdentifier, Pair, SSL};
+use gfx_ssl_interface::{sorted, PDAIdentifier, Pair, SSL, Tuple, OracleComponent};
 use jupiter::jupiter_override::{Swap, SwapLeg};
 use jupiter_core::amm::{
     Amm, KeyedAccount, Quote, QuoteParams, SwapLegAndAccountMetas, SwapParams,
@@ -199,10 +199,10 @@ impl GfxAmm {
             })?;
         let pair_data = Some(data);
         let pair: Pair = Pair::try_deserialize(&mut data.as_slice())?;
-        let (ssl_a_mint, ssl_b_mint) = pair.mints;
+        let Tuple {first: ssl_a_mint, second: ssl_b_mint} = pair.mints;
         let mut oracle_addresses = HashSet::new();
         for oracle in pair.oracles.iter() {
-            for (key, _) in oracle.path.iter() {
+            for OracleComponent { key, inversed: _ } in oracle.path.iter() {
                 if *key != Pubkey::default() {
                     oracle_addresses.insert(*key);
                 }
@@ -346,7 +346,7 @@ impl Amm for GfxAmm {
                 self.pair_data = Some(data);
                 let pair: Pair = Pair::try_deserialize(&mut data.as_slice())?;
                 for oracle in pair.oracles.iter() {
-                    for (key, _) in oracle.path.iter() {
+                    for OracleComponent { key, inversed: _ } in oracle.path.iter() {
                         if *key != Pubkey::default() {
                             self.oracle_addresses.insert(*key);
                         }
@@ -452,9 +452,9 @@ impl Amm for GfxAmm {
         } {
             QuoteResult::Ok(swap_result) => {
                 let fee_pct = if !is_reversed {
-                    self.pair.as_ref().unwrap().fee_rate.0
+                    self.pair.as_ref().unwrap().fee_rate.first
                 } else {
-                    self.pair.as_ref().unwrap().fee_rate.1
+                    self.pair.as_ref().unwrap().fee_rate.second
                 };
                 let fee_pct = Decimal::new(fee_pct.into(), 4);
                 let price_impact_pct = Decimal::from_f64_retain(swap_result.price_impact)
