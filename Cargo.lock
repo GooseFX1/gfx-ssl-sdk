@@ -3087,7 +3087,7 @@ dependencies = [
 [[package]]
 name = "pyth-sdk"
 version = "0.7.0"
-source = "git+https://github.com/GooseFX1/pyth-sdk-rs.git#a3c2776d6c0498eda9f88a6e865cc69fd2277bd7"
+source = "git+https://github.com/pyth-network/pyth-sdk-rs.git#ecbe342568b36c58cdf4b34187c2c3777f1689af"
 dependencies = [
  "borsh 0.9.3",
  "borsh-derive 0.9.3",
@@ -3100,7 +3100,7 @@ dependencies = [
 [[package]]
 name = "pyth-sdk-solana"
 version = "0.7.2"
-source = "git+https://github.com/GooseFX1/pyth-sdk-rs.git#a3c2776d6c0498eda9f88a6e865cc69fd2277bd7"
+source = "git+https://github.com/pyth-network/pyth-sdk-rs.git#ecbe342568b36c58cdf4b34187c2c3777f1689af"
 dependencies = [
  "borsh 0.9.3",
  "borsh-derive 0.9.3",
