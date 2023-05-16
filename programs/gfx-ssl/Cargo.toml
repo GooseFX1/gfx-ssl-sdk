@@ -2,7 +2,7 @@
 description = "GFX SSl SDK"
 edition = "2021"
 name = "gfx-ssl-interface"
-version = "0.1.1"
+version = "0.1.2"
 
 [lib]
 crate-type = ["lib"]
@@ -19,5 +19,5 @@ no-idl = []
 anchor-lang = "0.27"
 anchor-spl = "0.27"
 gfx_controller = {path = "../gfx-controller", package = "gfx-controller-interface", features = ["cpi"]}
-solana-program = "1.14.11"
+solana-program = "1.15"
 bytemuck = "1.13.0"
