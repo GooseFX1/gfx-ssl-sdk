@@ -4,6 +4,7 @@ use anchor_lang::prelude::*;
 use bytemuck::{Pod, Zeroable};
 use std::io::Write;
 use std::ops::Deref;
+use anchor_lang::Discriminator;
 
 impl PDAIdentifier for Pair {
     const IDENT: &'static [u8] = b"GFX-SSL-Pair";
@@ -135,7 +136,9 @@ pub struct Pair {
 
 impl AccountSerialize for Pair {
     fn try_serialize<W: Write>(&self, writer: &mut W) -> Result<()> {
-        writer.write_all(bytemuck::bytes_of(self))?;
+        let mut disc = Self::discriminator().to_vec();
+        disc.append(&mut bytemuck::bytes_of(self).to_vec());
+        writer.write_all(&disc)?;
         Ok(())
     }
 }

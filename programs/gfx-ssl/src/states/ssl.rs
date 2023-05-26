@@ -2,6 +2,7 @@ use std::io::Write;
 use crate::utils::PDAIdentifier;
 use anchor_lang::prelude::*;
 use std::mem;
+use anchor_lang::Discriminator;
 
 impl PDAIdentifier for SSL {
     const IDENT: &'static [u8] = b"GFX-SSL";
@@ -45,7 +46,9 @@ impl Default for SSL {
 
 impl AccountSerialize for SSL {
     fn try_serialize<W: Write>(&self, writer: &mut W) -> Result<()> {
-        writer.write_all(bytemuck::bytes_of(self))?;
+        let mut disc = Self::discriminator().to_vec();
+        disc.append(&mut bytemuck::bytes_of(self).to_vec());
+        writer.write_all(&disc)?;
         Ok(())
     }
 }
